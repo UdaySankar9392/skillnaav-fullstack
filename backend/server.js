@@ -1,9 +1,8 @@
 const express = require("express");
 const dotenv = require("dotenv");
-const mongoose = require("mongoose");
 const path = require("path");
 const cors = require("cors");
-const connectDB = require("./config/db");
+const connectDB = require("./config/dbConfig");
 const { notFound, errorHandler } = require("./middlewares/errorMiddleware");
 
 dotenv.config(); // Load environment variables
@@ -18,12 +17,13 @@ app.use(express.json()); // For parsing application/json
 app.use(cors()); // Enable CORS
 
 // Routes
-const userRoutes = require("./routes/userRoutes");
+const userRoutes = require("./routes/webapp-routes/userRoutes");
 const skillnaavRoute = require("./routes/skillnaavRoute");
 
+// Define routes
 app.use("/api/users", userRoutes); // User routes
 app.use("/api/skillnaav", skillnaavRoute); // Skillnaav routes
-app.use("/api/contact", require("./routes/skillnaavRoute")); // Contact route
+app.use("/api/contact", skillnaavRoute); // Contact route (Verify if this is correct)
 
 // Serve static assets if in production
 if (process.env.NODE_ENV === "production") {

@@ -32,7 +32,7 @@ const AdminCreateAccount = () => {
   const handleSubmit = async (values, { setSubmitting }) => {
     try {
       const response = await axios.post(
-        "/api2/api/users/register",
+        "/api/users/register",
         values
       );
       navigate("/admin-main-page");

@@ -30,7 +30,7 @@ const PartnerLogin = () => {
       };
       // Ensure this path is correct
       const { data } = await axios.post(
-        "/api2/api/users/login",
+        "/api/users/login",
         values,
         config
       );
