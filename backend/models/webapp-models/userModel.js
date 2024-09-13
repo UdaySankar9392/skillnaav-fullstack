@@ -1,7 +1,7 @@
 const mongoose = require("mongoose");
 const bcrypt = require("bcrypt");
 
-const userSchema = new mongoose.Schema(
+const userwebappSchema = new mongoose.Schema(
   {
     name: {
       type: String,
@@ -33,7 +33,7 @@ const userSchema = new mongoose.Schema(
   }
 );
 
-userSchema.pre("save", async function (next) {
+userwebappSchema.pre("save", async function (next) {
   if (!this.isModified("password")) {
     next();
   }
@@ -41,10 +41,10 @@ userSchema.pre("save", async function (next) {
   this.password = await bcrypt.hash(this.password, salt);
 });
 
-userSchema.methods.matchPassword = async function (enteredPassword) {
+userwebappSchema.methods.matchPassword = async function (enteredPassword) {
   return await bcrypt.compare(enteredPassword, this.password);
 };
 
-const User = mongoose.model("User", userSchema);
+const Userwebapp = mongoose.model("Userwebapp", userwebappSchema);
 
-module.exports = User;
+module.exports = Userwebapp;

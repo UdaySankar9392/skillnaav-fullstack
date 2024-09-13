@@ -1,5 +1,5 @@
 const asyncHandler = require("express-async-handler");
-const User = require("../models/webapp-models/userModel");
+const Userwebapp = require("../models/webapp-models/userModel");
 const generateToken = require("../utils/generateToken");
 
 const registerUser = asyncHandler(async (req, res) => {
@@ -14,14 +14,14 @@ const registerUser = asyncHandler(async (req, res) => {
   }
 
   // Check if the user already exists
-  const userExists = await User.findOne({ email });
+  const userExists = await Userwebapp.findOne({ email });
   if (userExists) {
     res.status(400);
     throw new Error("User already exists");
   }
 
   // Create user
-  const user = await User.create({ name, email, password, pic });
+  const user = await Userwebapp.create({ name, email, password, pic });
 
   if (user) {
     res.status(201).json({
@@ -41,7 +41,7 @@ const registerUser = asyncHandler(async (req, res) => {
 const authUser = asyncHandler(async (req, res) => {
   const { email, password } = req.body;
 
-  const user = await User.findOne({ email });
+  const user = await Userwebapp.findOne({ email });
 
   if (user && (await user.matchPassword(password))) {
     res.json({
