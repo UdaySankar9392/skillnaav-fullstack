@@ -1,0 +1,25 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+@import "@fontsource/inter/400.css";
+@import "@fontsource/inter/600.css";
+@import "@fontsource/inter/700.css";
+
+/* input */
+input,
+textarea {
+  height: 40px;
+  border: 1px solid gray;
+  width: 100%;
+  padding-left: 20px;
+  margin-top: 20px;
+}
+
+input:focus {
+  outline: none;
+  border: 2px solid rgb(86, 65, 65);
+}
+textarea {
+  height: 100px;
+  padding: 10px;
+}
