@@ -1,41 +1,32 @@
-name: Deploy SkillNaav
+name: Deploy
 
-on:
-  push:
+on:  
+  push:    
     branches:
       - main
 
-jobs:
-  deploy:
+jobs:  
+  deploy:    
     runs-on: ubuntu-latest
-
-    steps:
-    - name: Checkout the code
-      uses: actions/checkout@v2
-
-    - name: Install SSH Key
-      uses: webfactory/ssh-agent@v0.5.3
-      with:
-        ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
-
-    - name: Deploy to Server
-      run: |
-        ssh ubuntu@test.skillnaav.com << 'EOF'
-          # Navigate to the project directory
-          cd /home/ubuntu/skillnaav-fullstack
-
-          # Backend update
-          cd backend
-          git pull origin main
+    
+    steps:      
+      - name: Checkout code        
+        uses: actions/checkout@v3      
+        
+      - name: Set up SSH key        
+        uses: webfactory/ssh-agent@v0.7.0       
+        with:          
+          ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}      
+          
+      - name: Build React app
+        run: |
+          cd frontend
           npm install
-
-          # Frontend update
-          cd ../frontend
-          git pull origin main
-          npm install 
           npm run build
 
-          # Restart services (PM2, Nginx, etc.)
-          pm2 restart all
-          sudo systemctl restart nginx
-        EOF
+      - name: Deploy to server        
+        run: |          
+          # Copy the build to the server
+          scp -r frontend/build/* ubuntu@test.skillnaav.com:/home/ubuntu/skillnaav-fullstack/frontend/build
+          
+          
