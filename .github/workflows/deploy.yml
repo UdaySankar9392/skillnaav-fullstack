@@ -1,4 +1,4 @@
-name: Deploy
+name: Deploy to Production
 
 on:
   push:
@@ -10,15 +10,26 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
+    - name: Checkout code
+      uses: actions/checkout@v3
 
-      - name: Set up SSH key
-        uses: webfactory/ssh-agent@v0.7.0
-        with:
-          ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
+    - name: Set up SSH
+      run: |
+        mkdir -p ~/.ssh
+        echo "$SSH_PRIVATE_KEY" > ~/.ssh/id_rsa
+        chmod 600 ~/.ssh/id_rsa
 
-      - name: Deploy to server
-        run: |
-          # SSH into the server and run the deploy.sh script from the server itself
-          ssh ubuntu@test.skillnaav.com 'bash /home/ubuntu/skillnaav-fullstack/deploy.sh'
+    - name: Add SSH Host Key
+      run: |
+        ssh-keyscan test.skillnaav.com >> ~/.ssh/known_hosts
+
+    - name: Start SSH Agent
+      run: |
+        eval $(ssh-agent -s)
+        ssh-add ~/.ssh/id_rsa
+
+    - name: Deploy to server
+      run: |
+        ssh ubuntu@test.skillnaav.com 'bash /home/ubuntu/skillnaav-fullstack/deploy.sh'
+      env:
+        SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
