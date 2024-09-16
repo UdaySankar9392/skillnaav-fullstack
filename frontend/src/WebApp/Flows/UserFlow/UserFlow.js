@@ -47,7 +47,7 @@ const UserFlow = () => {
       <div className="flex flex-col items-center justify-center p-8 w-full lg:w-1/2 bg-white">
         <div className="w-full max-w-md flex flex-col justify-center min-h-screen lg:min-h-full">
           <h1 className="text-2xl font-semibold mb-6 text-center">
-            Create an Acc
+            Create an Acco
           </h1>
           <Formik
             initialValues={{ email: "", password: "" }}
