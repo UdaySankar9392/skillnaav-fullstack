@@ -1,4 +1,4 @@
-name: Deploy to Production
+name: Deploy
 
 on:
   push:
@@ -10,26 +10,24 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v3
+      - name: Checkout code
+        uses: actions/checkout@v3
 
-    - name: Set up SSH
-      run: |
-        mkdir -p ~/.ssh
-        echo "$SSH_PRIVATE_KEY" > ~/.ssh/id_rsa
-        chmod 600 ~/.ssh/id_rsa
+      - name: Set up SSH key
+        uses: webfactory/ssh-agent@v0.7.0
+        with:
+          ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
 
-    - name: Add SSH Host Key
-      run: |
-        ssh-keyscan test.skillnaav.com >> ~/.ssh/known_hosts
+      - name: Build React app
+        run: |
+          cd frontend
+          npm install
+          # Build the React app with warnings ignored
+          CI=false npm run build
 
-    - name: Start SSH Agent
-      run: |
-        eval $(ssh-agent -s)
-        ssh-add ~/.ssh/id_rsa
-
-    - name: Deploy to server
-      run: |
-        ssh ubuntu@test.skillnaav.com 'bash /home/ubuntu/skillnaav-fullstack/deploy.sh'
-      env:
-        SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+      - name: Deploy to server
+        run: |
+          # Copy the build to the server
+          scp -r frontend/build/* ubuntu@test.skillnaav.com:/home/ubuntu/skillnaav-fullstack/frontend/build
+          # Optional: Run deploy script on the server
+          ssh ubuntu@test.skillnaav.com 'bash /home/ubuntu/skillnaav-fullstack/deploy.sh'
