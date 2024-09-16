@@ -22,7 +22,6 @@
     "formik": "^2.4.6",
     "framer-motion": "^11.2.10",
     "http-proxy-middleware": "^3.0.2",
-    "i": "^0.3.7",
     "lodash-es": "^4.17.21",
     "moment": "^2.30.1",
     "npm": "^10.8.0",
@@ -45,7 +44,7 @@
   },
   "scripts": {
     "start": "react-scripts start",
-    "build": "react-scripts build",
+    "build": "set SKIP_PREFLIGHT_CHECK=true && set ESLINT_NO_DEV_ERRORS=true && react-scripts build",
     "test": "react-scripts test",
     "eject": "react-scripts eject"
   },
