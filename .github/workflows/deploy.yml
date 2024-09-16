@@ -20,7 +20,7 @@ jobs:
 
     - name: Deploy to Server
       run: |
-        ssh ubuntu@www.test.skillnaav.com << 'EOF'
+        ssh ubuntu@test.skillnaav.com << 'EOF'
           # Navigate to the project directory
           cd /home/ubuntu/skillnaav-fullstack
 
