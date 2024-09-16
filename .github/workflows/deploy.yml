@@ -18,13 +18,7 @@ jobs:
         with:
           ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
 
-      - name: Build React app
-        run: |
-          cd frontend
-          npm install
-          npm run build
-
       - name: Deploy to server
         run: |
-          # Copy the build to the server
-          scp -r frontend/build/* ubuntu@test.skillnaav.com:/home/ubuntu/skillnaav-fullstack/frontend/build
+          # SSH into the server and run the deploy.sh script from the server itself
+          ssh ubuntu@test.skillnaav.com 'bash /home/ubuntu/skillnaav-fullstack/deploy.sh'
