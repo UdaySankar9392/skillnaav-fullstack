@@ -1,33 +1,29 @@
 import React from "react";
-import { useTabContext } from "./UserHomePageContext/HomePageContext"; // Correct path
+import { useTabContext } from "./UserHomePageContext/HomePageContext";
 import Message from "./Message";
 import AeronauticalJobs from "./AeronauticalJobs";
 import SearchBar from "./SearchBar";
 import Home from "./Home";
-import Filter from "./Filter"; // Import the Filter component
+import Filter from "./Filter";
 import SavedJobs from "./SavedJobs";
 import Applications from "./Applications";
-import Support from "./Support";
-import Profile from "./Profile"; // Import the Profile component
+import Profile from "./Profile";
+import Support from "./Support"; // Import the Support component
 
 const BodyContent = () => {
-  const { selectedTab, fine, handleSelectTab } = useTabContext();
-  console.log("Selected Tab:", selectedTab);
+  const { selectedTab, handleSelectTab } = useTabContext();
 
   let content;
 
   switch (selectedTab) {
-    case "home":
-      content = <Home />;
-      break;
-    case "aeronautical-jobs":
+    case "your-job-posts":
       content = <AeronauticalJobs />;
       break;
-    case "searchbar":
+    case "post-a-job":
       content = <SearchBar />;
       break;
     case "messages":
-      content = <Message />; // Assuming Notifications is for messages
+      content = <Message />;
       break;
     case "applications":
       content = <Applications />;
@@ -36,27 +32,19 @@ const BodyContent = () => {
       content = <SavedJobs />;
       break;
     case "profile":
-      content = <Profile />; // Render the Profile component
+      content = <Profile />;
       break;
     case "support":
-      content = <Support />;
+      content = <Support />; // Render the Support component
       break;
     case "logout":
-      content = <div>Logout Content</div>;
-      break;
-    case "filter":
-      content = <Filter />; // Render the Filter component
+      content = <div>You have been logged out. Please log in again.</div>; // Logout message or component
       break;
     default:
-      content = <div>Select a tab {fine}</div>;
+      content = <div>Select a tab</div>;
   }
 
-  return (
-    <div className="flex-1 p-4">
-      {content}
-      <button onClick={() => handleSelectTab("searchbar")}></button>
-    </div>
-  );
+  return <div className="flex-1 p-4">{content}</div>;
 };
 
 export default BodyContent;
