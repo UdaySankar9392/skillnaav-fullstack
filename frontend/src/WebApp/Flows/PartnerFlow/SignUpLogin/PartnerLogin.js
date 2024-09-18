@@ -2,7 +2,6 @@ import React, { useState } from "react";
 import { Formik, Form, Field, ErrorMessage } from "formik";
 import * as Yup from "yup";
 import { useNavigate, Link } from "react-router-dom";
-import loginImage from "../../../../assets-webapp/login-image.png";
 import axios from "axios";
 import Loading from "../../../Warnings/Loading/Loading";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
@@ -28,12 +27,7 @@ const PartnerLogin = () => {
           "Content-type": "application/json",
         },
       };
-      // Ensure this path is correct
-      const { data } = await axios.post(
-        "/api/users/login",
-        values,
-        config
-      );
+      const { data } = await axios.post("/api/users/login", values, config);
       localStorage.setItem("userInfo", JSON.stringify(data));
       setLoading(false);
       navigate("/partner-main-page");
@@ -50,19 +44,17 @@ const PartnerLogin = () => {
 
   return (
     <div className="flex flex-col lg:flex-row min-h-screen font-poppins">
-      {/* Left Section (Image) */}
-      <div className="hidden lg:flex lg:w-1/2 items-center justify-center">
-        <img
-          src={loginImage}
-          alt="login"
-          className="w-full h-full object-cover rounded-lg"
-        />
+      {/* Left Section (Colorful Background) */}
+      <div className="hidden lg:flex lg:w-1/2 items-center justify-center bg-gradient-to-br from-blue-500 to-teal-400">
+        <div className="w-3/4 h-3/4 flex items-center justify-center">
+          <h1 className="text-white text-5xl font-extrabold">Partner Portal</h1>
+        </div>
       </div>
 
       {/* Right Section (Form) */}
-      <div className="flex flex-col items-center justify-center p-8 w-full lg:w-1/2">
+      <div className="flex flex-col items-center justify-center p-8 w-full lg:w-1/2 bg-white shadow-lg rounded-lg">
         <div className="w-full max-w-md flex flex-col justify-center min-h-screen lg:min-h-full">
-          <h1 className="text-3xl font-extrabold mb-6 text-center text-gray-800">
+          <h1 className="text-4xl font-extrabold mb-6 text-center text-gray-800">
             Welcome Back
           </h1>
           <h2 className="text-lg font-medium mb-6 text-center text-gray-600">
@@ -93,7 +85,7 @@ const PartnerLogin = () => {
                       type="email"
                       name="email"
                       placeholder="Enter your email"
-                      className="w-full p-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-400"
+                      className="w-full p-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500"
                     />
                     <ErrorMessage
                       name="email"
@@ -104,15 +96,12 @@ const PartnerLogin = () => {
 
                   {/* Password Field */}
                   <div className="relative">
-                    {/* Password Input Field */}
                     <Field
                       type={showPassword ? "text" : "password"}
                       name="password"
                       placeholder="Enter your password"
-                      className="w-full p-4 pr-16 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-400"
+                      className="w-full p-4 pr-16 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500"
                     />
-
-                    {/* Show/Hide Password Icon */}
                     <button
                       type="button"
                       className="absolute inset-y-0 right-4 mt-3 flex items-center justify-center h-full text-gray-600"
@@ -123,8 +112,6 @@ const PartnerLogin = () => {
                         size="lg"
                       />
                     </button>
-
-                    {/* Error Message */}
                     <ErrorMessage
                       name="password"
                       component="div"
@@ -134,26 +121,23 @@ const PartnerLogin = () => {
 
                   {/* Remember Me and Forgot Password */}
                   <div className="flex justify-between items-center mb-6">
-                    {/* Checkbox and Label */}
                     <div className="flex items-center space-x-2">
                       <Field
                         type="checkbox"
                         name="rememberMe"
                         id="rememberMe"
-                        className="form-checkbox h-4 w-4 text-purple-500 transition duration-150 ease-in-out"
+                        className="form-checkbox h-4 w-4 text-teal-500 transition duration-150 ease-in-out"
                       />
                       <label
                         htmlFor="rememberMe"
-                        className="block text-sm mt-4  text-gray-700"
+                        className="block text-sm mt-4 text-gray-700"
                       >
                         Remember me
                       </label>
                     </div>
-
-                    {/* Forgot Password Link */}
                     <Link
                       to="/forgot-password"
-                      className="text-sm font-medium mt-4 text-purple-500 hover:text-purple-700 transition duration-150 ease-in-out"
+                      className="text-sm font-medium mt-4 text-teal-500 hover:text-teal-700 transition duration-150 ease-in-out"
                     >
                       Forgot password?
                     </Link>
@@ -163,7 +147,7 @@ const PartnerLogin = () => {
                   <button
                     type="submit"
                     disabled={isSubmitting}
-                    className="w-full bg-purple-500 text-white  p-4 rounded-lg hover:bg-purple-600 transition-colors duration-300 shadow-md"
+                    className="w-full bg-teal-500 text-white p-4 rounded-lg hover:bg-teal-600 transition-colors duration-300 shadow-md"
                   >
                     Sign In
                   </button>
@@ -184,7 +168,7 @@ const PartnerLogin = () => {
             Don’t have an account?{" "}
             <Link
               to="/partner-create-account"
-              className="text-purple-500 hover:underline font-semibold"
+              className="text-teal-500 hover:underline font-semibold"
             >
               Sign up
             </Link>
