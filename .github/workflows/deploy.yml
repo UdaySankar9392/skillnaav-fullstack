@@ -1,4 +1,4 @@
-name: Deploy to Server
+name: Deploy
 
 on:
   push:
@@ -10,21 +10,15 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v2
+      - name: Checkout code
+        uses: actions/checkout@v3
 
-    - name: Configure SSH for GitHub Actions
-      run: |
-        mkdir -p ~/.ssh
-        echo "Host test.skillnaav.com" >> ~/.ssh/config
-        echo "    Hostname test.skillnaav.com" >> ~/.ssh/config
-        echo "    User ubuntu" >> ~/.ssh/config
-        echo "    HostKeyAlgorithms +ssh-rsa,ecdsa-sha2-nistp256,ssh-ed25519" >> ~/.ssh/config
-        echo "    PubkeyAcceptedAlgorithms +ssh-rsa,ecdsa-sha2-nistp256,ssh-ed25519" >> ~/.ssh/config
-        ssh-keyscan -H test.skillnaav.com >> ~/.ssh/known_hosts
+      - name: Set up SSH key
+        uses: webfactory/ssh-agent@v0.7.0
+        with:
+          ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
 
-    - name: Deploy to Server
-      run: |
-        scp -r frontend/build/* ubuntu@test.skillnaav.com:/home/ubuntu/skillnaav-fullstack/frontend/build
-      env:
-        SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+      - name: Deploy to server
+        run: |
+          # SSH into the server and run the deploy.sh script from the server itself
+          ssh ubuntu@test.skillnaav.com 'bash /home/ubuntu/skillnaav-fullstack/deploy.sh'
