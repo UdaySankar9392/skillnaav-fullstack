@@ -1,5 +1,9 @@
 import React from "react";
 import AeroImage from "../../../../assets-webapp/Aero-image.png";
+import code from "../../../../assets-webapp/code.png";
+import denside from "../../../../assets-webapp/denside.png";
+import gradient from "../../../../assets-webapp/gradient.png";
+import tech from "../../../../assets-webapp/tech.png";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faMapMarkerAlt,
@@ -7,51 +11,54 @@ import {
   faDollarSign,
 } from "@fortawesome/free-solid-svg-icons";
 
-const JobListing = () => {
-  // Job data array
-  const jobData = [
-    {
-      jobTitle: "Data Science Intern",
-      company: "Harber Inc",
-      location: "439 Metz Field, Canada",
-      type: "Remote",
-      duration: "Internship • 3 months",
-      salary: "30k per month",
-      field: "Computer science engineering",
-    },
-    {
-      jobTitle: "Software Engineer Intern",
-      company: "Acme Corp",
-      location: "123 Tech Lane, USA",
-      type: "Remote",
-      duration: "Internship • 6 months",
-      salary: "35k per month",
-      field: "Software Engineering",
-    },
-    {
-      jobTitle: "Web Developer",
-      company: "Techie Ltd",
-      location: "789 Code Street, India",
-      type: "Remote",
-      duration: "Full-time • 12 months",
-      salary: "45k per month",
-      field: "Web Development",
-    },
-    {
-      jobTitle: "UX/UI Designer",
-      company: "Creative Co",
-      location: "456 Design Blvd, UK",
-      type: "Remote",
-      duration: "Full-time • 24 months",
-      salary: "50k per month",
-      field: "Design",
-    },
-  ];
+const jobData = [
+  {
+    jobTitle: "Data Science Intern",
+    company: "Harber Inc",
+    location: "439 Metz Field, Canada",
+    type: "Remote",
+    duration: "Internship • 3 months",
+    salary: "30k per month",
+    field: "Computer science engineering",
+    image: tech, // Add image path
+  },
+  {
+    jobTitle: "Software Engineer Intern",
+    company: "Acme Corp",
+    location: "123 Tech Lane, USA",
+    type: "Remote",
+    duration: "Internship • 6 months",
+    salary: "35k per month",
+    field: "Software Engineering",
+    image: code, // Add image path
+  },
+  {
+    jobTitle: "Web Developer",
+    company: "Techie Ltd",
+    location: "789 Code Street, India",
+    type: "Remote",
+    duration: "Full-time • 12 months",
+    salary: "45k per month",
+    field: "Web Development",
+    image: denside, // Add image path
+  },
+  {
+    jobTitle: "UX/UI Designer",
+    company: "Creative Co",
+    location: "456 Design Blvd, UK",
+    type: "Remote",
+    duration: "Full-time • 24 months",
+    salary: "50k per month",
+    field: "Design",
+    image: gradient, // Add image path
+  },
+];
 
+const JobListing = () => {
   return (
     <div className="font-poppins">
       {/* Header Section */}
-      <div className="relative w-1132px h-250px">
+      <div className="relative w-full h-64">
         <img
           src={AeroImage}
           alt="Finding Your Dream Job"
@@ -71,8 +78,8 @@ const JobListing = () => {
             <div key={index} className="border rounded-lg p-6 shadow-sm">
               <div className="flex items-center mb-4">
                 <img
-                  src="/path-to-company-logo.png"
-                  alt="Company Logo"
+                  src={job.image}
+                  alt={`${job.company} Logo`}
                   className="w-12 h-12 rounded-full mr-4"
                 />
                 <div>

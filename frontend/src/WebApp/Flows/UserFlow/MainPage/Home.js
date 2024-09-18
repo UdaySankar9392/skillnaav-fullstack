@@ -1,5 +1,9 @@
 import React, { useState } from "react";
 import Homeimage from "../../../../assets-webapp/Home-Image.png";
+import code from "../../../../assets-webapp/code.png";
+import denside from "../../../../assets-webapp/denside.png";
+import gradient from "../../../../assets-webapp/gradient.png";
+import tech from "../../../../assets-webapp/tech.png";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faMapMarkerAlt,
@@ -23,6 +27,7 @@ const Home = () => {
       duration: "Internship • 3 months",
       salary: "30k per month",
       field: "Computer science engineering",
+      image: tech, // Add image path
     },
     {
       jobTitle: "Software Engineer Intern",
@@ -32,6 +37,7 @@ const Home = () => {
       duration: "Internship • 6 months",
       salary: "35k per month",
       field: "Software Engineering",
+      image: code, // Add image path
     },
     {
       jobTitle: "Web Developer",
@@ -41,6 +47,7 @@ const Home = () => {
       duration: "Full-time • 12 months",
       salary: "45k per month",
       field: "Web Development",
+      image: denside, // Add image path
     },
     {
       jobTitle: "UX/UI Designer",
@@ -50,6 +57,7 @@ const Home = () => {
       duration: "Full-time • 24 months",
       salary: "50k per month",
       field: "Design",
+      image: gradient, // Add image path
     },
     // Add other jobs
   ];
@@ -66,7 +74,7 @@ const Home = () => {
     if (savedJobs.some((savedJob) => savedJob.jobTitle === job.jobTitle)) {
       removeJob(job);
     } else {
-      saveJob({ ...job, isApplied: false });
+      saveJob({ ...job, isApplied: false }); // Save the job without applying status
     }
   };
 
@@ -76,7 +84,8 @@ const Home = () => {
         <ApplyCards job={selectedJob} onBack={handleBack} />
       ) : (
         <>
-          <div className="relative w-full max-w-[1132px] h-[300px] mx-auto">
+          {/* Header Section */}
+          <div className="relative w-1132px h-250px">
             <img
               src={Homeimage}
               alt="Finding Your Dream Job"
@@ -85,10 +94,8 @@ const Home = () => {
           </div>
 
           <section className="py-10 px-6">
-            <h2 className="text-3xl font-bold mb-2 text-center md:text-left">
-              Find your next role
-            </h2>
-            <p className="text-gray-600 mb-6 text-center md:text-left">
+            <h2 className="text-3xl font-bold mb-2">Find your next role</h2>
+            <p className="text-gray-600 mb-6">
               Recommendations based on your profile
             </p>
 
@@ -96,7 +103,7 @@ const Home = () => {
               {jobData.map((job, index) => (
                 <div
                   key={index}
-                  className="relative border rounded-lg p-6 shadow-sm bg-white"
+                  className="relative border rounded-lg p-6 shadow-sm"
                 >
                   <div className="absolute top-2 right-2">
                     <button
@@ -117,8 +124,8 @@ const Home = () => {
                   </div>
                   <div className="flex items-center mb-4">
                     <img
-                      src="/path-to-company-logo.png"
-                      alt="Company Logo"
+                      src={job.image}
+                      alt={`${job.company} logo`}
                       className="w-12 h-12 rounded-full mr-4"
                     />
                     <div>
