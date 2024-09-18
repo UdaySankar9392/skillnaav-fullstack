@@ -2,20 +2,23 @@ import React, { useState, useRef, useEffect } from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faUser, faSignOutAlt } from "@fortawesome/free-solid-svg-icons";
 import { useTabContext } from "./UserHomePageContext/HomePageContext";
+import { useNavigate } from "react-router-dom";
 
 const Navbar = () => {
   const { fine } = useTabContext();
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const dropdownRef = useRef(null);
-
+  const navigate = useNavigate();
+  
   const handleUserClick = () => {
     setIsDropdownOpen(!isDropdownOpen);
   };
 
   const handleLogout = () => {
-    // Add your logout functionality here
-    console.log("Logged out");
-    setIsDropdownOpen(false); // Close the dropdown on logout
+    // Clear user information from localStorage
+    localStorage.removeItem("userInfo");
+    // Redirect to login page
+    navigate("/user/login");
   };
 
   // Handle clicks outside of the dropdown
