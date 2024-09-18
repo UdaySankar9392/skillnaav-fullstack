@@ -89,7 +89,7 @@ const Navbar = () => {
           ))}
           <a href="#contacts" onClick={toggleMenu}>
             <div className="font-medium text-white bg-[#451E5D] hover:bg-[#2c3b4e] px-6 py-3 rounded-md transition duration-300 text-2xl">
-              Request A Call Back
+              Requ
             </div>
           </a>
         </div>
