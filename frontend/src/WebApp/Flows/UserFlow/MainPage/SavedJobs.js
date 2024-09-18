@@ -12,7 +12,7 @@ const SavedJobs = () => {
   const { savedJobs, removeJob } = useTabContext();
 
   return (
-    <div className="p-6">
+    <div className="p-6 font-poppins">
       <h2 className="text-2xl font-bold mb-4">Saved Jobs</h2>
       {savedJobs.length === 0 ? (
         <p className="text-gray-600">You have no saved jobs.</p>
