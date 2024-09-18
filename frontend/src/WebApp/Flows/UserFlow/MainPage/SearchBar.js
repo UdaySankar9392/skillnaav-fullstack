@@ -89,7 +89,15 @@ const SearchBar = () => {
   return (
     <Box sx={{ padding: 2, fontFamily: "Poppins, sans-serif" }}>
       {/* Search Bar */}
-      <Box sx={{ display: "flex", alignItems: "center", mb: 2 }}>
+      <Box
+        sx={{
+          display: "flex",
+          border: "none",
+          boxShadow: "none",
+          alignItems: "center",
+          mb: 2,
+        }}
+      >
         <TextField
           fullWidth
           placeholder="Search for internships and jobs"
@@ -114,7 +122,7 @@ const SearchBar = () => {
               backgroundColor: "white",
               border: "none",
               boxShadow: "none",
-              borderRadius: "4px",
+              //    borderRadius: "4px",
             },
             "& .MuiInputBase-input": {
               padding: "10px 14px",

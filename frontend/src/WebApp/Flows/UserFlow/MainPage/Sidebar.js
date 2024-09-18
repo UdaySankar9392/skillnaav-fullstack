@@ -4,7 +4,6 @@ import {
   faHome,
   faPlane,
   faSearch,
-  faEnvelopeOpen,
   faFileAlt,
   faHeart,
   faUser,
@@ -13,14 +12,23 @@ import {
 } from "@fortawesome/free-solid-svg-icons";
 import logo from "../../../../assets-webapp/Skillnaav-logo.png"; // Replace with your actual logo path
 import { useTabContext } from "./UserHomePageContext/HomePageContext"; // Adjust path as needed
+import { useNavigate } from "react-router-dom"; // Import useNavigate
 
 const Sidebar = () => {
   const [selectedTab, setSelectedTab] = useState("home");
   const { handleSelectTab } = useTabContext();
+  const navigate = useNavigate(); // Initialize navigate hook
 
   const handleTabClick = (tab) => {
-    setSelectedTab(tab);
-    handleSelectTab(tab);
+    if (tab === "logout") {
+      // Clear user information from localStorage
+      localStorage.removeItem("userInfo");
+      // Redirect to login page
+      navigate("/user/login");
+    } else {
+      setSelectedTab(tab);
+      handleSelectTab(tab);
+    }
   };
 
   return (
@@ -45,7 +53,6 @@ const Sidebar = () => {
               label: "Aeronautical jobs",
             },
             { id: "searchbar", icon: faSearch, label: "Search" },
-            { id: "messages", icon: faEnvelopeOpen, label: "Messages" },
             { id: "applications", icon: faFileAlt, label: "Applications" },
             { id: "saved-jobs", icon: faHeart, label: "Saved jobs" },
             { id: "profile", icon: faUser, label: "Profile" },

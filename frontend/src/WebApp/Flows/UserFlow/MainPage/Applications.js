@@ -12,8 +12,8 @@ const Applications = () => {
   const { applications } = useTabContext();
 
   return (
-    <div className="p-4">
-      <h2 className="text-xl font-semibold mb-4">Your Applications</h2>
+    <div className="p-4 font-poppins">
+      <h2 className="text-xl  font-semibold mb-4">Your Applications</h2>
       {applications.length === 0 ? (
         <p>No applications yet.</p>
       ) : (
