@@ -45,7 +45,7 @@ const Sidebar = () => {
               label: "Aeronautical jobs",
             },
             { id: "searchbar", icon: faSearch, label: "Search" },
-            { id: "messages", icon: faEnvelopeOpen, label: "Messages" },
+            // { id: "messages", icon: faEnvelopeOpen, label: "Messages" },
             { id: "applications", icon: faFileAlt, label: "Applications" },
             { id: "saved-jobs", icon: faHeart, label: "Saved jobs" },
             { id: "profile", icon: faUser, label: "Profile" },
