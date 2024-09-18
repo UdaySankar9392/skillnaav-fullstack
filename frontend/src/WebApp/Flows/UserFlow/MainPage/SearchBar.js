@@ -1,93 +1,173 @@
-import React, { useState } from 'react';
-import { FaSearch, FaFilter, FaTimes } from 'react-icons/fa';
-import FilterModal from './Filter'; // Updated path
-import Card from './Card';
+import React, { useState } from "react";
+import {
+  TextField,
+  IconButton,
+  InputAdornment,
+  Button,
+  Chip,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  Box,
+} from "@mui/material";
+import SearchIcon from "@mui/icons-material/Search";
+import FilterListIcon from "@mui/icons-material/FilterList";
+import ClearIcon from "@mui/icons-material/Clear";
+import Card from "./Card";
+
+const FilterDialog = ({ open, onClose, onApply }) => {
+  const [filters, setFilters] = useState([]);
+
+  const handleApply = () => {
+    onApply(filters);
+    onClose();
+  };
+
+  const handleChange = (event) => {
+    setFilters(event.target.value.split(",").map((filter) => filter.trim()));
+  };
+
+  return (
+    <Dialog open={open} onClose={onClose}>
+      <DialogTitle>Apply Filters</DialogTitle>
+      <DialogContent>
+        <TextField
+          autoFocus
+          margin="dense"
+          label="Filters (comma separated)"
+          type="text"
+          fullWidth
+          variant="standard"
+          onChange={handleChange}
+        />
+      </DialogContent>
+      <DialogActions>
+        <Button onClick={onClose} color="primary">
+          Cancel
+        </Button>
+        <Button onClick={handleApply} color="primary">
+          Apply
+        </Button>
+      </DialogActions>
+    </Dialog>
+  );
+};
 
 const SearchBar = () => {
-  const [searchTerm, setSearchTerm] = useState('');
+  const [searchTerm, setSearchTerm] = useState("");
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [appliedFilters, setAppliedFilters] = useState([]);
 
-  const handleSearch = (e) => {
-    setSearchTerm(e.target.value);
+  const handleSearch = (event) => {
+    setSearchTerm(event.target.value);
   };
 
   const clearSearch = () => {
-    setSearchTerm('');
+    setSearchTerm("");
   };
 
   const handleFilterClick = () => {
     setIsFilterOpen(true);
   };
 
-  const closeFilterModal = () => {
+  const closeFilterDialog = () => {
     setIsFilterOpen(false);
   };
 
   const applyFilters = (filters) => {
     setAppliedFilters(filters);
-    setIsFilterOpen(false);
+    closeFilterDialog();
   };
 
   const removeFilter = (filterIndex) => {
-    setAppliedFilters(appliedFilters.filter((_, index) => index !== filterIndex));
+    setAppliedFilters(
+      appliedFilters.filter((_, index) => index !== filterIndex)
+    );
   };
 
   return (
-    <div className="relative font-poppins">
-      <div className="w-full mb-4">
-        <div className="flex items-center bg-white shadow rounded-lg overflow-hidden w-full">
-          <div className="flex items-center px-4 border-r border-gray-300">
-            <FaSearch className="w-5 h-5 text-gray-600" />
-          </div>
-          <input
-            type="text"
-            placeholder="Search for internships and jobs"
-            value={searchTerm}
-            onChange={handleSearch}
-            className="w-full px-4 py-3 text-gray-700 focus:outline-none"
-          />
-          {searchTerm && (
-            <button onClick={clearSearch} className="px-4 text-gray-600">
-              <FaTimes className="w-5 h-5" />
-            </button>
-          )}
-          <button
-            onClick={handleFilterClick}
-            className="flex items-center justify-center px-4 border-l border-gray-300"
-          >
-            <FaFilter className="w-6 h-6 text-gray-600" />
-            <span className="ml-2 text-gray-600">Filter</span>
-          </button>
-        </div>
-      </div>
-
-      <div className="flex flex-wrap items-center space-x-2 mb-4">
-        {appliedFilters.map((filter, index) => (
-          <div
-            key={index}
-            className="flex items-center bg-gray-200 text-gray-700 px-3 py-1 rounded-full"
-          >
-            <span className="mr-2">{filter}</span>
-            <button onClick={() => removeFilter(index)} className="text-gray-600">
-              <FaTimes />
-            </button>
-          </div>
-        ))}
-      </div>
-
-      <div className="w-full">
-        <Card searchTerm={searchTerm} />
-      </div>
-
-      {isFilterOpen && (
-        <FilterModal
-          isOpen={isFilterOpen}
-          onClose={closeFilterModal}
-          onApply={applyFilters} // Pass applyFilters to the modal
+    <Box sx={{ padding: 2, fontFamily: "Poppins, sans-serif" }}>
+      {/* Search Bar */}
+      <Box sx={{ display: "flex", alignItems: "center", mb: 2 }}>
+        <TextField
+          fullWidth
+          placeholder="Search for internships and jobs"
+          value={searchTerm}
+          onChange={handleSearch}
+          InputProps={{
+            startAdornment: (
+              <InputAdornment position="start">
+                <SearchIcon />
+              </InputAdornment>
+            ),
+            endAdornment: searchTerm && (
+              <InputAdornment position="end">
+                <IconButton onClick={clearSearch}>
+                  <ClearIcon />
+                </IconButton>
+              </InputAdornment>
+            ),
+          }}
+          sx={{
+            "& .MuiInputBase-root": {
+              backgroundColor: "white",
+              border: "none",
+              boxShadow: "none",
+              borderRadius: "4px",
+            },
+            "& .MuiInputBase-input": {
+              padding: "10px 14px",
+            },
+            "& .MuiInputBase-root:hover": {
+              border: "none",
+              boxShadow: "none",
+            },
+            "& .MuiInputBase-root.Mui-focused": {
+              border: "none",
+              boxShadow: "none",
+            },
+          }}
         />
+        <Button
+          variant="contained"
+          color="primary"
+          onClick={handleFilterClick}
+          startIcon={<FilterListIcon />}
+          sx={{ ml: 2 }}
+        >
+          Filter
+        </Button>
+      </Box>
+
+      {/* Applied Filters */}
+      {appliedFilters.length > 0 && (
+        <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1, mb: 2 }}>
+          {appliedFilters.map((filter, index) => (
+            <Chip
+              key={index}
+              label={filter}
+              onDelete={() => removeFilter(index)}
+              color="primary"
+              variant="outlined"
+              sx={{ mb: 1 }}
+            />
+          ))}
+        </Box>
       )}
-    </div>
+
+      {/* Cards */}
+      <Box>
+        <Card searchTerm={searchTerm} />
+      </Box>
+
+      {/* Filter Dialog */}
+      <FilterDialog
+        open={isFilterOpen}
+        onClose={closeFilterDialog}
+        onApply={applyFilters}
+      />
+    </Box>
   );
 };
 

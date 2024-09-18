@@ -1,5 +1,4 @@
 import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faHome,
@@ -25,12 +24,14 @@ const Sidebar = () => {
   };
 
   return (
-    <div className="w-64 h-screen bg-white flex flex-col justify-between pl-6 font-poppins shadow-lg sticky top-0 overflow-y-auto scrollbar-hide">
+    <div className="w-64 h-screen bg-white flex flex-col justify-between pl-6 pr-6 font-poppins shadow-lg sticky top-0 overflow-y-auto scrollbar-hide">
       {/* Logo Section with sticky position */}
-      <div className="sticky top-0 z-10 bg-white py-4">
-        <div className="flex items-center mb-4">
-          <img src={logo} alt="Skillnaav Logo" className="w-auto h-12" />
-        </div>
+      <div className="sticky top-0 z-10 bg-white py-4 flex items-center justify-center">
+        <img
+          src={logo}
+          alt="Skillnaav Logo"
+          className="h-16 object-contain" // Adjust height and ensure the image maintains aspect ratio
+        />
       </div>
 
       {/* Navigation Links */}
