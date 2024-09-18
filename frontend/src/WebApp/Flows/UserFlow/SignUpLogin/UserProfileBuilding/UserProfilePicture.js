@@ -230,7 +230,7 @@ const UserProfilePicture = ({ onSubmit }) => {
           </div>
         </div>
 
-        <div className="flex justify-between">
+        {/* <div className="flex justify-between">
           <button
             type="button"
             onClick={handleSkip}
@@ -249,6 +249,27 @@ const UserProfilePicture = ({ onSubmit }) => {
             }`}
           >
             Submit
+          </button>
+        </div> */}
+        <div className="flex justify-between mt-6">
+          <button
+            type="button"
+            onClick={handleSkip}
+            className="w-1/2 py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-gray-500 hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-400"
+          >
+            Skip
+          </button>
+          <button
+            type="button"
+            onClick={handleSubmit}
+            disabled={!isFormValid()}
+            className={`w-1/2 py-2 ml-4 ${
+              isFormValid()
+                ? "bg-purple-600 hover:bg-purple-700"
+                : "bg-gray-300"
+            } text-white rounded-md transition duration-200`}
+          >
+            Continue
           </button>
         </div>
       </div>
