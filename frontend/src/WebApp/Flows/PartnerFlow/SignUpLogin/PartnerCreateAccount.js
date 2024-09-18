@@ -233,6 +233,7 @@ const PartnerCreateAccount = () => {
               className="text-teal-500 hover:underline font-semibold"
             >
               Login
+              
             </Link>
           </p>
         </div>
