@@ -18,6 +18,12 @@ jobs:
         with:
           ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
 
+      - name: Add remote server to known hosts
+        run: |
+          mkdir -p ~/.ssh
+          ssh-keyscan -H test.skillnaav.com >> ~/.ssh/known_hosts
+          cat ~/.ssh/known_hosts  # Optional: Check that the key was added
+
       - name: Deploy to server
         run: |
           # SSH into the server and run the deploy.sh script from the server itself
