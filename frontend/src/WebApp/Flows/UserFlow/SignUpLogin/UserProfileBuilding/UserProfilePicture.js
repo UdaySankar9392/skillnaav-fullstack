@@ -10,36 +10,52 @@ const UserProfilePicture = ({ onSubmit }) => {
     linkedin: "",
     portfolio: "",
   });
-  const [preview, setPreview] = useState(null);
-  const navigate = useNavigate(); // Use it here
+  const [profilePreview, setProfilePreview] = useState(null);
+  const [resumePreview, setResumePreview] = useState(null);
+  const navigate = useNavigate();
 
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData({ ...formData, [name]: value });
   };
 
-  const handleFileChange = (e) => {
-    const { name, files } = e.target;
-    setFormData({ ...formData, [name]: files[0] });
-    if (files[0]) {
+  const handleProfilePictureChange = (e) => {
+    const file = e.target.files[0];
+    setFormData({ ...formData, profilePicture: file });
+    if (file) {
       const reader = new FileReader();
       reader.onloadend = () => {
-        setPreview(reader.result);
+        setProfilePreview(reader.result);
       };
-      reader.readAsDataURL(files[0]);
+      reader.readAsDataURL(file);
     }
   };
 
-  const handleDeleteFile = (fieldName) => {
-    setFormData({ ...formData, [fieldName]: null });
-    setPreview(null);
+  const handleResumeChange = (e) => {
+    const file = e.target.files[0];
+    setFormData({ ...formData, resume: file });
+    setResumePreview(file ? file.name : null); // No preview for file, just file name
+  };
+
+  const handleDeleteProfilePicture = () => {
+    setFormData({ ...formData, profilePicture: null });
+    setProfilePreview(null);
+  };
+
+  const handleDeleteResume = () => {
+    setFormData({ ...formData, resume: null });
+    setResumePreview(null);
   };
 
   const handleSubmit = () => {
     if (isFormValid()) {
-      // onSubmit();
-      navigate("/user-main-page"); // Navigate to the homepage after form submission
+      // Submit form logic here
+      navigate("/user-main-page"); // Navigate after form submission
     }
+  };
+
+  const handleSkip = () => {
+    navigate("/user-main-page"); // Navigate directly when "Skip" is clicked
   };
 
   const isFormValid = () => {
@@ -47,18 +63,6 @@ const UserProfilePicture = ({ onSubmit }) => {
       formData;
     return fieldOfStudy && profilePicture && resume && linkedin && portfolio;
   };
-
-  useEffect(() => {
-    if (formData.profilePicture) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setPreview(reader.result);
-      };
-      reader.readAsDataURL(formData.profilePicture);
-    } else {
-      setPreview(null);
-    }
-  }, [formData.profilePicture]);
 
   const buttonDisabled = !isFormValid();
 
@@ -82,21 +86,23 @@ const UserProfilePicture = ({ onSubmit }) => {
               className="mt-1 block w-full px-3 py-2 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-purple-500 focus:border-purple-500"
             >
               <option value="">Select Your Field</option>
-              <option value="CSE">CSE</option>
-              <option value="ECE">ECE</option>
-              <option value="MECH">MECH</option>
-              <option value="CIVIL">CIVIL</option>
-              <option value="IT">IT</option>
-              <option value="EEE">EEE</option>
+              <option value="space">Space Internships</option>
+              <option value="aero">Aeronautical Internships</option>
+              <option value="tech">Tech Internships</option>
+              <option value="research">Research Internships</option>
+              <option value="education">Education Internships</option>
             </select>
           </div>
         </div>
+
         <div className="space-y-4">
           <div className="w-full h-12 p-3 bg-purple-100 border-b border-purple-300">
             <h2 className="text-lg font-bold text-gray-700">
               LINKS AND DOCUMENTS
             </h2>
           </div>
+
+          {/* Profile Picture Upload */}
           <div className="flex flex-col items-center space-y-2">
             <label className="block text-sm font-medium text-gray-700">
               Profile Picture
@@ -105,23 +111,37 @@ const UserProfilePicture = ({ onSubmit }) => {
               <input
                 type="file"
                 name="profilePicture"
-                onChange={handleFileChange}
+                onChange={handleProfilePictureChange}
                 id="profilePictureInput"
                 className="hidden"
               />
-              {preview ? (
+              {profilePreview ? (
                 <div className="relative">
                   <img
-                    src={preview}
+                    src={profilePreview}
                     alt="Profile Preview"
                     className="w-16 h-16 object-cover rounded-full"
                   />
                   <button
                     type="button"
-                    onClick={() => handleDeleteFile("profilePicture")}
-                    className="absolute top-0 right-0 px-2 py-1 text-xs text-white bg-red-600 rounded-md hover:bg-red-700"
+                    onClick={handleDeleteProfilePicture}
+                    className="absolute top-0 right-0 bg-gray-800 bg-opacity-70 text-white rounded-full p-1 hover:bg-red-600 transition duration-200"
+                    title="Delete Picture"
                   >
-                    Delete
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      strokeWidth={2}
+                      stroke="currentColor"
+                      className="w-4 h-4"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        d="M6 18L18 6M6 6l12 12"
+                      />
+                    </svg>
                   </button>
                 </div>
               ) : (
@@ -138,6 +158,8 @@ const UserProfilePicture = ({ onSubmit }) => {
               )}
             </div>
           </div>
+
+          {/* Resume Upload */}
           <div className="flex flex-col items-center space-y-2">
             <label className="block text-sm font-medium text-gray-700">
               Resume or CV
@@ -146,18 +168,18 @@ const UserProfilePicture = ({ onSubmit }) => {
               <input
                 type="file"
                 name="resume"
-                onChange={handleFileChange}
+                onChange={handleResumeChange}
                 id="resumeInput"
                 className="hidden"
               />
-              {formData.resume ? (
+              {resumePreview ? (
                 <div className="relative">
                   <span className="block w-16 h-16 text-center leading-16">
-                    {formData.resume.name}
+                    {resumePreview}
                   </span>
                   <button
                     type="button"
-                    onClick={() => handleDeleteFile("resume")}
+                    onClick={handleDeleteResume}
                     className="absolute top-0 right-0 px-2 py-1 text-xs text-white bg-red-600 rounded-md hover:bg-red-700"
                   >
                     Delete
@@ -178,6 +200,7 @@ const UserProfilePicture = ({ onSubmit }) => {
             </div>
             <span className="text-xs text-gray-500">PDF (max. 10MB)</span>
           </div>
+
           <div className="space-y-2">
             <label className="block text-sm font-medium text-gray-700">
               LinkedIn Profile
@@ -191,6 +214,7 @@ const UserProfilePicture = ({ onSubmit }) => {
               placeholder="Enter LinkedIn URL"
             />
           </div>
+
           <div className="space-y-2">
             <label className="block text-sm font-medium text-gray-700">
               Portfolio Website
@@ -205,18 +229,47 @@ const UserProfilePicture = ({ onSubmit }) => {
             />
           </div>
         </div>
-        <div>
+
+        {/* <div className="flex justify-between">
+          <button
+            type="button"
+            onClick={handleSkip}
+            className="py-2 px-4 border border-purple-600 rounded-md shadow-sm text-sm font-medium text-purple-600 hover:bg-purple-100"
+          >
+            Skip
+          </button>
           <button
             type="button"
             onClick={handleSubmit}
-            className={`w-full py-2 px-4 border rounded-md shadow-sm text-sm font-medium ${
-              buttonDisabled
-                ? "bg-[#E9D7FE] text-[#B4A0D1]"
-                : "bg-purple-600 text-white hover:bg-purple-700"
-            }`}
             disabled={buttonDisabled}
+            className={`py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white ${
+              buttonDisabled
+                ? "bg-gray-300 cursor-not-allowed"
+                : "bg-purple-600 hover:bg-purple-700"
+            }`}
           >
             Submit
+          </button>
+        </div> */}
+        <div className="flex justify-between mt-6">
+          <button
+            type="button"
+            onClick={handleSkip}
+            className="w-1/2 py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-gray-500 hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-400"
+          >
+            Skip
+          </button>
+          <button
+            type="button"
+            onClick={handleSubmit}
+            disabled={!isFormValid()}
+            className={`w-1/2 py-2 ml-4 ${
+              isFormValid()
+                ? "bg-purple-600 hover:bg-purple-700"
+                : "bg-gray-300"
+            } text-white rounded-md transition duration-200`}
+          >
+            Continue
           </button>
         </div>
       </div>
