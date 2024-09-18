@@ -48,7 +48,7 @@ const Navbar = () => {
             href="#contacts"
             className="hidden lg:block font-medium text-white bg-[#451E5D] hover:bg-[#2c3b4e] px-4 py-2 rounded-md transition duration-300"
           >
-            Request Back
+            Request A Back
           </a>
           <div className="lg:hidden" onClick={toggleMenu}>
             <img
