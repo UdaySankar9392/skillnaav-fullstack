@@ -44,39 +44,33 @@ const Sidebar = () => {
       id: "logout",
       icon: faSignOutAlt,
       label: "Logout",
-      customTextColor: "text-red-600",
-      hoverBg: "hover:bg-red-100",
+      customTextColor: "text-teal-500",
+      hoverBg: "hover:bg-teal-100",
     },
   ];
 
   // Reusable Sidebar Button Component
   const SidebarButton = ({ item }) => {
     const isSelected = selectedTab === item.id;
-    const selectedColor = "bg-[#F0DEFD] text-[#7520A9]";
-    const defaultColor =
-      item.customTextColor || "text-gray-600 hover:bg-gray-100";
+    const selectedColor = "bg-teal-100 text-teal-500";
+    const defaultColor = "text-gray-700 hover:bg-gray-100"; // Dark gray text by default
 
     return (
       <button
         onClick={() => handleTabClick(item.id)}
-        className={`flex items-center p-3 rounded-lg w-52 text-left font-semibold ${
-          // Changed font-medium to font-semibold
+        className={`flex items-center p-3 rounded-lg w-full text-left font-semibold ${
           isSelected ? selectedColor : defaultColor
-        }`}
+        } ${item.hoverBg || "hover:bg-gray-100"}`}
       >
         <FontAwesomeIcon
           icon={item.icon}
           className={`w-5 h-5 mr-3 ${
-            isSelected
-              ? "text-[#7520A9]"
-              : item.customTextColor || "text-gray-600"
+            isSelected ? "text-teal-500" : "text-[475467]" // Dark gray icon by default
           }`}
         />
         <span
           className={`${
-            isSelected
-              ? "text-[#7520A9]"
-              : item.customTextColor || "text-gray-600"
+            isSelected ? "text-teal-500" : "text-[475467]" // Dark gray text by default
           }`}
         >
           {item.label}
@@ -118,14 +112,14 @@ const Sidebar = () => {
         </ul>
 
         {/* Upgrade Section */}
-        <div className="mt-6 p-4 bg-purple-100 rounded-lg">
-          <h3 className="text-purple-700 text-sm font-semibold">
+        <div className="mt-6 p-4 bg-teal-100 rounded-lg">
+          <h3 className="text-teal-700 text-sm font-semibold">
             UPGRADE TO PREMIUM
           </h3>
-          <p className="text-xs text-gray-600 mt-1">
+          <p className="text-xs text-teal-600 mt-1">
             Your team has used 80% of your available space. Need more?
           </p>
-          <button className="mt-4 w-full bg-purple-700 text-white py-2 px-4 rounded-lg">
+          <button className="mt-4 w-full bg-teal-700 text-white py-2 px-4 rounded-lg">
             Upgrade Plan
           </button>
         </div>
