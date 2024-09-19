@@ -106,7 +106,7 @@ const TryforFree = () => {
             boxShadow: "0 4px 8px rgba(0, 0, 0, 0.2)",
             outline: "none",
           }}
-          onClick={() => handleOptionClick("/admin-account")}
+          onClick={() => handleOptionClick("/admin/login")}
           onMouseDown={(e) => (e.currentTarget.style.transform = "scale(0.98)")}
           onMouseUp={(e) => (e.currentTarget.style.transform = "scale(1)")}
         >
