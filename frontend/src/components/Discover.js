@@ -17,7 +17,7 @@ const Discover = () => {
   const navigate = useNavigate();
 
   const handleButtonClick = () => {
-    navigate("/user");
+    navigate("/choose-role");
   };
   if (
     !skillnaavData ||

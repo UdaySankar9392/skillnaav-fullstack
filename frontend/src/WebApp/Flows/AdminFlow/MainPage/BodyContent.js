@@ -9,9 +9,10 @@ import SavedJobs from "./SavedJobs";
 import Applications from "./Applications";
 import Support from "./Support";
 import Profile from "./Profile"; // Import the Profile component
-
+import YourJobPosts from "./YourJobPosts";
+import PostAJob from "./PostAJob";
 const BodyContent = () => {
-  const { selectedTab, fine, handleSelectTab } = useTabContext();
+  const { selectedTab, handleSelectTab } = useTabContext();
   console.log("Selected Tab:", selectedTab);
 
   let content;
@@ -23,11 +24,17 @@ const BodyContent = () => {
     case "aeronautical-jobs":
       content = <AeronauticalJobs />;
       break;
+    case "your-job-posts":
+      content = <YourJobPosts />;
+      break;
+    case "post-a-job":
+      content = <PostAJob />;
+      break;
     case "searchbar":
       content = <SearchBar />;
       break;
     case "messages":
-      content = <Message />; // Assuming Notifications is for messages
+      content = <Message />; // Assuming Messages is for notifications
       break;
     case "applications":
       content = <Applications />;
@@ -48,15 +55,10 @@ const BodyContent = () => {
       content = <Filter />; // Render the Filter component
       break;
     default:
-      content = <div>Select a tab {fine}</div>;
+      content = <div>Select a tab</div>;
   }
 
-  return (
-    <div className="flex-1 p-4">
-      {content}
-      <button onClick={() => handleSelectTab("searchbar")}></button>
-    </div>
-  );
+  return <div className="flex-1 p-4">{content}</div>;
 };
 
 export default BodyContent;

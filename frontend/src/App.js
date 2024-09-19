@@ -28,6 +28,7 @@ import AdminLogin from "./WebApp/Flows/AdminFlow/SignUpLogin/AdminLogin";
 import AdminProfileForm from "./WebApp/Flows/AdminFlow/SignUpLogin/AdminProfileBuilding/AdminProfileForm";
 import AdminProfilePicture from "./WebApp/Flows/AdminFlow/SignUpLogin/AdminProfileBuilding/AdminProfilePicture";
 import AdminMainPage from "./WebApp/Flows/AdminFlow/MainPage/AdminMainPage";
+import TryforFree from "./WebApp/TryforFree";
 
 function App() {
   const { skillnaavData, reloadData } = useSelector((state) => state.root);
@@ -83,7 +84,7 @@ function App() {
         <Route path="/partner-main-page" element={<PartnerMainPage />} />
 
         {/* Admin Flow */}
-        <Route path="/admin" element={<AdminFlow />} />
+        <Route path="/admin-account" element={<AdminFlow />} />
         <Route path="/admin-create-account" element={<AdminCreateAccount />} />
         <Route path="/admin/login" element={<AdminLogin />} />
         <Route path="/admin-profile-form" element={<AdminProfileForm />} />
@@ -92,6 +93,9 @@ function App() {
           element={<AdminProfilePicture />}
         />
         <Route path="/admin-main-page" element={<AdminMainPage />} />
+
+        {/* Try for free */}
+        <Route path="/choose-role" element={<TryforFree />} />
       </Routes>
     </BrowserRouter>
   );
