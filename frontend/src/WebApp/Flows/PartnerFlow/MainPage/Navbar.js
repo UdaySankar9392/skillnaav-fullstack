@@ -1,18 +1,26 @@
 import React, { useState, useRef, useEffect } from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faUser, faSignOutAlt } from "@fortawesome/free-solid-svg-icons";
+import { useNavigate } from "react-router-dom"; // Import useNavigate
 
 const Navbar = () => {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const dropdownRef = useRef(null);
+  const navigate = useNavigate(); // Initialize navigate hook
 
   const handleUserClick = () => {
     setIsDropdownOpen((prev) => !prev);
   };
 
   const handleLogout = () => {
-    // Add your logout functionality here
+    // Remove user info from local storage
+    localStorage.removeItem("userInfo");
+
+    // Add additional logout functionality if needed
     console.log("Logged out");
+
+    // Redirect the user to the login page
+    navigate("/partner/login"); // Use navigate hook to redirect
   };
 
   const handleClickOutside = (event) => {

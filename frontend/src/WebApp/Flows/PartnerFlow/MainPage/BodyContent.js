@@ -8,19 +8,21 @@ import Filter from "./Filter";
 import SavedJobs from "./SavedJobs";
 import Applications from "./Applications";
 import Profile from "./Profile";
-import Support from "./Support"; // Import the Support component
+import Support from "./Support";
+import YourJobPosts from "./YourJobPosts";
+import PostAJob from "./PostAJob";
 
 const BodyContent = () => {
-  const { selectedTab, handleSelectTab } = useTabContext();
+  const { selectedTab } = useTabContext();
 
   let content;
 
   switch (selectedTab) {
     case "your-job-posts":
-      content = <AeronauticalJobs />;
+      content = <YourJobPosts />;
       break;
     case "post-a-job":
-      content = <SearchBar />;
+      content = <PostAJob />;
       break;
     case "messages":
       content = <Message />;
