@@ -201,7 +201,7 @@ const PartnerCreateAccount = () => {
             <hr className="w-full border-t border-gray-300" />
           </div>
 
-          <button className="w-full bg-white text-gray-800 p-3 rounded-lg border border-gray-300 hover:bg-gray-100 mb-4 flex items-center justify-center">
+          {/* <button className="w-full bg-white text-gray-800 p-3 rounded-lg border border-gray-300 hover:bg-gray-100 mb-4 flex items-center justify-center">
             <span className="mr-2">
               <img src={googleIcon} alt="Google" className="h-5 w-5" />
             </span>
@@ -224,7 +224,7 @@ const PartnerCreateAccount = () => {
             <span className="font-poppins font-semibold text-base leading-6">
               Sign Up with Apple
             </span>
-          </button>
+          </button> */}
 
           <p className="text-center text-gray-500 font-poppins font-medium text-base leading-6">
             Already have an account?{" "}
@@ -233,7 +233,7 @@ const PartnerCreateAccount = () => {
               className="text-teal-500 hover:underline font-semibold"
             >
               Login
-              
+
             </Link>
           </p>
         </div>
