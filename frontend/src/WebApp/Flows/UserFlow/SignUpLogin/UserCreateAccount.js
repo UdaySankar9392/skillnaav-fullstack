@@ -31,10 +31,7 @@ const UserCreateAccount = () => {
   // Function to handle form submission
   const handleSubmit = async (values, { setSubmitting }) => {
     try {
-      const response = await axios.post(
-        "/api/users/register",
-        values
-      );
+      const response = await axios.post("/api/users/register", values);
       navigate("/user-profile-form");
       localStorage.setItem("userInfo", JSON.stringify(response.data));
     } catch (error) {
@@ -138,30 +135,6 @@ const UserCreateAccount = () => {
                   />
                 </div>
 
-                {/* <div className="mb-4 relative">
-                  <Field
-                    type={showConfirmPassword ? "text" : "password"}
-                    name="confirmPassword"
-                    placeholder="Confirm Password"
-                    className="w-full p-3 border border-gray-300 rounded-lg"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                    className="absolute right-3 top-1/2 transform -translate-y-1/2"
-                  >
-                    {showConfirmPassword ? (
-                      <EyeSlashIcon className="h-5 w-5 mt-4 text-gray-500" />
-                    ) : (
-                      <EyeIcon className="h-5 w-5 mt-2 text-gray-500" />
-                    )}
-                  </button>
-                  <ErrorMessage
-                    name="confirmPassword"
-                    component="div"
-                    className="text-red-500 text-sm"
-                  />
-                </div> */}
                 <div className="mb-4 relative">
                   <Field
                     type={showConfirmPassword ? "text" : "password"}
@@ -205,7 +178,7 @@ const UserCreateAccount = () => {
             <hr className="w-full border-t border-gray-300" />
           </div>
 
-          <button className="w-full bg-white text-gray-800 p-3 rounded-lg border border-gray-300 hover:bg-gray-100 mb-4 flex items-center justify-center">
+          {/* <button className="w-full bg-white text-gray-800 p-3 rounded-lg border border-gray-300 hover:bg-gray-100 mb-4 flex items-center justify-center">
             <span className="mr-2">
               <img src={googleIcon} alt="Google" className="h-5 w-5" />
             </span>
@@ -228,7 +201,7 @@ const UserCreateAccount = () => {
             <span className="font-poppins font-semibold text-base leading-6">
               Sign Up with Apple
             </span>
-          </button>
+          </button> */}
 
           <p className="text-center text-gray-500 font-poppins font-medium text-base leading-6">
             Already have an account?{" "}
