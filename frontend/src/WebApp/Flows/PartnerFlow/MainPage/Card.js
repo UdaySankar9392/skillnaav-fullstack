@@ -14,7 +14,7 @@ const JobCard = ({ searchTerm }) => {
     },
     {
         jobTitle: 'Data Science Intern',
-        company: 'Harber Inc',
+        compan  : 'Harber Inc',
         location: '439 Metz Field, Canada',
         type: 'Remote',
         duration: 'Internship • 3 months',

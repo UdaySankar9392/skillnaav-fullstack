@@ -1,9 +1,10 @@
-import React, { createContext, useState, useContext } from 'react';
+import React, { createContext, useState, useContext } from "react";
 
 const UserHomePageContext = createContext();
 
 export const TabProvider = ({ children }) => {
-  const [selectedTab, setSelectedTab] = useState('home');
+  // Set 'your-job-posts' as the initial selectedTab to render it by default
+  const [selectedTab, setSelectedTab] = useState("your-job-posts");
   const [savedJobs, setSavedJobs] = useState([]);
   const [applications, setApplications] = useState([]);
 
@@ -13,7 +14,9 @@ export const TabProvider = ({ children }) => {
 
   const saveJob = (job) => {
     setSavedJobs((prevJobs) => {
-      const existingJobIndex = prevJobs.findIndex(savedJob => savedJob.jobTitle === job.jobTitle);
+      const existingJobIndex = prevJobs.findIndex(
+        (savedJob) => savedJob.jobTitle === job.jobTitle
+      );
       if (existingJobIndex !== -1) {
         const updatedJobs = [...prevJobs];
         updatedJobs[existingJobIndex] = job;
@@ -24,12 +27,16 @@ export const TabProvider = ({ children }) => {
   };
 
   const removeJob = (job) => {
-    setSavedJobs((prevJobs) => prevJobs.filter((j) => j.jobTitle !== job.jobTitle));
+    setSavedJobs((prevJobs) =>
+      prevJobs.filter((j) => j.jobTitle !== job.jobTitle)
+    );
   };
 
   const applyJob = (job) => {
     setApplications((prevJobs) => {
-      const existingJobIndex = prevJobs.findIndex(appJob => appJob.jobTitle === job.jobTitle);
+      const existingJobIndex = prevJobs.findIndex(
+        (appJob) => appJob.jobTitle === job.jobTitle
+      );
       if (existingJobIndex !== -1) {
         return prevJobs;
       }
@@ -38,7 +45,17 @@ export const TabProvider = ({ children }) => {
   };
 
   return (
-    <UserHomePageContext.Provider value={{ selectedTab, handleSelectTab, savedJobs, saveJob, removeJob, applications, applyJob }}>
+    <UserHomePageContext.Provider
+      value={{
+        selectedTab,
+        handleSelectTab,
+        savedJobs,
+        saveJob,
+        removeJob,
+        applications,
+        applyJob,
+      }}
+    >
       {children}
     </UserHomePageContext.Provider>
   );
