@@ -13,7 +13,7 @@ import { useTabContext } from "./UserHomePageContext/HomePageContext"; // Adjust
 import { useNavigate } from "react-router-dom"; // Import useNavigate
 
 const Sidebar = () => {
-  const [selectedTab, setSelectedTab] = useState("home");
+  const [selectedTab, setSelectedTab] = useState("your-job-posts"); // Set default tab to "your-job-posts"
   const { handleSelectTab } = useTabContext();
   const navigate = useNavigate(); // Initialize navigate hook
 
@@ -59,7 +59,8 @@ const Sidebar = () => {
     return (
       <button
         onClick={() => handleTabClick(item.id)}
-        className={`flex items-center p-3 rounded-lg w-52 text-left font-medium ${
+        className={`flex items-center p-3 rounded-lg w-52 text-left font-semibold ${
+          // Changed font-medium to font-semibold
           isSelected ? selectedColor : defaultColor
         }`}
       >
