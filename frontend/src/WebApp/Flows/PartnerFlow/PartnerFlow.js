@@ -9,6 +9,7 @@ import facebookIcon from "../../../assets-webapp/Facebook-icon.png";
 import appleIcon from "../../../assets-webapp/Apple-icon.png";
 import axios from "axios";
 import { Link } from "react-router-dom";
+import partner2Image from "../../../assets-webapp/partner2_img.jpg";
 
 // Validation schema for Formik
 const validationSchema = Yup.object({
@@ -40,9 +41,9 @@ const PartnerFlow = () => {
     <div className="flex flex-col lg:flex-row min-h-screen font-poppins">
       <div className="hidden md:flex md:w-full lg:w-1/2 items-center justify-center">
         <img
-          src={partnerImage}
+          src={partner2Image}
           alt="Create Account"
-          className="w-full max-w-[830px] h-auto lg:h-[900px] object-cover shadow-lg"
+          className="w-full h-full object-contain max-w-[830px] max-h-[900px] shadow-lg"
         />
       </div>
 
