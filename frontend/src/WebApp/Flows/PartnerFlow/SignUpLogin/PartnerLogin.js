@@ -7,6 +7,7 @@ import Loading from "../../../Warnings/Loading/Loading";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faEye, faEyeSlash } from "@fortawesome/free-solid-svg-icons";
 import partnerImage from "../../../../assets-webapp/partner.jpg";
+import partner2Image from "../../../../assets-webapp/partner2_img.jpg";
 
 const validationSchema = Yup.object({
   email: Yup.string().email("Invalid email address").required("Required"),
@@ -48,17 +49,17 @@ const PartnerLogin = () => {
       {/* Left Section (Colorful Background) */}
       <div className="hidden md:flex md:w-full lg:w-1/2 items-center justify-center">
         <img
-          src={partnerImage}
+          src={partner2Image}
           alt="Create Account"
-          className="w-full max-w-[830px] h-auto lg:h-[900px] object-cover shadow-lg"
+          className="w-full h-full object-contain max-w-[830px] max-h-[900px] shadow-lg"
         />
       </div>
 
       {/* Right Section (Form) */}
-      <div className="flex flex-col items-center justify-center p-8 w-full lg:w-1/2 bg-white shadow-lg rounded-lg">
+      <div className="flex flex-col items-center justify-center p-8 w-full lg:w-1/2 rounded-lg">
         <div className="w-full max-w-md flex flex-col justify-center min-h-screen lg:min-h-full">
-          <h1 className="text-4xl font-extrabold mb-6 text-center text-gray-800">
-            Welcome Back
+          <h1 className="text-2xl font-extrabold mb-6 text-center text-gray-800">
+            Dear Partner, Welcome Back!
           </h1>
           <h2 className="text-lg font-medium mb-6 text-center text-gray-600">
             Please sign in to your account
