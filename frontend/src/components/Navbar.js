@@ -48,7 +48,7 @@ const Navbar = () => {
             href="#contacts"
             className="hidden lg:block font-medium text-white bg-[#451E5D] hover:bg-[#2c3b4e] px-4 py-2 rounded-md transition duration-300"
           >
-            Request Call Back
+            Request Back
           </a>
           <div className="lg:hidden" onClick={toggleMenu}>
             <img
@@ -89,7 +89,8 @@ const Navbar = () => {
           ))}
           <a href="#contacts" onClick={toggleMenu}>
             <div className="font-medium text-white bg-[#451E5D] hover:bg-[#2c3b4e] px-6 py-3 rounded-md transition duration-300 text-2xl">
-              Request A Call Back
+              Request A Call Back 
+               
             </div>
           </a>
         </div>
