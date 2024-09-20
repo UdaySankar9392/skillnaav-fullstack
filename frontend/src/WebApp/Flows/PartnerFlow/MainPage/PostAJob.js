@@ -21,7 +21,9 @@ const PostAJob = () => {
 
   return (
     <div className="max-w-4xl font-poppins mx-auto p-6 bg-white rounded-lg shadow-lg mt-8">
-      <h2 className="text-2xl font-semibold text-gray-800 mb-4">Post a Job</h2>
+      <h2 className="text-2xl font-semibold text-gray-800 mb-4">
+        Post an Internship
+      </h2>
       <form onSubmit={handleSubmit} className="space-y-6">
         <div>
           <label className="block text-gray-700 font-medium mb-2">
