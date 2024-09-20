@@ -21,10 +21,10 @@ jobs:
       - name: Add remote server to known hosts
         run: |
           mkdir -p ~/.ssh
-          ssh-keyscan -H test.skillnaav.com >> ~/.ssh/known_hosts
+          ssh-keyscan -H www.skillnaav.com >> ~/.ssh/known_hosts
           cat ~/.ssh/known_hosts  # Optional: Check that the key was added
 
       - name: Deploy to server
         run: |
           # SSH into the server and run the deploy.sh script from the server itself
-          ssh ubuntu@test.skillnaav.com 'bash /home/ubuntu/skillnaav-fullstack/deploy.sh'
+          ssh ubuntu@www.skillnaav.com 'bash /home/ubuntu/skillnaav-fullstack/deploy.sh'
