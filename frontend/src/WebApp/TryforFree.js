@@ -6,7 +6,7 @@ const TryforFree = () => {
 
   const handleOptionClick = (path) => {
     // Navigate to the specified path
-    navigate(path);
+    window.open(path, "_blank");
   };
 
   return (
