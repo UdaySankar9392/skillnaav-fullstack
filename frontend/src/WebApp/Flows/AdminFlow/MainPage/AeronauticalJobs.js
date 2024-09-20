@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import Homeimage from "../../../../assets-webapp/Home-Image.png";
+import Aeroimage from "../../../../assets-webapp/Aero-image.png";
 import code from "../../../../assets-webapp/code.png";
 import denside from "../../../../assets-webapp/denside.png";
 import gradient from "../../../../assets-webapp/gradient.png";
@@ -86,7 +86,7 @@ const JobListing = () => {
           {/* Header Section */}
           <div className="relative w-1132px h-250px">
             <img
-              src={Homeimage}
+              src={Aeroimage}
               alt="Finding Your Dream Job"
               className="w-full h-full object-cover"
             />
