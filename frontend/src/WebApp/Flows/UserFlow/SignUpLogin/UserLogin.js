@@ -29,11 +29,7 @@ const UserLogin = () => {
         },
       };
       // Ensure this path is correct
-      const { data } = await axios.post(
-        "/api/users/login",
-        values,
-        config
-      );
+      const { data } = await axios.post("/api/users/login", values, config);
       localStorage.setItem("userInfo", JSON.stringify(data));
       setLoading(false);
       navigate("/user-main-page");
@@ -63,7 +59,7 @@ const UserLogin = () => {
       <div className="flex flex-col items-center justify-center p-8 w-full lg:w-1/2">
         <div className="w-full max-w-md flex flex-col justify-center min-h-screen lg:min-h-full">
           <h1 className="text-3xl font-extrabold mb-6 text-center text-gray-800">
-            Welcome Back
+            Dear User, Welcome!
           </h1>
           <h2 className="text-lg font-medium mb-6 text-center text-gray-600">
             Please sign in to your account

@@ -7,7 +7,7 @@ import googleIcon from "../../../assets-webapp/Google-icon.png";
 import facebookIcon from "../../../assets-webapp/Facebook-icon.png";
 import appleIcon from "../../../assets-webapp/Apple-icon.png";
 import axios from "axios";
-import { Link } from 'react-router-dom';
+import { Link } from "react-router-dom";
 
 // Validation schema for Formik
 const validationSchema = Yup.object({
@@ -46,9 +46,13 @@ const UserFlow = () => {
       </div>
       <div className="flex flex-col items-center justify-center p-8 w-full lg:w-1/2 bg-white">
         <div className="w-full max-w-md flex flex-col justify-center min-h-screen lg:min-h-full">
-          <h1 className="text-2xl font-semibold mb-6 text-center">
-            Create an Account
+          <h1 className="text-3xl font-extrabold mb-4 text-center text-gray-800">
+           Dear User, Welcome!
           </h1>
+          <h2 className="text-lg font-medium mb-6 text-center text-gray-600">
+            Please sign in to your account
+          </h2>
+
           <Formik
             initialValues={{ email: "", password: "" }}
             validationSchema={validationSchema}
