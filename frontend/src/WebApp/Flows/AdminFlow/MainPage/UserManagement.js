@@ -75,26 +75,32 @@ const UserManagement = () => {
       <table className="min-w-full divide-y divide-gray-200">
         <thead className="bg-gray-100">
           <tr>
-            <th className="px-6 py-3 text-left text-sm font-medium text-gray-600 uppercase tracking-wider">
+            <th className="px-4 py-3 text-left text-sm font-medium text-gray-600 uppercase tracking-wider">
+              #
+            </th>
+            <th className="px-32 py-3 text-left text-sm font-medium text-gray-600 uppercase tracking-wider">
               Title
             </th>
-            <th className="px-6 py-3 text-left text-sm font-medium text-gray-600 uppercase tracking-wider">
+            <th className="px-28 py-3 text-left text-sm font-medium text-gray-600 uppercase tracking-wider">
               Applicant
             </th>
-            <th className="px-6 py-3 text-left text-sm font-medium text-gray-600 uppercase tracking-wider">
+            <th className="px-20 py-3 text-left text-sm font-medium text-gray-600 uppercase tracking-wider">
               Status
             </th>
-            <th className="px-6 py-3 text-left text-sm font-medium text-gray-600 uppercase tracking-wider">
+            <th className="px-32 py-3 text-left text-sm font-medium text-gray-600 uppercase tracking-wider">
               Actions
             </th>
           </tr>
         </thead>
         <tbody className="bg-white divide-y divide-gray-200">
-          {internships.map((internship) => (
+          {internships.map((internship, index) => (
             <tr
               key={internship.id}
               className="hover:bg-gray-50 transition duration-200"
             >
+              <td className="px-4 py-4 whitespace-nowrap text-gray-700">
+                {index + 1}
+              </td>
               <td className="px-6 py-4 whitespace-nowrap text-gray-700">
                 {internship.title}
               </td>
