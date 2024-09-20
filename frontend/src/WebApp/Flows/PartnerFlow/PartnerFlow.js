@@ -49,9 +49,13 @@ const PartnerFlow = () => {
 
       <div className="flex flex-col items-center justify-center p-8 w-full lg:w-1/2 bg-white">
         <div className="w-full max-w-md flex flex-col justify-center min-h-screen lg:min-h-full">
-          <h1 className="text-2xl font-semibold mb-6 text-center">
-            Welcome Back, Partner!
+          <h1 className="text-3xl font-extrabold mb-4 text-center text-gray-800">
+            Dear Partner, Welcome!
           </h1>
+          <h2 className="text-lg font-medium mb-6 text-center text-gray-600">
+            Please sign in to your account
+          </h2>
+
           <Formik
             initialValues={{ email: "", password: "" }}
             validationSchema={validationSchema}
