@@ -9,6 +9,7 @@ import facebookIcon from "../../../../assets-webapp/Facebook-icon.png";
 import appleIcon from "../../../../assets-webapp/Apple-icon.png";
 import { EyeIcon, EyeSlashIcon } from "@heroicons/react/24/solid"; // Ensure these are the correct imports
 import { Link } from "react-router-dom";
+import partnerImage from "../../../../assets-webapp/partner.jpg";
 
 // Validation schema for Formik
 const validationSchema = Yup.object({
@@ -50,10 +51,12 @@ const PartnerCreateAccount = () => {
 
   return (
     <div className="flex flex-col lg:flex-row min-h-screen font-poppins">
-      <div className="hidden lg:flex lg:w-1/2 items-center justify-center bg-gradient-to-br from-blue-500 to-teal-400">
-        <div className="w-3/4 h-3/4 flex items-center justify-center">
-          <h1 className="text-white text-5xl font-extrabold">Partner Portal</h1>
-        </div>
+      <div className="hidden md:flex md:w-full lg:w-1/2 items-center justify-center">
+        <img
+          src={partnerImage}
+          alt="Create Account"
+          className="w-full max-w-[830px] h-auto lg:h-[900px] object-cover shadow-lg"
+        />
       </div>
 
       <div className="flex flex-col items-center justify-center p-8 w-full lg:w-1/2 bg-white">
@@ -233,7 +236,6 @@ const PartnerCreateAccount = () => {
               className="text-teal-500 hover:underline font-semibold"
             >
               Login
-
             </Link>
           </p>
         </div>
