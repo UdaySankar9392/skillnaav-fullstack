@@ -51,7 +51,7 @@ const PartnerLogin = () => {
         <img
           src={partner2Image}
           alt="Create Account"
-          className="w-full h-full object-contain max-w-[830px] max-h-[900px] shadow-lg"
+          className="w-full h-full object-contain max-w-[830px] max-h-[900px] p-6 ml-6 shadow-lg"
         />
       </div>
 

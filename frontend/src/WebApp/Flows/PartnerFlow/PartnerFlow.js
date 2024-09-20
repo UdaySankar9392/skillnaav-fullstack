@@ -43,14 +43,14 @@ const PartnerFlow = () => {
         <img
           src={partner2Image}
           alt="Create Account"
-          className="w-full h-full object-contain max-w-[830px] max-h-[900px] shadow-lg"
+          className="w-full h-full object-contain max-w-[830px] max-h-[900px] p-6 ml-6 shadow-lg"
         />
       </div>
 
       <div className="flex flex-col items-center justify-center p-8 w-full lg:w-1/2 bg-white">
         <div className="w-full max-w-md flex flex-col justify-center min-h-screen lg:min-h-full">
           <h1 className="text-2xl font-semibold mb-6 text-center">
-            Create an account
+            Welcome Back, Partner!
           </h1>
           <Formik
             initialValues={{ email: "", password: "" }}

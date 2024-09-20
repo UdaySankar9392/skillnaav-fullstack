@@ -25,7 +25,7 @@ const TryforFree = () => {
     >
       <img
         src={skillnaavlogo}
-        style={{ width: "150px", height: "auto" }}
+        style={{ width: "210px", height: "auto" }}
         alt="SkillNaav Logo"
       />
 
