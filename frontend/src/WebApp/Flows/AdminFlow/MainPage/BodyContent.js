@@ -1,64 +1,65 @@
 import React from "react";
 import { useTabContext } from "./UserHomePageContext/HomePageContext"; // Correct path
-import Message from "./Message";
-import AeronauticalJobs from "./AeronauticalJobs";
-import SearchBar from "./SearchBar";
-import Home from "./Home";
-import Filter from "./Filter"; // Import the Filter component
-import SavedJobs from "./SavedJobs";
-import Applications from "./Applications";
-import Support from "./Support";
-import Profile from "./Profile"; // Import the Profile component
-import YourJobPosts from "./YourJobPosts";
-import PostAJob from "./PostAJob";
+import {
+  FaUsers,
+  FaUserFriends,
+  FaBriefcase,
+  FaDollarSign,
+} from "react-icons/fa"; // Import icons
+
 const BodyContent = () => {
-  const { selectedTab, handleSelectTab } = useTabContext();
+  const { selectedTab } = useTabContext();
   console.log("Selected Tab:", selectedTab);
 
-  let content;
+  // Dummy data for the dashboard; replace with actual data from your state or API
+  const partnersCount = 100; // Replace with actual data
+  const activeUsersCount = 250; // Replace with actual data
+  const internshipsCount = 75; // Replace with actual data
+  const totalRevenue = 5000; // Replace with actual data
 
-  switch (selectedTab) {
-    case "home":
-      content = <Home />;
-      break;
-    case "aeronautical-jobs":
-      content = <AeronauticalJobs />;
-      break;
-    case "your-job-posts":
-      content = <YourJobPosts />;
-      break;
-    case "post-a-job":
-      content = <PostAJob />;
-      break;
-    case "searchbar":
-      content = <SearchBar />;
-      break;
-    case "messages":
-      content = <Message />; // Assuming Messages is for notifications
-      break;
-    case "applications":
-      content = <Applications />;
-      break;
-    case "saved-jobs":
-      content = <SavedJobs />;
-      break;
-    case "profile":
-      content = <Profile />; // Render the Profile component
-      break;
-    case "support":
-      content = <Support />;
-      break;
-    case "logout":
-      content = <div>Logout Content</div>;
-      break;
-    case "filter":
-      content = <Filter />; // Render the Filter component
-      break;
-    default:
-      content = <div>Select a tab</div>;
-  }
-
-  return <div className="flex-1 p-4">{content}</div>;
+  return (
+    <div className="flex-1 font-poppins p-6 bg-gray-50">
+      {selectedTab === "home" ? (
+        <div className="bg-white p-8 rounded-lg shadow-md">
+          <h2 className="text-2xl font-semibold mb-6 text-center">
+            Admin Dashboard
+          </h2>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
+            <div className="bg-blue-100 p-6 rounded-lg shadow-lg flex items-center">
+              <FaUserFriends className="h-8 w-8 text-blue-600 mr-4" />
+              <div>
+                <h3 className="text-lg font-medium">Partners Enrolled</h3>
+                <p className="text-3xl font-bold">{partnersCount}</p>
+              </div>
+            </div>
+            <div className="bg-green-100 p-6 rounded-lg shadow-lg flex items-center">
+              <FaUsers className="h-8 w-8 text-green-600 mr-4" />
+              <div>
+                <h3 className="text-lg font-medium">Active Users</h3>
+                <p className="text-3xl font-bold">{activeUsersCount}</p>
+              </div>
+            </div>
+            <div className="bg-yellow-100 p-6 rounded-lg shadow-lg flex items-center">
+              <FaBriefcase className="h-8 w-8 text-yellow-600 mr-4" />
+              <div>
+                <h3 className="text-lg font-medium">Total Internships</h3>
+                <p className="text-3xl font-bold">{internshipsCount}</p>
+              </div>
+            </div>
+            <div className="bg-red-100 p-6 rounded-lg shadow-lg flex items-center">
+              <FaDollarSign className="h-8 w-8 text-red-600 mr-4" />
+              <div>
+                <h3 className="text-lg font-medium">Total Revenue</h3>
+                <p className="text-3xl font-bold">${totalRevenue}</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      ) : (
+        <div className="text-center mt-4">Coming Soon...</div>
+      )}
+    </div>
+  );
 };
 
 export default BodyContent;
