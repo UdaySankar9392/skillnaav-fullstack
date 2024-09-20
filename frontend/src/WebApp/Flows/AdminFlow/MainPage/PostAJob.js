@@ -32,7 +32,7 @@ const PostAJob = () => {
 
   return (
     <div className="p-6 font-poppins bg-gray-50 min-h-screen">
-      <h2 className="text-3xl font-bold mb-6 text-blue-800">Post a Job</h2>
+      <h2 className="text-3xl font-bold mb-6 text-blue-800">Post an Internship</h2>
       <form
         onSubmit={handleSubmit}
         className="max-w-lg mx-auto bg-white p-8 rounded-lg shadow-md"

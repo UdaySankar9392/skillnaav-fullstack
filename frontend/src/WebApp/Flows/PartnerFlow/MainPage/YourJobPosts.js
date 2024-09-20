@@ -8,7 +8,7 @@ const YourJobPosts = () => {
       title: "Aerospace Engineer",
       company: "AeroTech Canada",
       location: "Montreal, QC",
-      status: "Applied",
+      status: "Accepted",
       dateApplied: "August 15, 2024",
     },
     {
@@ -40,7 +40,7 @@ const YourJobPosts = () => {
   return (
     <div className="p-6 font-poppins">
       <h2 className="text-2xl font-semibold mb-4 text-teal-700">
-        Your Job Posts
+        Your Internship Posts
       </h2>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {jobPosts.map((job) => (
