@@ -75,13 +75,13 @@ const UserManagement = () => {
       <table className="min-w-full divide-y divide-gray-200">
         <thead className="bg-gray-100">
           <tr>
-            <th className="px-4 py-3 text-left text-sm font-medium text-gray-600 uppercase tracking-wider">
-              #
+            <th className="px-2 py-3 text-left text-sm font-medium text-gray-600 uppercase tracking-wider">
+              S No.
             </th>
             <th className="px-32 py-3 text-left text-sm font-medium text-gray-600 uppercase tracking-wider">
               Title
             </th>
-            <th className="px-28 py-3 text-left text-sm font-medium text-gray-600 uppercase tracking-wider">
+            <th className="px-24 py-3 text-left text-sm font-medium text-gray-600 uppercase tracking-wider">
               Applicant
             </th>
             <th className="px-20 py-3 text-left text-sm font-medium text-gray-600 uppercase tracking-wider">

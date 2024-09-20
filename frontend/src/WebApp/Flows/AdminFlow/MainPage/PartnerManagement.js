@@ -58,9 +58,9 @@ const PartnerManagement = () => {
         <thead className="bg-gray-100">
           <tr>
             <th className="px-4 py-3 text-left text-sm font-medium text-gray-600 uppercase tracking-wider">
-              #
+              S No.
             </th>
-            <th className="px-28 py-3 text-left text-sm font-medium text-gray-600 uppercase tracking-wider">
+            <th className="px-24 py-3 text-left text-sm font-medium text-gray-600 uppercase tracking-wider">
               Company Name
             </th>
             <th className="px-32 py-3 text-left text-sm font-medium text-gray-600 uppercase tracking-wider">
