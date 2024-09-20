@@ -8,7 +8,6 @@ import {
 } from "react-icons/fa"; // Import icons
 import UserManagement from "./UserManagement";
 import PartnerManagement from "./PartnerManagement";
-
 const BodyContent = () => {
   const { selectedTab } = useTabContext();
   console.log("Selected Tab:", selectedTab);
@@ -50,7 +49,7 @@ const BodyContent = () => {
                 </div>
               </div>
               <div className="bg-red-100 p-6 rounded-lg shadow-lg flex items-center">
-                <FaDollarSign className="h-8 w-8 text-red-600 mr-4" />
+                <div className="h-8 w-8 text-red-600 mr-4" />
                 <div>
                   <h3 className="text-lg font-medium">Total Revenue</h3>
                   <p className="text-3xl font-bold">${totalRevenue}</p>
