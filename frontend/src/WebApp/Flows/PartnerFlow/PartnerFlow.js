@@ -3,6 +3,7 @@ import { Formik, Form, Field, ErrorMessage } from "formik";
 import * as Yup from "yup";
 import { useNavigate } from "react-router-dom";
 import createAccountImage from "../../../assets-webapp/login-image.png";
+import partnerImage from "../../../assets-webapp/partner.jpg";
 import googleIcon from "../../../assets-webapp/Google-icon.png";
 import facebookIcon from "../../../assets-webapp/Facebook-icon.png";
 import appleIcon from "../../../assets-webapp/Apple-icon.png";
@@ -37,11 +38,14 @@ const PartnerFlow = () => {
 
   return (
     <div className="flex flex-col lg:flex-row min-h-screen font-poppins">
-      <div className="hidden lg:flex lg:w-1/2 items-center justify-center bg-gradient-to-br from-blue-500 to-teal-400">
-        <div className="w-3/4 h-3/4 flex items-center justify-center">
-          <h1 className="text-white text-5xl font-extrabold">Partner Portal</h1>
-        </div>
+      <div className="hidden md:flex md:w-full lg:w-1/2 items-center justify-center">
+        <img
+          src={partnerImage}
+          alt="Create Account"
+          className="w-full max-w-[830px] h-auto lg:h-[900px] object-cover shadow-lg"
+        />
       </div>
+
       <div className="flex flex-col items-center justify-center p-8 w-full lg:w-1/2 bg-white">
         <div className="w-full max-w-md flex flex-col justify-center min-h-screen lg:min-h-full">
           <h1 className="text-2xl font-semibold mb-6 text-center">
@@ -125,7 +129,7 @@ const PartnerFlow = () => {
           </button> */}
           <p className="text-center text-gray-500 font-poppins font-medium text-base leading-6">
             Already have an account?{" "}
-            <Link to="/partner/login" className="text-blue-500 hover:underline">
+            <Link to="/partner/login" className="text-teal-500 hover:underline">
               Login
             </Link>
           </p>

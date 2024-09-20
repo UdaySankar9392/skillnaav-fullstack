@@ -6,6 +6,7 @@ import axios from "axios";
 import Loading from "../../../Warnings/Loading/Loading";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faEye, faEyeSlash } from "@fortawesome/free-solid-svg-icons";
+import partnerImage from "../../../../assets-webapp/partner.jpg";
 
 const validationSchema = Yup.object({
   email: Yup.string().email("Invalid email address").required("Required"),
@@ -45,10 +46,12 @@ const PartnerLogin = () => {
   return (
     <div className="flex flex-col lg:flex-row min-h-screen font-poppins">
       {/* Left Section (Colorful Background) */}
-      <div className="hidden lg:flex lg:w-1/2 items-center justify-center bg-gradient-to-br from-blue-500 to-teal-400">
-        <div className="w-3/4 h-3/4 flex items-center justify-center">
-          <h1 className="text-white text-5xl font-extrabold">Partner Portal</h1>
-        </div>
+      <div className="hidden md:flex md:w-full lg:w-1/2 items-center justify-center">
+        <img
+          src={partnerImage}
+          alt="Create Account"
+          className="w-full max-w-[830px] h-auto lg:h-[900px] object-cover shadow-lg"
+        />
       </div>
 
       {/* Right Section (Form) */}
