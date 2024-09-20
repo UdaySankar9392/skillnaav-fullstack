@@ -24,7 +24,7 @@ const YourJobPosts = () => {
       title: "Flight Systems Analyst",
       company: "NorthStar Aerospace",
       location: "Vancouver, BC",
-      status: "Interview Scheduled",
+      status: "In Review",
       dateApplied: "August 8, 2024",
     },
     {
@@ -54,11 +54,11 @@ const YourJobPosts = () => {
             <p className="text-gray-700">{job.company}</p>
             <p className="text-gray-500">{job.location}</p>
             <p className="text-sm text-gray-400 mt-2">
-              Applied on: {job.dateApplied}
+              Posted on: {job.dateApplied}
             </p>
             <div
               className={`mt-3 px-3 py-1 inline-block rounded-full text-sm font-medium ${
-                job.status === "Applied"
+                job.status === "Accepted"
                   ? "bg-blue-100 text-blue-800" // Blue for applied
                   : job.status === "In Review"
                   ? "bg-yellow-100 text-yellow-800" // Yellow for review
