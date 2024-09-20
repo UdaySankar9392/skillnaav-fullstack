@@ -45,7 +45,7 @@ const Sidebar = () => {
             {
               id: "task-management",
               icon: faClipboardList,
-              label: "Task Management",
+              label: "Partner Management",
             },
             { id: "analytics", icon: faChartBar, label: "Analytics" },
             { id: "settings", icon: faCogs, label: "Settings" },

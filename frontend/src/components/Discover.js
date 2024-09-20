@@ -17,8 +17,9 @@ const Discover = () => {
   const navigate = useNavigate();
 
   const handleButtonClick = () => {
-    navigate("/choose-role");
+    window.open("/choose-role", "_blank");
   };
+
   if (
     !skillnaavData ||
     !skillnaavData.discover ||
