@@ -31,8 +31,8 @@ const Sidebar = () => {
 
   // Define menu items
   const menuItems = [
-    { id: "your-job-posts", label: "Your Job Posts", icon: faBriefcase },
-    { id: "post-a-job", label: "Post A Job", icon: faPlus },
+    { id: "your-job-posts", label: "Internship Posts", icon: faBriefcase },
+    { id: "post-a-job", label: "Post An Internship", icon: faPlus },
     { id: "messages", label: "Messages", icon: faEnvelope },
     { id: "profile", label: "Profile", icon: faUser },
   ];
