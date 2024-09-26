@@ -1,124 +1,82 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
+import axios from "axios";
 
 const PartnerManagement = () => {
-  const [partners, setPartners] = useState([
-    {
-      id: 1,
-      name: "Tech Innovations Inc.",
-      type: "Company",
-      status: "pending",
-    },
-    { id: 2, name: "Global Finance Co.", type: "Company", status: "pending" },
-    {
-      id: 3,
-      name: "Ivy League University",
-      type: "University",
-      status: "approved",
-    },
-    {
-      id: 4,
-      name: "Future Leaders Academy",
-      type: "Institution",
-      status: "pending",
-    },
-    {
-      id: 5,
-      name: "Creative Arts Institute",
-      type: "Institution",
-      status: "approved",
-    },
-    {
-      id: 6,
-      name: "Green Energy Solutions",
-      type: "Company",
-      status: "pending",
-    },
-  ]);
+  const [internships, setInternships] = useState([]);
 
-  const handleApprove = (id) => {
-    setPartners(
-      partners.map((partner) =>
-        partner.id === id ? { ...partner, status: "approved" } : partner
-      )
-    );
-    console.log(`Approved partner with ID: ${id}`);
-  };
+  useEffect(() => {
+    // Fetch internships from the API
+    const fetchInternships = async () => {
+      try {
+        const response = await axios.get("/api/interns");
+        setInternships(response.data);
+      } catch (error) {
+        console.error("Error fetching internships:", error);
+      }
+    };
 
-  const handleReject = (id) => {
-    setPartners(partners.filter((partner) => partner.id !== id));
-    console.log(`Rejected partner with ID: ${id}`);
-  };
+    fetchInternships();
+  }, []);
 
   return (
     <div className="p-6 bg-white rounded-lg shadow-lg">
       <h2 className="text-2xl font-bold mb-4 text-center text-gray-800">
-        Partner Management
+        Admin Dashboard - Posted Internships
       </h2>
       <table className="min-w-full divide-y divide-gray-200">
-        <thead className="bg-gray-100">
+        <thead className="bg-gray-50">
           <tr>
-            <th className="px-4 py-3 text-left text-sm font-medium text-gray-600 uppercase tracking-wider">
-              S No.
+            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              Job Title
             </th>
-            <th className="px-24 py-3 text-left text-sm font-medium text-gray-600 uppercase tracking-wider">
-              Company Name
+            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              Company
             </th>
-            <th className="px-32 py-3 text-left text-sm font-medium text-gray-600 uppercase tracking-wider">
-              Type
+            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              Location
             </th>
-            <th className="px-16 py-3 text-left text-sm font-medium text-gray-600 uppercase tracking-wider">
-              Status
+            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              Start Date
             </th>
-            <th className="px-32 py-3 text-left text-sm font-medium text-gray-600 uppercase tracking-wider">
+            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              End Date
+            </th>
+            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              Stipend/Salary
+            </th>
+            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
               Actions
             </th>
           </tr>
         </thead>
         <tbody className="bg-white divide-y divide-gray-200">
-          {partners.map((partner, index) => (
-            <tr
-              key={partner.id}
-              className="hover:bg-gray-50 transition duration-200"
-            >
-              <td className="px-4 py-4 whitespace-nowrap text-gray-700">
-                {index + 1}
-              </td>
-              <td className="px-6 py-4 whitespace-nowrap text-gray-700">
-                {partner.name}
-              </td>
-              <td className="px-6 py-4 whitespace-nowrap text-gray-700">
-                {partner.type}
+          {internships.map((internship) => (
+            <tr key={internship._id}>
+              <td className="px-6 py-4 whitespace-nowrap">
+                {internship.jobTitle}
               </td>
               <td className="px-6 py-4 whitespace-nowrap">
-                <span
-                  className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
-                    partner.status === "pending"
-                      ? "bg-yellow-100 text-yellow-600"
-                      : "bg-green-100 text-green-600"
-                  }`}
-                >
-                  {partner.status}
-                </span>
+                {internship.companyName}
               </td>
               <td className="px-6 py-4 whitespace-nowrap">
-                {partner.status === "pending" ? (
-                  <>
-                    <button
-                      onClick={() => handleApprove(partner.id)}
-                      className="bg-green-500 text-white px-3 py-1 rounded mr-2 hover:bg-green-600 transition duration-200"
-                    >
-                      Approve
-                    </button>
-                    <button
-                      onClick={() => handleReject(partner.id)}
-                      className="bg-red-500 text-white px-3 py-1 rounded hover:bg-red-600 transition duration-200"
-                    >
-                      Reject
-                    </button>
-                  </>
-                ) : (
-                  <span className="text-green-600 font-semibold">Approved</span>
-                )}
+                {internship.location}
+              </td>
+              <td className="px-6 py-4 whitespace-nowrap">
+                {internship.startDate}
+              </td>
+              <td className="px-6 py-4 whitespace-nowrap">
+                {internship.endDateOrDuration}
+              </td>
+              <td className="px-6 py-4 whitespace-nowrap">
+                {internship.stipendOrSalary}
+              </td>
+              <td className="px-6 py-4 whitespace-nowrap">
+                <button className="text-green-600 hover:text-green-800">
+                  Approve
+                </button>
+                <button className="ml-4 text-red-600 hover:text-red-800">
+                  Reject
+                </button>
               </td>
             </tr>
           ))}
