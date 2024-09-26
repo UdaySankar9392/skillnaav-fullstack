@@ -8,6 +8,8 @@ const PartnerManagement = () => {
   const [internships, setInternships] = useState([]);
   const [selectedInternship, setSelectedInternship] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isRejectModalOpen, setIsRejectModalOpen] = useState(false);
+  const [internshipToReject, setInternshipToReject] = useState(null);
 
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
@@ -24,7 +26,7 @@ const PartnerManagement = () => {
     const fetchInternships = async () => {
       try {
         const response = await axios.get("/api/interns");
-        console.log("Fetched internships:", response.data); // Log the fetched data
+        console.log("Fetched internships:", response.data);
         setInternships(response.data);
       } catch (error) {
         console.error("Error fetching internships:", error);
@@ -33,18 +35,49 @@ const PartnerManagement = () => {
     fetchInternships();
   }, []);
 
-  const handleApprove = async (id) => {
+  const handleApprove = async (internId) => {
     try {
-      await axios.patch(`/api/interns/${id}`, { isApproved: true });
-      setInternships((prev) =>
-        prev.map((internship) =>
-          internship._id === id
+      console.log("Approving internship ID:", internId);
+      const response = await axios.patch(`/api/interns/${internId}/approve`, {
+        status: "approved",
+      });
+
+      console.log("Intern approved:", response.data);
+      setInternships((prevInternships) =>
+        prevInternships.map((internship) =>
+          internship._id === internId
             ? { ...internship, isApproved: true }
             : internship
         )
       );
     } catch (error) {
       console.error("Error approving internship:", error);
+    }
+  };
+
+  const handleRejectClick = (internship) => {
+    setInternshipToReject(internship);
+    setIsRejectModalOpen(true);
+  };
+
+  const confirmReject = async () => {
+    if (!internshipToReject) return;
+
+    try {
+      console.log("Rejecting internship ID:", internshipToReject._id);
+      await axios.delete(`/api/interns/${internshipToReject._id}/reject`);
+
+      // Remove internship from state
+      setInternships((prevInternships) =>
+        prevInternships.filter(
+          (internship) => internship._id !== internshipToReject._id
+        )
+      );
+
+      console.log("Internship rejected and deleted successfully");
+      setIsRejectModalOpen(false);
+    } catch (error) {
+      console.error("Error rejecting internship:", error);
     }
   };
 
@@ -55,6 +88,10 @@ const PartnerManagement = () => {
 
   const closeModal = () => {
     setIsModalOpen(false);
+  };
+
+  const closeRejectModal = () => {
+    setIsRejectModalOpen(false);
   };
 
   // Sorting logic
@@ -176,7 +213,10 @@ const PartnerManagement = () => {
                 >
                   Read More
                 </button>
-                <button className="px-4 py-2 bg-red-500 text-white rounded-md hover:bg-red-600">
+                <button
+                  className="px-4 py-2 bg-red-500 text-white rounded-md hover:bg-red-600"
+                  onClick={() => handleRejectClick(internship)}
+                >
                   Reject
                 </button>
               </td>
@@ -206,69 +246,74 @@ const PartnerManagement = () => {
           Next
         </button>
       </div>
-      {/* Modal for Read More */}
 
-      {selectedInternship && (
-        <Modal
-          isOpen={isModalOpen}
-          onRequestClose={closeModal}
-          className="fixed inset-0 flex items-center justify-center z-80"
-          overlayClassName="fixed inset-0 bg-black bg-opacity-70" // Overlay class for Tailwind
-        >
-          <div className="p-6 max-w-lg mx-auto bg-white rounded-lg shadow-lg z-80">
-            <h2 className="text-2xl font-bold mb-4">
-              {selectedInternship.jobTitle}
-            </h2>
-            <p className="mb-2">
-              <strong>Company:</strong> {selectedInternship.companyName}
-            </p>
-            <p className="mb-2">
-              <strong>Organization:</strong> {selectedInternship.organization}
-            </p>
-            <p className="mb-2">
-              <strong>Location:</strong> {selectedInternship.location}
-            </p>
-            <p className="mb-2">
-              <strong>Stipend/Salary:</strong>{" "}
-              {selectedInternship.stipendOrSalary}
-            </p>
-            <p className="mb-4">
-              <strong>Description:</strong> {selectedInternship.description}
-            </p>
+      {/* Internship Detail Modal */}
+      <Modal
+        isOpen={isModalOpen}
+        onRequestClose={closeModal}
+        contentLabel="Internship Details"
+        className="fixed inset-0 flex items-center justify-center"
+        overlayClassName="fixed inset-0 bg-black bg-opacity-50"
+      >
+        <div className="bg-white p-6 rounded-lg shadow-lg max-w-2xl w-full">
+          {selectedInternship && (
+            <>
+              <h2 className="text-2xl font-semibold mb-4">
+                {selectedInternship.jobTitle}
+              </h2>
+              <p className="mb-2">
+                <strong>Company:</strong> {selectedInternship.companyName}
+              </p>
+              <p className="mb-2">
+                <strong>Location:</strong> {selectedInternship.location}
+              </p>
+              <p className="mb-2">
+                <strong>Stipend/Salary:</strong>{" "}
+                {selectedInternship.stipendOrSalary}
+              </p>
+              <p className="mb-4">{selectedInternship.description}</p>
+            </>
+          )}
+          <button
+            onClick={closeModal}
+            className="px-4 py-2 bg-red-500 text-white rounded-md hover:bg-red-600"
+          >
+            Close
+          </button>
+        </div>
+      </Modal>
 
-            <div className="mt-4">
-              <h3 className="text-lg font-semibold mb-2">
-                Key Responsibilities:
-              </h3>
-              <ul className="list-disc list-inside mb-4">
-                {selectedInternship.responsibilities &&
-                  selectedInternship.responsibilities.map(
-                    (responsibility, index) => (
-                      <li key={index}>{responsibility}</li>
-                    )
-                  )}
-              </ul>
-
-              <h3 className="text-lg font-semibold mb-2">Qualifications:</h3>
-              <ul className="list-disc list-inside">
-                {selectedInternship.qualifications &&
-                  selectedInternship.qualifications.map(
-                    (qualification, index) => (
-                      <li key={index}>{qualification}</li>
-                    )
-                  )}
-              </ul>
-            </div>
-
+      {/* Reject Confirmation Modal */}
+      <Modal
+        isOpen={isRejectModalOpen}
+        onRequestClose={closeRejectModal}
+        contentLabel="Reject Internship Confirmation"
+        className="fixed inset-0 flex items-center justify-center"
+        overlayClassName="fixed inset-0 bg-black bg-opacity-50"
+      >
+        <div className="bg-white p-6 rounded-lg shadow-lg max-w-lg w-full">
+          <h2 className="text-xl font-semibold mb-4">Reject Internship</h2>
+          <p className="mb-4">
+            Are you sure you want to reject the internship "
+            {internshipToReject?.jobTitle}" by "
+            {internshipToReject?.companyName}"?
+          </p>
+          <div className="flex justify-end space-x-2">
             <button
-              onClick={closeModal}
-              className="mt-4 px-4 py-2 bg-gray-300 rounded-md hover:bg-gray-400"
+              onClick={confirmReject}
+              className="px-4 py-2 bg-red-500 text-white rounded-md hover:bg-red-600"
             >
-              Close
+              Confirm
+            </button>
+            <button
+              onClick={closeRejectModal}
+              className="px-4 py-2 bg-gray-300 rounded-md hover:bg-gray-400"
+            >
+              Cancel
             </button>
           </div>
-        </Modal>
-      )}
+        </div>
+      </Modal>
     </div>
   );
 };
