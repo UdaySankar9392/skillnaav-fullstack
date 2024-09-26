@@ -141,4 +141,57 @@ router.delete("/:id", async (req, res) => {
   }
 });
 
+// POST approve an internship posting by ID
+router.patch("/:id/approve", async (req, res) => {
+  try {
+    const internship = await InternshipPosting.findById(req.params.id);
+
+    if (internship) {
+      internship.isApproved = true; // Mark as approved
+      await internship.save(); // Save changes
+      res.json({ message: "Internship approved successfully", internship });
+    } else {
+      res.status(404).json({ message: "Internship not found" });
+    }
+  } catch (error) {
+    res
+      .status(500)
+      .json({ message: "Server Error: Unable to approve internship" });
+  }
+});
+
+// POST reject an internship posting by ID
+router.patch("/:id/reject", async (req, res) => {
+  try {
+    const internship = await InternshipPosting.findById(req.params.id);
+
+    if (internship) {
+      internship.isApproved = false; // Mark as rejected
+      await internship.save(); // Save changes
+      res.json({ message: "Internship rejected successfully", internship });
+    } else {
+      res.status(404).json({ message: "Internship not found" });
+    }
+  } catch (error) {
+    res
+      .status(500)
+      .json({ message: "Server Error: Unable to reject internship" });
+  }
+});
+
+// GET approved internships
+router.get("/approved", async (req, res) => {
+  try {
+    const approvedInternships = await InternshipPosting.find({
+      isApproved: true,
+    });
+    res.json(approvedInternships);
+  } catch (error) {
+    console.error("Error fetching approved internships:", error); // Log the error
+    res.status(500).json({
+      message: "Error fetching approved internships",
+      error: error.message,
+    });
+  }
+});
 module.exports = router;
