@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Homeimage from "../../../../assets-webapp/Home-Image.png";
 import code from "../../../../assets-webapp/code.png";
 import denside from "../../../../assets-webapp/denside.png";
@@ -17,50 +17,23 @@ import { useTabContext } from "./UserHomePageContext/HomePageContext";
 const Home = () => {
   const { savedJobs, saveJob, removeJob } = useTabContext();
   const [selectedJob, setSelectedJob] = useState(null);
+  const [jobData, setJobData] = useState([]); 
 
-  const jobData = [
-    {
-      jobTitle: "Data Science Intern",
-      company: "Harber Inc",
-      location: "439 Metz Field, Canada",
-      type: "Remote",
-      duration: "Internship • 3 months",
-      salary: "30k per month",
-      field: "Computer science engineering",
-      image: tech, // Add image path
-    },
-    {
-      jobTitle: "Software Engineer Intern",
-      company: "Acme Corp",
-      location: "123 Tech Lane, USA",
-      type: "Remote",
-      duration: "Internship • 6 months",
-      salary: "35k per month",
-      field: "Software Engineering",
-      image: code, // Add image path
-    },
-    {
-      jobTitle: "Web Developer",
-      company: "Techie Ltd",
-      location: "789 Code Street, India",
-      type: "Remote",
-      duration: "Full-time • 12 months",
-      salary: "45k per month",
-      field: "Web Development",
-      image: denside, // Add image path
-    },
-    {
-      jobTitle: "UX/UI Designer",
-      company: "Creative Co",
-      location: "456 Design Blvd, UK",
-      type: "Remote",
-      duration: "Full-time • 24 months",
-      salary: "50k per month",
-      field: "Design",
-      image: gradient, // Add image path
-    },
-    // Add other jobs
-  ];
+  useEffect(() => {
+    const fetchJobData = async () => {
+      try {
+        const response = await fetch("/api/interns/");
+        const data = await response.json();
+        // Filter jobs where isApproved is true
+        const approvedJobs = data.filter((job) => job.isApproved);
+        setJobData(approvedJobs); // Set the state with approved jobs
+      } catch (error) {
+        console.error("Error fetching job data:", error);
+      }
+    };
+
+    fetchJobData();
+  }, []); // Empty dependency array to run only on mount
 
   const handleViewDetails = (job) => {
     setSelectedJob(job);
