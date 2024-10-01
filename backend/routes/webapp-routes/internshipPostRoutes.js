@@ -131,16 +131,25 @@ router.put("/:id", async (req, res) => {
 // DELETE an internship posting by ID
 router.delete("/:id", async (req, res) => {
   try {
-    const internship = await InternshipPosting.findById(req.params.id);
+    const { id } = req.params;
 
-    if (internship) {
-      await internship.remove();
-      res.json({ message: "Internship removed" });
-    } else {
-      res.status(404).json({ message: "Internship not found" });
+    // Log the ID to verify
+    console.log("ID to delete:", id);
+
+    // Find and delete the internship in one step
+    const deletedInternship = await InternshipPosting.findByIdAndDelete(id);
+
+    if (!deletedInternship) {
+      return res.status(404).json({ message: "Internship not found" });
     }
+
+    res.json({ message: "Internship deleted successfully" });
   } catch (error) {
-    res.status(500).json({ message: "Server Error" });
+    console.error("Error during deletion:", error); // Log the actual error
+    res.status(500).json({
+      message: "Server Error: Unable to delete the internship",
+      error: error.message,
+    });
   }
 });
 

@@ -65,7 +65,7 @@ const PartnerManagement = () => {
 
     try {
       console.log("Rejecting internship ID:", internshipToReject._id);
-      await axios.delete(`/api/interns/${internshipToReject._id}/reject`);
+      await axios.delete(`/api/interns/${internshipToReject._id}`);
 
       // Remove internship from state
       setInternships((prevInternships) =>
