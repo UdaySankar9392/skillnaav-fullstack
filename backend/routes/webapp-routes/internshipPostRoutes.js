@@ -34,6 +34,7 @@ router.post("/", async (req, res) => {
       applicationProcess: req.body.applicationProcess,
       contactInfo: req.body.contactInfo,
       applicationLinkOrEmail: req.body.applicationLinkOrEmail,
+      imgUrl: req.body.imgUrl,
     });
 
     const createdInternship = await newInternship.save();
@@ -85,6 +86,7 @@ router.put("/:id", async (req, res) => {
     workAuthorization,
     skillsToBeDeveloped,
     numberOfOpenings,
+    imgUrl,
   } = req.body;
 
   try {
@@ -112,6 +114,7 @@ router.put("/:id", async (req, res) => {
       internship.workAuthorization = workAuthorization;
       internship.skillsToBeDeveloped = skillsToBeDeveloped;
       internship.numberOfOpenings = numberOfOpenings;
+      internship.imgUrl = imgUrl;
 
       const updatedInternship = await internship.save();
       res.json(updatedInternship);
