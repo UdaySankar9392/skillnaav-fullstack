@@ -24,6 +24,7 @@ const internshipPostingSchema = mongoose.Schema(
       phone: { type: String, required: true },
     },
     applicationLinkOrEmail: { type: String, required: true },
+    imgUrl: { type: String, required: true },
   },
   { timestamps: true }
 );
