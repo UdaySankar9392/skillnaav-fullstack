@@ -1,9 +1,5 @@
 import React, { useState, useEffect } from "react";
 import Homeimage from "../../../../assets-webapp/Home-Image.png";
-import code from "../../../../assets-webapp/code.png";
-import denside from "../../../../assets-webapp/denside.png";
-import gradient from "../../../../assets-webapp/gradient.png";
-import tech from "../../../../assets-webapp/tech.png";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faMapMarkerAlt,
@@ -17,7 +13,7 @@ import { useTabContext } from "./UserHomePageContext/HomePageContext";
 const Home = () => {
   const { savedJobs, saveJob, removeJob } = useTabContext();
   const [selectedJob, setSelectedJob] = useState(null);
-  const [jobData, setJobData] = useState([]); 
+  const [jobData, setJobData] = useState([]);
 
   useEffect(() => {
     const fetchJobData = async () => {
@@ -97,32 +93,34 @@ const Home = () => {
                   </div>
                   <div className="flex items-center mb-4">
                     <img
-                      src={job.image}
-                      alt={`${job.company} logo`}
+                      src={job.imgUrl}
+                      alt={`${job.companyName} logo`}
                       className="w-12 h-12 rounded-full mr-4"
                     />
                     <div>
                       <h3 className="text-xl font-semibold">{job.jobTitle}</h3>
                       <p className="text-gray-600">
-                        {job.company} • {index + 1}d ago
+                        {job.companyName} • {index + 1}d ago
                       </p>
                     </div>
                   </div>
                   <div className="text-gray-600 mb-4">
                     <p>
                       <FontAwesomeIcon icon={faMapMarkerAlt} /> {job.location} •{" "}
-                      {job.type}
+                      {job.jobType}
                     </p>
                     <p>
-                      <FontAwesomeIcon icon={faClock} /> {job.duration}
+                      <FontAwesomeIcon icon={faClock} /> {job.startDate} -{" "}
+                      {job.endDateOrDuration}
                     </p>
                     <p>
-                      <FontAwesomeIcon icon={faDollarSign} /> {job.salary}
+                      <FontAwesomeIcon icon={faDollarSign} />{" "}
+                      {job.stipendOrSalary}
                     </p>
                   </div>
                   <div className="flex items-center justify-between">
                     <span className="bg-blue-100 text-blue-800 text-sm font-medium mr-2 px-2.5 py-0.5 rounded">
-                      {job.field}
+                      {job.preferredExperience}
                     </span>
                     <button
                       className="text-purple-600 hover:underline"

@@ -13,7 +13,7 @@ const Applications = () => {
 
   return (
     <div className="p-4 font-poppins">
-      <h2 className="text-xl  font-semibold mb-4">Your Applications</h2>
+      <h2 className="text-xl font-semibold mb-4">Your Applications</h2>
       {applications.length === 0 ? (
         <p>No applications yet.</p>
       ) : (
@@ -23,13 +23,13 @@ const Applications = () => {
               <div className="flex justify-between items-center mb-4">
                 <div className="flex items-center">
                   <img
-                    src="https://via.placeholder.com/60"
-                    alt="company-logo"
+                    src={job.imgUrl} // Use job image URL from data
+                    alt={`${job.companyName} logo`} // Correct company name
                     className="rounded-full w-12 h-12 mr-4"
                   />
                   <div>
                     <h3 className="text-lg font-semibold">{job.jobTitle}</h3>
-                    <p className="text-gray-500">{job.company}</p>
+                    <p className="text-gray-500">{job.companyName}</p>
                   </div>
                 </div>
                 <button className="bg-green-100 text-green-700 px-3 py-1 rounded-full text-sm">
@@ -39,21 +39,25 @@ const Applications = () => {
               <div className="text-gray-500 text-sm mb-2">
                 <p>
                   <FontAwesomeIcon icon={faMapMarkerAlt} /> {job.location} •{" "}
-                  {job.type}
+                  {job.jobType}
                 </p>
                 <p>
-                  <FontAwesomeIcon icon={faClock} /> {job.duration}
+                  <FontAwesomeIcon icon={faClock} /> {job.endDateOrDuration}
                 </p>
                 <p>
-                  <FontAwesomeIcon icon={faDollarSign} /> {job.salary}
+                  <FontAwesomeIcon icon={faDollarSign} /> {job.stipendOrSalary}
                 </p>
               </div>
               <div className="flex justify-between items-center">
                 <div className="flex flex-wrap gap-2">
-                  <span className="text-sm bg-gray-200 text-gray-800 py-1 px-3 rounded-full">
-                    {job.field}
-                  </span>
-                  {/* Add more tags if needed */}
+                  {job.qualifications.map((qualification, idx) => (
+                    <span
+                      key={idx}
+                      className="text-sm bg-gray-200 text-gray-800 py-1 px-3 rounded-full"
+                    >
+                      {qualification}
+                    </span>
+                  ))}
                 </div>
                 <button className="text-purple-500 font-semibold">
                   View details
