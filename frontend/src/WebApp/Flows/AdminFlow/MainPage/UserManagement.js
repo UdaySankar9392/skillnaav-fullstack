@@ -68,88 +68,92 @@ const UserManagement = () => {
   };
 
   return (
-    <div className="p-6 bg-white rounded-lg shadow-lg">
-      <h2 className="text-2xl font-bold mb-4 text-center text-gray-800">
+    <div className="p-6 bg-white rounded-lg shadow-lg max-w-6xl mx-auto">
+      <h2 className="text-2xl font-bold mb-6 text-center text-gray-800">
         Internship Applications
       </h2>
-      <table className="min-w-full divide-y divide-gray-200">
-        <thead className="bg-gray-100">
-          <tr>
-            <th className="px-2 py-3 text-left text-sm font-medium text-gray-600 uppercase tracking-wider">
-              S No.
-            </th>
-            <th className="px-32 py-3 text-left text-sm font-medium text-gray-600 uppercase tracking-wider">
-              Title
-            </th>
-            <th className="px-24 py-3 text-left text-sm font-medium text-gray-600 uppercase tracking-wider">
-              Applicant
-            </th>
-            <th className="px-20 py-3 text-left text-sm font-medium text-gray-600 uppercase tracking-wider">
-              Status
-            </th>
-            <th className="px-32 py-3 text-left text-sm font-medium text-gray-600 uppercase tracking-wider">
-              Actions
-            </th>
-          </tr>
-        </thead>
-        <tbody className="bg-white divide-y divide-gray-200">
-          {internships.map((internship, index) => (
-            <tr
-              key={internship.id}
-              className="hover:bg-gray-50 transition duration-200"
-            >
-              <td className="px-4 py-4 whitespace-nowrap text-gray-700">
-                {index + 1}
-              </td>
-              <td className="px-6 py-4 whitespace-nowrap text-gray-700">
-                {internship.title}
-              </td>
-              <td className="px-6 py-4 whitespace-nowrap text-gray-700">
-                {internship.applicant}
-              </td>
-              <td className="px-6 py-4 whitespace-nowrap">
-                <span
-                  className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
-                    internship.status === "pending"
-                      ? "bg-yellow-100 text-yellow-600"
-                      : internship.status === "approved"
-                      ? "bg-green-100 text-green-600"
-                      : "bg-red-100 text-red-600"
-                  }`}
-                >
-                  {internship.status}
-                </span>
-              </td>
-              <td className="px-6 py-4 whitespace-nowrap">
-                {internship.status === "pending" ? (
-                  <>
-                    <button
-                      onClick={() => handleApprove(internship.id)}
-                      className="bg-green-500 text-white px-3 py-1 rounded mr-2 hover:bg-green-600 transition duration-200"
-                    >
-                      Approve
-                    </button>
-                    <button
-                      onClick={() => handleReject(internship.id)}
-                      className="bg-red-500 text-white px-3 py-1 rounded mr-2 hover:bg-red-600 transition duration-200"
-                    >
-                      Reject
-                    </button>
-                    <button
-                      onClick={() => handleReview(internship.id)}
-                      className="bg-blue-500 text-white px-3 py-1 rounded hover:bg-blue-600 transition duration-200"
-                    >
-                      Review
-                    </button>
-                  </>
-                ) : (
-                  <span className="text-gray-500">No actions available</span>
-                )}
-              </td>
+      <div className="overflow-x-auto">
+        <table className="min-w-full table-auto divide-y divide-gray-200">
+          <thead className="bg-gray-100">
+            <tr>
+              <th className="px-4 py-3 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">
+                S No.
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">
+                Title
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">
+                Applicant
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">
+                Status
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">
+                Actions
+              </th>
             </tr>
-          ))}
-        </tbody>
-      </table>
+          </thead>
+          <tbody className="bg-white divide-y divide-gray-200">
+            {internships.map((internship, index) => (
+              <tr
+                key={internship.id}
+                className="hover:bg-gray-50 transition duration-200"
+              >
+                <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-700">
+                  {index + 1}
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
+                  {internship.title}
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
+                  {internship.applicant}
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap">
+                  <span
+                    className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
+                      internship.status === "pending"
+                        ? "bg-yellow-100 text-yellow-600"
+                        : internship.status === "approved"
+                        ? "bg-green-100 text-green-600"
+                        : "bg-red-100 text-red-600"
+                    }`}
+                  >
+                    {internship.status}
+                  </span>
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap">
+                  {internship.status === "pending" ? (
+                    <div className="flex space-x-2">
+                      <button
+                        onClick={() => handleApprove(internship.id)}
+                        className="bg-green-500 text-white px-3 py-1 rounded hover:bg-green-600 transition duration-200 text-sm"
+                      >
+                        Approve
+                      </button>
+                      <button
+                        onClick={() => handleReject(internship.id)}
+                        className="bg-red-500 text-white px-3 py-1 rounded hover:bg-red-600 transition duration-200 text-sm"
+                      >
+                        Reject
+                      </button>
+                      <button
+                        onClick={() => handleReview(internship.id)}
+                        className="bg-blue-500 text-white px-3 py-1 rounded hover:bg-blue-600 transition duration-200 text-sm"
+                      >
+                        Review
+                      </button>
+                    </div>
+                  ) : (
+                    <span className="text-gray-500 text-sm">
+                      No actions available
+                    </span>
+                  )}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
     </div>
   );
 };
