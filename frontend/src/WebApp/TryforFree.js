@@ -76,7 +76,7 @@ const TryforFree = () => {
           onMouseDown={(e) => (e.currentTarget.style.transform = "scale(0.98)")}
           onMouseUp={(e) => (e.currentTarget.style.transform = "scale(1)")}
         >
-          Continue as User (Student)
+          Continue as Student
         </button>
         <button
           style={{

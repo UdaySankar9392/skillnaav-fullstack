@@ -132,7 +132,7 @@ const PartnerManagement = () => {
   );
 
   return (
-    <div className="p-6 bg-gray-100 rounded-lg shadow-md">
+    <div className="p-6 rounded-lg shadow-md">
       <h2 className="text-3xl font-bold mb-6 text-center text-gray-700">
         Admin Dashboard - Posted Internships
       </h2>

@@ -2,120 +2,125 @@ import React, { useState } from "react";
 import axios from "axios";
 import firebase from "firebase/compat/app";
 import "firebase/compat/storage"; // Import Firebase storage
+import { useTabContext } from "./UserHomePageContext/HomePageContext";
+
 
 const PostAJob = () => {
-  const [jobTitle, setJobTitle] = useState("");
-  const [companyName, setCompanyName] = useState("");
-  const [location, setLocation] = useState("");
-  const [jobType, setJobType] = useState("Internship");
-  const [jobDescription, setJobDescription] = useState("");
-  const [startDate, setStartDate] = useState("");
-  const [endDateOrDuration, setEndDateOrDuration] = useState("");
-  const [stipendOrSalary, setStipendOrSalary] = useState("");
-  const [qualifications, setQualifications] = useState("");
-  const [preferredExperience, setPreferredExperience] = useState("None");
-  const [applicationDeadline, setApplicationDeadline] = useState("");
-  const [applicationProcess, setApplicationProcess] = useState("");
-  const [contactInfo, setContactInfo] = useState({
-    name: "",
-    email: "",
-    phone: "",
-  });
-  const [applicationLinkOrEmail, setApplicationLinkOrEmail] = useState("");
-  const [imgUrl, setImgUrl] = useState(""); // URL for the uploaded image
-  const [uploading, setUploading] = useState(false); // Uploading state
-  const [previewUrl, setPreviewUrl] = useState(null); // Preview of selected image
+  const { saveJob } = useTabContext(); // Get saveJob from context
 
-  // Handle job posting submission
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    const postData = {
-      jobTitle,
-      companyName,
-      location,
-      jobType,
-      jobDescription,
-      startDate,
-      endDateOrDuration,
-      stipendOrSalary,
-      qualifications: qualifications.split(",").map((q) => q.trim()), // Convert string to array
-      preferredExperience,
-      applicationDeadline,
-      applicationProcess,
-      contactInfo,
-      applicationLinkOrEmail,
-      imgUrl, // Add the uploaded image URL to postData
-    };
-
-    try {
-      const response = await axios.post("/api/interns", postData);
-      console.log("Internship posted successfully:", response.data);
-      resetForm();
-    } catch (error) {
-      if (error.response) {
-        console.error("Error posting internship:", error.response.data);
-      } else {
-        console.error("Network error:", error.message);
-      }
-    }
-  };
-
-  // Reset the form fields
-  const resetForm = () => {
-    setJobTitle("");
-    setCompanyName("");
-    setLocation("");
-    setJobType("Internship");
-    setJobDescription("");
-    setStartDate("");
-    setEndDateOrDuration("");
-    setStipendOrSalary("");
-    setQualifications("");
-    setPreferredExperience("None");
-    setApplicationDeadline("");
-    setApplicationProcess("");
-    setContactInfo({
+  const [formData, setFormData] = useState({
+    jobTitle: "",
+    companyName: "",
+    location: "",
+    jobType: "Internship",
+    jobDescription: "",
+    startDate: "",
+    endDateOrDuration: "",
+    stipendOrSalary: "",
+    qualifications: "",
+    preferredExperience: "None",
+    applicationDeadline: "",
+    applicationProcess: "",
+    contactInfo: {
       name: "",
       email: "",
       phone: "",
+    },
+    applicationLinkOrEmail: "",
+    imgUrl: "",
+  });
+
+  const [uploading, setUploading] = useState(false);
+  const [previewUrl, setPreviewUrl] = useState(null);
+
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    if (name.includes("contactInfo.")) {
+      const contactField = name.split(".")[1];
+      setFormData((prev) => ({
+        ...prev,
+        contactInfo: { ...prev.contactInfo, [contactField]: value },
+      }));
+    } else {
+      setFormData((prev) => ({ ...prev, [name]: value }));
+    }
+  };
+
+  const handleQualificationsChange = (e) => {
+    setFormData((prev) => ({
+      ...prev,
+      qualifications: e.target.value.split(",").map((q) => q.trim()),
+    }));
+  };
+
+  const resetForm = () => {
+    setFormData({
+      jobTitle: "",
+      companyName: "",
+      location: "",
+      jobType: "Internship",
+      jobDescription: "",
+      startDate: "",
+      endDateOrDuration: "",
+      stipendOrSalary: "",
+      qualifications: "",
+      preferredExperience: "None",
+      applicationDeadline: "",
+      applicationProcess: "",
+      contactInfo: {
+        name: "",
+        email: "",
+        phone: "",
+      },
+      applicationLinkOrEmail: "",
+      imgUrl: "",
     });
-    setApplicationLinkOrEmail("");
-    setImgUrl("");
     setPreviewUrl(null);
   };
 
-  // Handle image upload to Firebase
-  const handleFileUpload = (event) => {
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    try {
+      const response = await axios.post("/api/interns", {
+        ...formData,
+        imgUrl: formData.imgUrl,
+      });
+      console.log("Internship posted successfully:", response.data);
+
+      // Save the job in context
+      saveJob(response.data);
+
+      resetForm();
+    } catch (error) {
+      console.error(
+        "Error posting internship:",
+        error.response?.data || error.message
+      );
+    }
+  };
+
+  const handleFileUpload = async (event) => {
     const selectedFile = event.target.files[0];
-    if (selectedFile) {
-      setUploading(true); // Start the uploading state
+    if (!selectedFile) {
+      console.log("No file selected.");
+      return;
+    }
 
-      // Create a preview of the image for instant feedback
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setPreviewUrl(reader.result);
-      };
-      reader.readAsDataURL(selectedFile);
+    setUploading(true);
+    const reader = new FileReader();
+    reader.onloadend = () => setPreviewUrl(reader.result);
+    reader.readAsDataURL(selectedFile);
 
-      // Upload to Firebase Storage
+    try {
       const storageRef = firebase.storage().ref();
       const fileRef = storageRef.child(selectedFile.name);
-      fileRef
-        .put(selectedFile)
-        .then((snapshot) => {
-          return snapshot.ref.getDownloadURL();
-        })
-        .then((downloadURL) => {
-          console.log("File available at:", downloadURL);
-          setImgUrl(downloadURL); // Set the uploaded image URL
-          setUploading(false); // End the uploading state
-        })
-        .catch((error) => {
-          console.error("Error uploading file:", error);
-          setUploading(false); // End the uploading state if there's an error
-        });
-    } else {
-      console.log("No file selected.");
+      const snapshot = await fileRef.put(selectedFile);
+      const downloadURL = await snapshot.ref.getDownloadURL();
+      setFormData((prev) => ({ ...prev, imgUrl: downloadURL }));
+    } catch (error) {
+      console.error("Error uploading file:", error);
+    } finally {
+      setUploading(false);
     }
   };
 
@@ -125,169 +130,77 @@ const PostAJob = () => {
         Post an Internship
       </h2>
       <form onSubmit={handleSubmit} className="space-y-6">
-        {/* Job Title */}
-        <div>
-          <label className="block text-gray-700 font-medium mb-2">
-            Job Title
-          </label>
-          <input
-            type="text"
-            value={jobTitle}
-            onChange={(e) => setJobTitle(e.target.value)}
-            className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring focus:ring-purple-500"
-            placeholder="Enter job title"
-            required
-          />
-        </div>
+        {/** Input Fields **/}
+        {Object.entries({
+          jobTitle: "Job Title",
+          companyName: "Company Name",
+          location: "Location",
+          jobType: "Job Type",
+          jobDescription: "Job Description",
+          startDate: "Start Date",
+          endDateOrDuration: "End Date or Duration",
+          stipendOrSalary: "Stipend or Salary",
+          qualifications: "Qualifications",
+          preferredExperience: "Preferred Experience",
+          applicationDeadline: "Application Deadline",
+          applicationLinkOrEmail: "Application Link or Email",
+        }).map(([key, label]) => (
+          <div key={key}>
+            <label className="block text-gray-700 font-medium mb-2">
+              {label}
+            </label>
+            {key === "jobType" ? (
+              <select
+                name={key}
+                value={formData[key]}
+                onChange={handleChange}
+                className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring focus:ring-teal-500"
+                required
+              >
+                <option value="Full-Time">Full-Time</option>
+                <option value="Part-Time">Part-Time</option>
+                <option value="Contract">Contract</option>
+                <option value="Internship">Internship</option>
+              </select>
+            ) : (
+              <input
+                type={
+                  key === "startDate" || key === "applicationDeadline"
+                    ? "date"
+                    : "text"
+                }
+                name={key}
+                value={formData[key]}
+                onChange={
+                  key === "qualifications"
+                    ? handleQualificationsChange
+                    : handleChange
+                }
+                className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring focus:ring-teal-500"
+                placeholder={`Enter ${label.toLowerCase()}`}
+                required
+              />
+            )}
+          </div>
+        ))}
 
-        {/* Company Name */}
+        {/* Contact Info */}
         <div>
           <label className="block text-gray-700 font-medium mb-2">
-            Company Name
+            Contact Information
           </label>
-          <input
-            type="text"
-            value={companyName}
-            onChange={(e) => setCompanyName(e.target.value)}
-            className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring focus:ring-purple-500"
-            placeholder="Enter company name"
-            required
-          />
-        </div>
-
-        {/* Location */}
-        <div>
-          <label className="block text-gray-700 font-medium mb-2">
-            Location
-          </label>
-          <input
-            type="text"
-            value={location}
-            onChange={(e) => setLocation(e.target.value)}
-            className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring focus:ring-purple-500"
-            placeholder="Enter job location"
-            required
-          />
-        </div>
-
-        {/* Job Type */}
-        <div>
-          <label className="block text-gray-700 font-medium mb-2">
-            Job Type
-          </label>
-          <select
-            value={jobType}
-            onChange={(e) => setJobType(e.target.value)}
-            className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring focus:ring-purple-500"
-            required
-          >
-            <option value="Full-Time">Full-Time</option>
-            <option value="Part-Time">Part-Time</option>
-            <option value="Contract">Contract</option>
-            <option value="Internship">Internship</option>
-          </select>
-        </div>
-
-        {/* Job Description */}
-        <div>
-          <label className="block text-gray-700 font-medium mb-2">
-            Job Description
-          </label>
-          <textarea
-            value={jobDescription}
-            onChange={(e) => setJobDescription(e.target.value)}
-            className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring focus:ring-purple-500"
-            placeholder="Enter job description"
-            rows="4"
-            required
-          />
-        </div>
-
-        {/* Start Date */}
-        <div>
-          <label className="block text-gray-700 font-medium mb-2">
-            Start Date
-          </label>
-          <input
-            type="date"
-            value={startDate}
-            onChange={(e) => setStartDate(e.target.value)}
-            className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring focus:ring-purple-500"
-            required
-          />
-        </div>
-
-        {/* End Date or Duration */}
-        <div>
-          <label className="block text-gray-700 font-medium mb-2">
-            End Date or Duration
-          </label>
-          <input
-            type="text"
-            value={endDateOrDuration}
-            onChange={(e) => setEndDateOrDuration(e.target.value)}
-            className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring focus:ring-purple-500"
-            placeholder="Enter end date or duration"
-            required
-          />
-        </div>
-
-        {/* Stipend or Salary */}
-        <div>
-          <label className="block text-gray-700 font-medium mb-2">
-            Stipend or Salary
-          </label>
-          <input
-            type="text"
-            value={stipendOrSalary}
-            onChange={(e) => setStipendOrSalary(e.target.value)}
-            className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring focus:ring-purple-500"
-            placeholder="Enter stipend or salary details"
-            required
-          />
-        </div>
-
-        {/* Qualifications */}
-        <div>
-          <label className="block text-gray-700 font-medium mb-2">
-            Qualifications
-          </label>
-          <input
-            type="text"
-            value={qualifications}
-            onChange={(e) => setQualifications(e.target.value)}
-            className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring focus:ring-purple-500"
-            placeholder="Enter required qualifications (comma-separated)"
-            required
-          />
-        </div>
-
-        {/* Preferred Experience */}
-        <div>
-          <label className="block text-gray-700 font-medium mb-2">
-            Preferred Experience
-          </label>
-          <input
-            type="text"
-            value={preferredExperience}
-            onChange={(e) => setPreferredExperience(e.target.value)}
-            className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring focus:ring-purple-500"
-            placeholder="Enter preferred experience level (e.g., None)"
-          />
-        </div>
-
-        {/* Application Deadline */}
-        <div>
-          <label className="block text-gray-700 font-medium mb-2">
-            Application Deadline
-          </label>
-          <input
-            type="date"
-            value={applicationDeadline}
-            onChange={(e) => setApplicationDeadline(e.target.value)}
-            className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring focus:ring-purple-500"
-            required
-          />
+          {Object.entries(formData.contactInfo).map(([field, value]) => (
+            <input
+              key={field}
+              type={field === "email" ? "email" : "text"}
+              name={`contactInfo.${field}`}
+              value={value}
+              onChange={handleChange}
+              className="w-full mt-2 p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring focus:ring-teal-500"
+              placeholder={`Enter contact ${field}`}
+              required={field === "name" || field === "email"}
+            />
+          ))}
         </div>
 
         {/* Application Process */}
@@ -296,62 +209,12 @@ const PostAJob = () => {
             Application Process
           </label>
           <textarea
-            value={applicationProcess}
-            onChange={(e) => setApplicationProcess(e.target.value)}
-            className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring focus:ring-purple-500"
+            name="applicationProcess"
+            value={formData.applicationProcess}
+            onChange={handleChange}
+            className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring focus:ring-teal-500"
             placeholder="Describe the application process"
             rows="3"
-          />
-        </div>
-
-        {/* Contact Info */}
-        <div>
-          <label className="block text-gray-700 font-medium mb-2">
-            Contact Information
-          </label>
-          <input
-            type="text"
-            value={contactInfo.name}
-            onChange={(e) =>
-              setContactInfo({ ...contactInfo, name: e.target.value })
-            }
-            className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring focus:ring-purple-500"
-            placeholder="Enter contact name"
-            required
-          />
-          <input
-            type="email"
-            value={contactInfo.email}
-            onChange={(e) =>
-              setContactInfo({ ...contactInfo, email: e.target.value })
-            }
-            className="w-full mt-2 p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring focus:ring-purple-500"
-            placeholder="Enter contact email"
-            required
-          />
-          <input
-            type="tel"
-            value={contactInfo.phone}
-            onChange={(e) =>
-              setContactInfo({ ...contactInfo, phone: e.target.value })
-            }
-            className="w-full mt-2 p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring focus:ring-purple-500"
-            placeholder="Enter contact phone"
-          />
-        </div>
-
-        {/* Application Link or Email */}
-        <div>
-          <label className="block text-gray-700 font-medium mb-2">
-            Application Link or Email
-          </label>
-          <input
-            type="text"
-            value={applicationLinkOrEmail}
-            onChange={(e) => setApplicationLinkOrEmail(e.target.value)}
-            className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring focus:ring-purple-500"
-            placeholder="Enter application link or email"
-            required
           />
         </div>
 
@@ -360,21 +223,21 @@ const PostAJob = () => {
           <label className="block text-gray-700 font-medium mb-2">
             Image Upload
           </label>
-          <input type="file" onChange={handleFileUpload} />
-          {uploading && <p>Uploading...</p>}
+          <input
+            type="file"
+            accept="image/*"
+            onChange={handleFileUpload}
+            className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring focus:ring-teal-500"
+          />
+          {uploading && <p className="text-gray-500">Uploading...</p>}
           {previewUrl && (
-            <img
-              src={previewUrl}
-              alt="Preview"
-              className="mt-4 w-full h-64 object-cover"
-            />
+            <img src={previewUrl} alt="Preview" className="mt-2 rounded" />
           )}
         </div>
 
-        {/* Submit Button */}
         <button
           type="submit"
-          className="w-full bg-teal-600 text-white font-semibold py-3 rounded-lg hover:bg-teal-700 transition duration-200"
+          className="w-full p-3 bg-teal-500 text-white font-semibold rounded-lg hover:bg-teal-600"
         >
           Post Internship
         </button>
