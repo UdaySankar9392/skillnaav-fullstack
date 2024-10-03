@@ -7,6 +7,7 @@ import {
   FaDollarSign,
 } from "react-icons/fa";
 import { useTabContext } from "./UserHomePageContext/HomePageContext";
+
 const ApplyCards = ({ job, onBack }) => {
   const { savedJobs, applications, saveJob, removeJob, applyJob } =
     useTabContext();
@@ -31,14 +32,14 @@ const ApplyCards = ({ job, onBack }) => {
 
   return (
     <div className="relative bg-white rounded-lg shadow-lg max-w-full mx-auto p-4 sm:p-6 lg:p-8 xl:p-12 overflow-auto">
-      <button className="text-gray-500 text-sm mb-4" onClick={onBack}>
+      <button className="text-gray-500 w-12 h-12 text-sm mb-4" onClick={onBack}>
         &lt; back
       </button>
 
       <div className="flex flex-col md:flex-row items-start justify-between mb-4">
         <div className="flex items-start mb-4 md:mb-0">
           <img
-            src="https://via.placeholder.com/60"
+            src={job.imgUrl}
             alt="company-logo"
             className="rounded-full w-12 h-12 mr-4"
           />
@@ -46,20 +47,23 @@ const ApplyCards = ({ job, onBack }) => {
             <h2 className="text-xl md:text-2xl font-semibold text-gray-800">
               {job.jobTitle}
             </h2>
-            <p className="text-gray-500">{job.company}</p>
+            <p className="text-gray-500">{job.companyName}</p>
             <div className="flex items-center text-gray-500 mt-2 text-sm md:text-base">
               <FaMapMarkerAlt className="mr-2" />
               <p>
-                {job.location} • {job.type}
+                {job.location} • {job.jobType}
               </p>
             </div>
             <div className="flex items-center text-gray-500 mt-2 text-sm md:text-base">
               <FaBriefcase className="mr-2" />
-              <p>{job.duration}</p>
+              <p>
+                From {new Date(job.startDate).toLocaleDateString()} to{" "}
+                {job.endDateOrDuration}
+              </p>
             </div>
             <div className="flex items-center text-gray-500 mt-2 text-sm md:text-base">
               <FaDollarSign className="mr-2" />
-              <p>{job.salary}</p>
+              <p>{job.stipendOrSalary}</p>
             </div>
             <button
               onClick={handleApply}
@@ -91,24 +95,7 @@ const ApplyCards = ({ job, onBack }) => {
         <h3 className="text-lg md:text-xl font-semibold text-gray-800 mb-2">
           About the job
         </h3>
-        <p className="text-gray-600 leading-relaxed">
-          {/* Add the job description here */}
-          Accusamus similique repudiandae exercitationem error dolore autem ea
-          laborum. Voluptates iste id velit consectetur et a. Rerum ipsum quae.
-          Voluptate odit et quo hic rem tempora. Est et consequatur deserunt
-          molestias a at quasi dicta. Et sunt maxime at totam ratione.
-          <br />
-          <br />
-          Corrupti pariatur eum eum. Velit cupiditate rerum velit debitis. Sequi
-          ducimus ipsum facilis voluptas. Dignissimos dolores aut voluptas.
-          Possimus magni voluptas est. Animi impedit aut.
-          <br />
-          <br />
-          Nihil ipsam voluptas. Voluptates omnis et. Dolores modi temporibus
-          quidem est porro culpa. Exercitationem qui voluptatem repudiandae
-          voluptate et dolores. Est omnis ut et est cumque at provident eos
-          sint. Et qui aut recusandae quam dolor explicabo.
-        </p>
+        <p className="text-gray-600 leading-relaxed">{job.jobDescription}</p>
       </div>
 
       <div>
@@ -116,11 +103,25 @@ const ApplyCards = ({ job, onBack }) => {
           Skills required
         </h3>
         <div className="flex flex-wrap gap-2">
-          <span className="text-sm bg-gray-200 text-gray-800 py-1 px-3 rounded-full">
-            {job.field}
-          </span>
-          {/* Add more skills if needed */}
+          {job.qualifications.map((qualification, index) => (
+            <span
+              key={index}
+              className="text-sm bg-gray-200 text-gray-800 py-1 px-3 rounded-full"
+            >
+              {qualification}
+            </span>
+          ))}
         </div>
+      </div>
+
+      <div className="mt-6">
+        <h3 className="text-lg md:text-xl font-semibold text-gray-800 mb-2">
+          Contact Information
+        </h3>
+        <p className="text-gray-600">
+          {job.contactInfo.name}, {job.contactInfo.email},{" "}
+          {job.contactInfo.phone}
+        </p>
       </div>
     </div>
   );

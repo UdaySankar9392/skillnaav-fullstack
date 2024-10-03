@@ -20,16 +20,15 @@ const Home = () => {
       try {
         const response = await fetch("/api/interns/");
         const data = await response.json();
-        // Filter jobs where isApproved is true
         const approvedJobs = data.filter((job) => job.isApproved);
-        setJobData(approvedJobs); // Set the state with approved jobs
+        setJobData(approvedJobs);
       } catch (error) {
         console.error("Error fetching job data:", error);
       }
     };
 
     fetchJobData();
-  }, []); // Empty dependency array to run only on mount
+  }, []);
 
   const handleViewDetails = (job) => {
     setSelectedJob(job);
@@ -43,7 +42,7 @@ const Home = () => {
     if (savedJobs.some((savedJob) => savedJob.jobTitle === job.jobTitle)) {
       removeJob(job);
     } else {
-      saveJob({ ...job, isApplied: false }); // Save the job without applying status
+      saveJob({ ...job, isApplied: false });
     }
   };
 
@@ -110,7 +109,8 @@ const Home = () => {
                       {job.jobType}
                     </p>
                     <p>
-                      <FontAwesomeIcon icon={faClock} /> {job.startDate} -{" "}
+                      <FontAwesomeIcon icon={faClock} />{" "}
+                      {new Date(job.startDate).toLocaleDateString()} -{" "}
                       {job.endDateOrDuration}
                     </p>
                     <p>
@@ -119,9 +119,16 @@ const Home = () => {
                     </p>
                   </div>
                   <div className="flex items-center justify-between">
-                    <span className="bg-blue-100 text-blue-800 text-sm font-medium mr-2 px-2.5 py-0.5 rounded">
-                      {job.preferredExperience}
-                    </span>
+                    <div className="flex flex-wrap gap-2">
+                      {job.qualifications.map((qualification, index) => (
+                        <span
+                          key={index}
+                          className="text-sm bg-gray-200 text-gray-800 py-1 px-3 rounded-full"
+                        >
+                          {qualification}
+                        </span>
+                      ))}
+                    </div>
                     <button
                       className="text-purple-600 hover:underline"
                       onClick={() => handleViewDetails(job)}
