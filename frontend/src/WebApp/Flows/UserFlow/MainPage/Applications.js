@@ -1,15 +1,42 @@
-import React from "react";
-import { useTabContext } from "./UserHomePageContext/HomePageContext";
+import React, { useEffect, useState } from "react";
+import axios from "axios";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
-  faHeart,
   faMapMarkerAlt,
   faClock,
   faDollarSign,
 } from "@fortawesome/free-solid-svg-icons";
 
 const Applications = () => {
-  const { applications } = useTabContext();
+  // State to store applications
+  const [applications, setApplications] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  // Fetch applications when the component mounts
+  useEffect(() => {
+    const fetchApplications = async () => {
+      try {
+        const response = await axios.get("/api/applications"); // Replace with your actual API route
+        setApplications(response.data); // Set the applications data
+        setLoading(false);
+      } catch (err) {
+        console.error("Error fetching applications:", err);
+        setError("Failed to load applications. Please try again.");
+        setLoading(false);
+      }
+    };
+
+    fetchApplications();
+  }, []); // Empty dependency array means this runs once when the component mounts
+
+  if (loading) {
+    return <p>Loading applications...</p>;
+  }
+
+  if (error) {
+    return <p>{error}</p>;
+  }
 
   return (
     <div className="p-4 font-poppins">

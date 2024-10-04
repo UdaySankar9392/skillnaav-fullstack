@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import axios from "axios";
 import {
   FaHeart,
   FaShareAlt,
@@ -11,14 +12,47 @@ import { useTabContext } from "./UserHomePageContext/HomePageContext";
 const ApplyCards = ({ job, onBack }) => {
   const { savedJobs, applications, saveJob, removeJob, applyJob } =
     useTabContext();
-  const [isApplied, setIsApplied] = useState(
-    applications.some((appJob) => appJob.jobTitle === job.jobTitle)
-  );
 
-  const handleApply = () => {
+  // Check if the job is already applied
+  const isAlreadyApplied = applications.some(
+    (appJob) => appJob.jobTitle === job.jobTitle
+  );
+  const [isApplied, setIsApplied] = useState(isAlreadyApplied);
+
+  const handleApply = async () => {
     if (!isApplied) {
-      setIsApplied(true);
-      applyJob(job); // Save the job to applications
+      setIsApplied(true); // Temporarily set to avoid multiple clicks
+
+      try {
+        const response = await axios.post("/api/applications", {
+          jobTitle: job.jobTitle,
+          companyName: job.companyName,
+          location: job.location,
+          jobType: job.jobType,
+          startDate: job.startDate,
+          endDateOrDuration: job.endDateOrDuration,
+          stipendOrSalary: job.stipendOrSalary,
+          jobDescription: job.jobDescription,
+          qualifications: job.qualifications,
+          imgUrl: job.imgUrl,
+          contactInfo: {
+            name: job.contactInfo?.name,
+            email: job.contactInfo?.email,
+            phone: job.contactInfo?.phone,
+          },
+        });
+
+        if (response.status === 201) {
+          applyJob(job); // Save the job to the applications context
+          alert("Application submitted successfully!");
+        } else {
+          throw new Error(response.data.message || "Failed to apply.");
+        }
+      } catch (error) {
+        console.error("Error submitting application:", error);
+        alert(error.response?.data?.message || "Failed to apply.");
+        setIsApplied(false); // Reset state to allow retry
+      }
     }
   };
 
@@ -38,11 +72,13 @@ const ApplyCards = ({ job, onBack }) => {
 
       <div className="flex flex-col md:flex-row items-start justify-between mb-4">
         <div className="flex items-start mb-4 md:mb-0">
-          <img
-            src={job.imgUrl}
-            alt="company-logo"
-            className="rounded-full w-12 h-12 mr-4"
-          />
+          {job.imgUrl && (
+            <img
+              src={job.imgUrl}
+              alt="company-logo"
+              className="rounded-full w-12 h-12 mr-4"
+            />
+          )}
           <div>
             <h2 className="text-xl md:text-2xl font-semibold text-gray-800">
               {job.jobTitle}
@@ -51,19 +87,19 @@ const ApplyCards = ({ job, onBack }) => {
             <div className="flex items-center text-gray-500 mt-2 text-sm md:text-base">
               <FaMapMarkerAlt className="mr-2" />
               <p>
-                {job.location} • {job.jobType}
+                {job.location} • {job.jobType || "Not specified"}
               </p>
             </div>
             <div className="flex items-center text-gray-500 mt-2 text-sm md:text-base">
               <FaBriefcase className="mr-2" />
               <p>
                 From {new Date(job.startDate).toLocaleDateString()} to{" "}
-                {job.endDateOrDuration}
+                {job.endDateOrDuration || "Not specified"}
               </p>
             </div>
             <div className="flex items-center text-gray-500 mt-2 text-sm md:text-base">
               <FaDollarSign className="mr-2" />
-              <p>{job.stipendOrSalary}</p>
+              <p>{job.stipendOrSalary || "Not specified"}</p>
             </div>
             <button
               onClick={handleApply}
@@ -95,7 +131,9 @@ const ApplyCards = ({ job, onBack }) => {
         <h3 className="text-lg md:text-xl font-semibold text-gray-800 mb-2">
           About the job
         </h3>
-        <p className="text-gray-600 leading-relaxed">{job.jobDescription}</p>
+        <p className="text-gray-600 leading-relaxed">
+          {job.jobDescription || "No description available"}
+        </p>
       </div>
 
       <div>
@@ -103,7 +141,7 @@ const ApplyCards = ({ job, onBack }) => {
           Skills required
         </h3>
         <div className="flex flex-wrap gap-2">
-          {job.qualifications.map((qualification, index) => (
+          {(job.qualifications || []).map((qualification, index) => (
             <span
               key={index}
               className="text-sm bg-gray-200 text-gray-800 py-1 px-3 rounded-full"
@@ -119,8 +157,9 @@ const ApplyCards = ({ job, onBack }) => {
           Contact Information
         </h3>
         <p className="text-gray-600">
-          {job.contactInfo.name}, {job.contactInfo.email},{" "}
-          {job.contactInfo.phone}
+          {job.contactInfo?.name || "Not provided"},{" "}
+          {job.contactInfo?.email || "Not provided"},{" "}
+          {job.contactInfo?.phone || "Not provided"}
         </p>
       </div>
     </div>
