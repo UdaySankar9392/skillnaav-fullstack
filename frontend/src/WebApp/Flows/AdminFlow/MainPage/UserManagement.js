@@ -1,71 +1,85 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import axios from "axios";
 
 const UserManagement = () => {
-  const [internships, setInternships] = useState([
-    {
-      id: 1,
-      title: "Aerospace Internship",
-      applicant: "John Doe",
-      status: "pending",
-    },
-    {
-      id: 2,
-      title: "Aeronautical Internship",
-      applicant: "Jane Smith",
-      status: "pending",
-    },
-    {
-      id: 3,
-      title: "Propulsion Internship",
-      applicant: "Alice Johnson",
-      status: "pending",
-    },
-    {
-      id: 4,
-      title: "Software Engineering Internship",
-      applicant: "Mike Brown",
-      status: "approved",
-    },
-    {
-      id: 5,
-      title: "Data Science Internship",
-      applicant: "Emily White",
-      status: "rejected",
-    },
-    {
-      id: 6,
-      title: "Web Development Internship",
-      applicant: "Robert Green",
-      status: "pending",
-    },
-  ]);
+  const [internships, setInternships] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [reviewingId, setReviewingId] = useState(null); // Track which application is being reviewed
 
-  const handleApprove = (id) => {
-    setInternships((prevInternships) =>
-      prevInternships.map((internship) =>
-        internship.id === id
-          ? { ...internship, status: "approved" }
-          : internship
-      )
-    );
-    console.log(`Approved internship with ID: ${id}`);
+  // Fetch data from the API on component mount
+  useEffect(() => {
+    const fetchApplications = async () => {
+      try {
+        const response = await axios.get("/api/applications"); // Replace with your API endpoint
+        setInternships(response.data);
+        setLoading(false);
+      } catch (err) {
+        setError(err.message);
+        setLoading(false);
+      }
+    };
+
+    fetchApplications();
+  }, []);
+
+  const handleApprove = async (id) => {
+    try {
+      setLoading(true); // Optionally add loading state
+      const response = await axios.patch(`/api/applications/${id}`, {
+        status: "approved",
+      });
+
+      if (response.status === 200) {
+        setInternships((prevInternships) =>
+          prevInternships.map((internship) =>
+            internship._id === id
+              ? { ...internship, status: "approved" }
+              : internship
+          )
+        );
+      } else {
+        throw new Error("Failed to approve the application.");
+      }
+    } catch (err) {
+      console.error("Error approving application:", err.message);
+    } finally {
+      setReviewingId(null); // Close the action buttons after action
+      setLoading(false);
+    }
   };
 
-  const handleReject = (id) => {
-    setInternships((prevInternships) =>
-      prevInternships.map((internship) =>
-        internship.id === id
-          ? { ...internship, status: "rejected" }
-          : internship
-      )
-    );
-    console.log(`Rejected internship with ID: ${id}`);
+  const handleReject = async (id) => {
+    try {
+      await axios.patch(`/api/applications/${id}`, { status: "rejected" });
+      setInternships((prevInternships) =>
+        prevInternships.map((internship) =>
+          internship._id === id
+            ? { ...internship, status: "rejected" }
+            : internship
+        )
+      );
+      setReviewingId(null); // Close the action buttons after rejecting
+    } catch (err) {
+      console.error("Error rejecting application:", err.message);
+    }
   };
 
   const handleReview = (id) => {
-    console.log(`Reviewing internship with ID: ${id}`);
-    // Implement review logic as needed
+    if (reviewingId === id) {
+      setReviewingId(null); // If already reviewing, toggle it off
+    } else {
+      setReviewingId(id); // Set the current ID to show action buttons
+    }
   };
+
+  if (loading) {
+    return <div>Loading applications...</div>;
+  }
+
+  if (error) {
+    return <div>Error fetching data: {error}</div>;
+  }
 
   return (
     <div className="p-6 bg-white rounded-lg shadow-lg max-w-6xl mx-auto">
@@ -83,7 +97,13 @@ const UserManagement = () => {
                 Title
               </th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">
-                Applicant
+                Company Name
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">
+                Location
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">
+                Stipend/Salary
               </th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">
                 Status
@@ -96,17 +116,23 @@ const UserManagement = () => {
           <tbody className="bg-white divide-y divide-gray-200">
             {internships.map((internship, index) => (
               <tr
-                key={internship.id}
+                key={internship._id}
                 className="hover:bg-gray-50 transition duration-200"
               >
                 <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-700">
                   {index + 1}
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
-                  {internship.title}
+                  {internship.jobTitle}
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
-                  {internship.applicant}
+                  {internship.companyName}
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
+                  {internship.location}
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
+                  {internship.stipendOrSalary}
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap">
                   <span
@@ -123,26 +149,31 @@ const UserManagement = () => {
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap">
                   {internship.status === "pending" ? (
-                    <div className="flex space-x-2">
-                      <button
-                        onClick={() => handleApprove(internship.id)}
-                        className="bg-green-500 text-white px-3 py-1 rounded hover:bg-green-600 transition duration-200 text-sm"
-                      >
-                        Approve
-                      </button>
-                      <button
-                        onClick={() => handleReject(internship.id)}
-                        className="bg-red-500 text-white px-3 py-1 rounded hover:bg-red-600 transition duration-200 text-sm"
-                      >
-                        Reject
-                      </button>
-                      <button
-                        onClick={() => handleReview(internship.id)}
-                        className="bg-blue-500 text-white px-3 py-1 rounded hover:bg-blue-600 transition duration-200 text-sm"
-                      >
-                        Review
-                      </button>
-                    </div>
+                    <>
+                      {reviewingId === internship._id ? (
+                        <div className="flex space-x-2">
+                          <button
+                            onClick={() => handleApprove(internship._id)}
+                            className="bg-green-500 text-white px-3 py-1 rounded hover:bg-green-600 transition duration-200 text-sm"
+                          >
+                            Approve
+                          </button>
+                          <button
+                            onClick={() => handleReject(internship._id)}
+                            className="bg-red-500 text-white px-3 py-1 rounded hover:bg-red-600 transition duration-200 text-sm"
+                          >
+                            Reject
+                          </button>
+                        </div>
+                      ) : (
+                        <button
+                          onClick={() => handleReview(internship._id)}
+                          className="bg-blue-500 text-white px-3 py-1 rounded hover:bg-blue-600 transition duration-200 text-sm"
+                        >
+                          Review
+                        </button>
+                      )}
+                    </>
                   ) : (
                     <span className="text-gray-500 text-sm">
                       No actions available
