@@ -1,5 +1,5 @@
 const express = require("express");
-const InternshipPosting = require("../../models/webapp-models/internshipPostModel.js"); // Adjust the path to your model
+const InternshipPosting = require("../../models/webapp-models/internshipPostModel.js");
 const router = express.Router();
 
 // GET all internship postings
@@ -206,4 +206,5 @@ router.get("/approved", async (req, res) => {
     });
   }
 });
+
 module.exports = router;
