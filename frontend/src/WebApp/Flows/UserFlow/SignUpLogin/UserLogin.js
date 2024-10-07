@@ -30,6 +30,8 @@ const UserLogin = () => {
       };
       // Ensure this path is correct
       const { data } = await axios.post("/api/users/login", values, config);
+      const token = data.token; // Use data to get the token
+      localStorage.setItem("token", JSON.stringify(token));
       localStorage.setItem("userInfo", JSON.stringify(data));
       setLoading(false);
       navigate("/user-main-page");
