@@ -209,7 +209,7 @@ const AdminCreateAccount = () => {
 
           {/* Login Link */}
           <p className="text-center text-gray-500">
-            Already have an account?{" "}
+            Already have an account?
             <Link
               to="/admin/login"
               className="text-blue-500 hover:underline font-semibold"
