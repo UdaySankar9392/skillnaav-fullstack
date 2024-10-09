@@ -17,7 +17,7 @@ const ApplicationSchema = new mongoose.Schema(
       email: { type: String, required: true },
       phone: { type: String, required: true },
     },
-    isApplied: { type: Boolean, default: false }, // Add isApplied field
+    isApplied: { type: Boolean, default: false }, 
   },
   { timestamps: true }
 );
