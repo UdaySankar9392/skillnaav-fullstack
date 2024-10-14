@@ -10,7 +10,34 @@ import {
 import { useTabContext } from "./UserHomePageContext/HomePageContext";
 
 const ApplyCards = ({ job, onBack }) => {
- 
+  const { savedJobs, applications, saveJob, removeJob } = useTabContext();
+  const [isApplied, setIsApplied] = useState(
+    applications.some((appJob) => appJob.jobTitle === job.jobTitle)
+  );
+
+  const handleApply = async () => {
+    try {
+      const response = await axios.put(`/api/interns/${job._id}`, {
+        studentApplied: true,
+      });
+
+      if (response.status === 200) {
+        setIsApplied(true);
+        // Optionally, update the local applications state if needed
+      }
+    } catch (error) {
+      console.error("Error applying for the job:", error);
+      // Handle the error accordingly (e.g., show a notification)
+    }
+  };
+
+  const toggleSaveJob = () => {
+    if (savedJobs.some((savedJob) => savedJob.jobTitle === job.jobTitle)) {
+      removeJob(job);
+    } else {
+      saveJob(job);
+    }
+  };
 
   return (
     <div className="relative bg-white rounded-lg shadow-lg max-w-full mx-auto p-4 sm:p-6 lg:p-8 xl:p-12 overflow-auto">

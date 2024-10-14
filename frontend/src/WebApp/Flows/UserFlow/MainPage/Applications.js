@@ -17,7 +17,7 @@ const Applications = () => {
   useEffect(() => {
     const fetchApplications = async () => {
       try {
-        const response = await axios.get("/api/applications"); // Replace with your actual API route
+        const response = await axios.get("/api/interns"); // Replace with your actual API route
         setApplications(response.data); // Set the applications data
         setLoading(false);
       } catch (err) {
@@ -38,14 +38,17 @@ const Applications = () => {
     return <p>{error}</p>;
   }
 
+  // Filter to only include applications where studentApplied is true
+  const appliedInternships = applications.filter((job) => job.studentApplied);
+
   return (
     <div className="p-4 font-poppins">
       <h2 className="text-xl font-semibold mb-4">Your Applications</h2>
-      {applications.length === 0 ? (
+      {appliedInternships.length === 0 ? (
         <p>No applications yet.</p>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          {applications.map((job, index) => (
+          {appliedInternships.map((job, index) => (
             <div key={index} className="bg-white rounded-lg shadow-lg p-4">
               <div className="flex justify-between items-center mb-4">
                 <div className="flex items-center">
