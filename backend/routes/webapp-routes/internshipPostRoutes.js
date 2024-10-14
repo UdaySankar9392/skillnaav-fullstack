@@ -17,8 +17,6 @@ router.get("/", async (req, res) => {
 // POST create a new internship posting
 router.post("/", async (req, res) => {
   try {
-    console.log(req.body); // Log the incoming request data
-
     const newInternship = new InternshipPosting({
       jobTitle: req.body.jobTitle,
       companyName: req.body.companyName,
@@ -35,12 +33,14 @@ router.post("/", async (req, res) => {
       contactInfo: req.body.contactInfo,
       applicationLinkOrEmail: req.body.applicationLinkOrEmail,
       imgUrl: req.body.imgUrl,
+      studentApplied: req.body.studentApplied || false,
+      adminApproved: req.body.adminApproved || false,
     });
 
     const createdInternship = await newInternship.save();
     res.status(201).json(createdInternship);
   } catch (error) {
-    console.error("Error: ", error); // Log the actual error
+    console.error("Error: ", error);
     res
       .status(400)
       .json({ message: "Error: Unable to create internship post" });
@@ -87,6 +87,8 @@ router.put("/:id", async (req, res) => {
     skillsToBeDeveloped,
     numberOfOpenings,
     imgUrl,
+    studentApplied,
+    adminApproved,
   } = req.body;
 
   try {
@@ -115,6 +117,12 @@ router.put("/:id", async (req, res) => {
       internship.skillsToBeDeveloped = skillsToBeDeveloped;
       internship.numberOfOpenings = numberOfOpenings;
       internship.imgUrl = imgUrl;
+      internship.studentApplied =
+        studentApplied !== undefined
+          ? studentApplied
+          : internship.studentApplied; // Update or retain current value
+      internship.adminApproved =
+        adminApproved !== undefined ? adminApproved : internship.adminApproved; // Update or retain current value
 
       const updatedInternship = await internship.save();
       res.json(updatedInternship);
@@ -159,7 +167,7 @@ router.patch("/:id/approve", async (req, res) => {
     const internship = await InternshipPosting.findById(req.params.id);
 
     if (internship) {
-      internship.isApproved = true; // Mark as approved
+      internship.adminApproved = true; // Mark as approved
       await internship.save(); // Save changes
       res.json({ message: "Internship approved successfully", internship });
     } else {
@@ -178,7 +186,7 @@ router.patch("/:id/reject", async (req, res) => {
     const internship = await InternshipPosting.findById(req.params.id);
 
     if (internship) {
-      internship.isApproved = false; // Mark as rejected
+      internship.adminApproved = false; // Mark as rejected
       await internship.save(); // Save changes
       res.json({ message: "Internship rejected successfully", internship });
     } else {
@@ -195,7 +203,7 @@ router.patch("/:id/reject", async (req, res) => {
 router.get("/approved", async (req, res) => {
   try {
     const approvedInternships = await InternshipPosting.find({
-      isApproved: true,
+      adminApproved: true,
     });
     res.json(approvedInternships);
   } catch (error) {
