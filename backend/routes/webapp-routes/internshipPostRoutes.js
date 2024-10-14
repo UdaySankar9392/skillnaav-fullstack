@@ -17,8 +17,6 @@ router.get("/", async (req, res) => {
 // POST create a new internship posting
 router.post("/", async (req, res) => {
   try {
-    console.log(req.body); // Log the incoming request data
-
     const newInternship = new InternshipPosting({
       jobTitle: req.body.jobTitle,
       companyName: req.body.companyName,
@@ -35,12 +33,14 @@ router.post("/", async (req, res) => {
       contactInfo: req.body.contactInfo,
       applicationLinkOrEmail: req.body.applicationLinkOrEmail,
       imgUrl: req.body.imgUrl,
+      studentApplied: req.body.studentApplied || false,
+      adminApproved: req.body.adminApproved || false,
     });
 
     const createdInternship = await newInternship.save();
     res.status(201).json(createdInternship);
   } catch (error) {
-    console.error("Error: ", error); // Log the actual error
+    console.error("Error: ", error);
     res
       .status(400)
       .json({ message: "Error: Unable to create internship post" });
@@ -87,44 +87,56 @@ router.put("/:id", async (req, res) => {
     skillsToBeDeveloped,
     numberOfOpenings,
     imgUrl,
+    studentApplied,
+    adminApproved,
   } = req.body;
 
   try {
-    const internship = await InternshipPosting.findById(req.params.id);
+    // Use findByIdAndUpdate for better efficiency and only update fields that are provided in the request
+    const updatedInternship = await InternshipPosting.findByIdAndUpdate(
+      req.params.id,
+      {
+        // Only update fields that are present in the request
+        ...(jobTitle && { jobTitle }),
+        ...(companyName && { companyName }),
+        ...(location && { location }),
+        ...(jobType && { jobType }),
+        ...(jobDescription && { jobDescription }),
+        ...(startDate && { startDate }),
+        ...(endDateOrDuration && { endDateOrDuration }),
+        ...(stipendOrSalary && { stipendOrSalary }),
+        ...(qualifications && { qualifications }),
+        ...(preferredExperience && { preferredExperience }),
+        ...(workingHours && { workingHours }),
+        ...(applicationDeadline && { applicationDeadline }),
+        ...(applicationProcess && { applicationProcess }),
+        ...(companyWebsite && { companyWebsite }),
+        ...(contactInfo && { contactInfo }),
+        ...(internshipBenefits && { internshipBenefits }),
+        ...(department && { department }),
+        ...(applicationLinkOrEmail && { applicationLinkOrEmail }),
+        ...(workAuthorization && { workAuthorization }),
+        ...(skillsToBeDeveloped && { skillsToBeDeveloped }),
+        ...(numberOfOpenings && { numberOfOpenings }),
+        ...(imgUrl && { imgUrl }),
+        ...(studentApplied !== undefined && { studentApplied }),
+        ...(adminApproved !== undefined && { adminApproved }),
+      },
+      { new: true } // Return the updated document
+    );
 
-    if (internship) {
-      internship.jobTitle = jobTitle;
-      internship.companyName = companyName;
-      internship.location = location;
-      internship.jobType = jobType;
-      internship.jobDescription = jobDescription;
-      internship.startDate = startDate;
-      internship.endDateOrDuration = endDateOrDuration;
-      internship.stipendOrSalary = stipendOrSalary;
-      internship.qualifications = qualifications;
-      internship.preferredExperience = preferredExperience;
-      internship.workingHours = workingHours;
-      internship.applicationDeadline = applicationDeadline;
-      internship.applicationProcess = applicationProcess;
-      internship.companyWebsite = companyWebsite;
-      internship.contactInfo = contactInfo;
-      internship.internshipBenefits = internshipBenefits;
-      internship.department = department;
-      internship.applicationLinkOrEmail = applicationLinkOrEmail;
-      internship.workAuthorization = workAuthorization;
-      internship.skillsToBeDeveloped = skillsToBeDeveloped;
-      internship.numberOfOpenings = numberOfOpenings;
-      internship.imgUrl = imgUrl;
-
-      const updatedInternship = await internship.save();
+    // Check if internship was found and updated
+    if (updatedInternship) {
       res.json(updatedInternship);
     } else {
       res.status(404).json({ message: "Internship not found" });
     }
   } catch (error) {
-    res
-      .status(400)
-      .json({ message: "Error: Unable to update internship post" });
+    console.error("Error updating internship:", error.message);
+    res.status(500).json({
+      message: "Error: Unable to update internship post",
+      error: error.message,
+    });
   }
 });
 
@@ -159,7 +171,7 @@ router.patch("/:id/approve", async (req, res) => {
     const internship = await InternshipPosting.findById(req.params.id);
 
     if (internship) {
-      internship.isApproved = true; // Mark as approved
+      internship.adminApproved = true; // Mark as approved
       await internship.save(); // Save changes
       res.json({ message: "Internship approved successfully", internship });
     } else {
@@ -178,7 +190,7 @@ router.patch("/:id/reject", async (req, res) => {
     const internship = await InternshipPosting.findById(req.params.id);
 
     if (internship) {
-      internship.isApproved = false; // Mark as rejected
+      internship.adminApproved = false; // Mark as rejected
       await internship.save(); // Save changes
       res.json({ message: "Internship rejected successfully", internship });
     } else {
@@ -195,7 +207,7 @@ router.patch("/:id/reject", async (req, res) => {
 router.get("/approved", async (req, res) => {
   try {
     const approvedInternships = await InternshipPosting.find({
-      isApproved: true,
+      adminApproved: true,
     });
     res.json(approvedInternships);
   } catch (error) {

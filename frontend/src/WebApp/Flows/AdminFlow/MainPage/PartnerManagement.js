@@ -43,10 +43,11 @@ const PartnerManagement = () => {
       });
 
       console.log("Intern approved:", response.data);
+      // Update the internships state with the approved internship
       setInternships((prevInternships) =>
         prevInternships.map((internship) =>
           internship._id === internId
-            ? { ...internship, isApproved: true }
+            ? { ...internship, adminApproved: true } // Set adminApproved to true
             : internship
         )
       );
@@ -198,14 +199,14 @@ const PartnerManagement = () => {
               <td className="px-6 py-4 flex space-x-2">
                 <button
                   className={`px-4 py-2 rounded-md text-white ${
-                    internship.isApproved
+                    internship.adminApproved
                       ? "bg-green-500"
                       : "bg-blue-500 hover:bg-blue-700"
                   }`}
                   onClick={() => handleApprove(internship._id)}
-                  disabled={internship.isApproved}
+                  disabled={internship.adminApproved}
                 >
-                  {internship.isApproved ? "Approved" : "Approve"}
+                  {internship.adminApproved ? "Approved" : "Approve"}
                 </button>
                 <button
                   className="px-4 py-2 bg-indigo-500 text-white rounded-md hover:bg-indigo-600"

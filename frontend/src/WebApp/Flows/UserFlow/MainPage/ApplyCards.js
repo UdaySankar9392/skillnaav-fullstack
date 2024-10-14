@@ -10,49 +10,25 @@ import {
 import { useTabContext } from "./UserHomePageContext/HomePageContext";
 
 const ApplyCards = ({ job, onBack }) => {
-  const { savedJobs, applications, saveJob, removeJob, applyJob } =
-    useTabContext();
-
-  // Check if the job is already applied
-  const isAlreadyApplied = applications.some(
-    (appJob) => appJob.jobTitle === job.jobTitle
+  const { savedJobs, applications, saveJob, removeJob } = useTabContext();
+  const [isApplied, setIsApplied] = useState(
+    applications.some((appJob) => appJob.jobTitle === job.jobTitle)
   );
-  const [isApplied, setIsApplied] = useState(isAlreadyApplied);
 
   const handleApply = async () => {
-    if (!isApplied) {
-      setIsApplied(true); // Temporarily set to avoid multiple clicks
+    if (isApplied) return; // Prevent multiple applications
 
-      try {
-        const response = await axios.post("/api/applications", {
-          jobTitle: job.jobTitle,
-          companyName: job.companyName,
-          location: job.location,
-          jobType: job.jobType,
-          startDate: job.startDate,
-          endDateOrDuration: job.endDateOrDuration,
-          stipendOrSalary: job.stipendOrSalary,
-          jobDescription: job.jobDescription,
-          qualifications: job.qualifications,
-          imgUrl: job.imgUrl,
-          contactInfo: {
-            name: job.contactInfo?.name,
-            email: job.contactInfo?.email,
-            phone: job.contactInfo?.phone,
-          },
-        });
+    try {
+      const response = await axios.put(`/api/interns/${job._id}`, {
+        studentApplied: true,
+      });
 
-        if (response.status === 201) {
-          applyJob(job); // Save the job to the applications context
-          alert("Application submitted successfully!");
-        } else {
-          throw new Error(response.data.message || "Failed to apply.");
-        }
-      } catch (error) {
-        console.error("Error submitting application:", error);
-        alert(error.response?.data?.message || "Failed to apply.");
-        setIsApplied(false); // Reset state to allow retry
+      if (response.status === 200) {
+        setIsApplied(true);
       }
+    } catch (error) {
+      console.error("Error applying for the job:", error);
+      // Optionally, handle the error (e.g., show a notification)
     }
   };
 
@@ -60,7 +36,7 @@ const ApplyCards = ({ job, onBack }) => {
     if (savedJobs.some((savedJob) => savedJob.jobTitle === job.jobTitle)) {
       removeJob(job);
     } else {
-      saveJob(job); // Save job to saved jobs
+      saveJob(job);
     }
   };
 
