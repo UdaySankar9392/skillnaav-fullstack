@@ -16,6 +16,8 @@ const ApplyCards = ({ job, onBack }) => {
   );
 
   const handleApply = async () => {
+    if (isApplied) return; // Prevent multiple applications
+
     try {
       const response = await axios.put(`/api/interns/${job._id}`, {
         studentApplied: true,
@@ -23,11 +25,10 @@ const ApplyCards = ({ job, onBack }) => {
 
       if (response.status === 200) {
         setIsApplied(true);
-        // Optionally, update the local applications state if needed
       }
     } catch (error) {
       console.error("Error applying for the job:", error);
-      // Handle the error accordingly (e.g., show a notification)
+      // Optionally, handle the error (e.g., show a notification)
     }
   };
 
