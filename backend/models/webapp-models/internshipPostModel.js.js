@@ -3,10 +3,6 @@ const mongoose = require("mongoose");
 const internshipPostingSchema = mongoose.Schema(
   {
     jobTitle: { type: String, required: true },
-    isApproved: {
-      type: Boolean,
-      default: false,
-    },
     companyName: { type: String, required: true },
     location: { type: String, required: true },
     jobType: { type: String, required: true },
@@ -25,6 +21,8 @@ const internshipPostingSchema = mongoose.Schema(
     },
     applicationLinkOrEmail: { type: String, required: true },
     imgUrl: { type: String, required: true },
+    studentApplied: { type: Boolean, default: false }, // New field
+    adminApproved: { type: Boolean, default: false }, // New field
   },
   { timestamps: true }
 );
