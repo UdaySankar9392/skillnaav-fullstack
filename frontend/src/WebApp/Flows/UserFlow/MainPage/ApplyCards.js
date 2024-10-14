@@ -10,59 +10,7 @@ import {
 import { useTabContext } from "./UserHomePageContext/HomePageContext";
 
 const ApplyCards = ({ job, onBack }) => {
-  const { savedJobs, applications, saveJob, removeJob, applyJob } =
-    useTabContext();
-
-  // Check if the job is already applied
-  const isAlreadyApplied = applications.some(
-    (appJob) => appJob.jobTitle === job.jobTitle
-  );
-  const [isApplied, setIsApplied] = useState(isAlreadyApplied);
-
-  const handleApply = async () => {
-    if (!isApplied) {
-      setIsApplied(true); // Temporarily set to avoid multiple clicks
-
-      try {
-        const response = await axios.post("/api/applications", {
-          jobTitle: job.jobTitle,
-          companyName: job.companyName,
-          location: job.location,
-          jobType: job.jobType,
-          startDate: job.startDate,
-          endDateOrDuration: job.endDateOrDuration,
-          stipendOrSalary: job.stipendOrSalary,
-          jobDescription: job.jobDescription,
-          qualifications: job.qualifications,
-          imgUrl: job.imgUrl,
-          contactInfo: {
-            name: job.contactInfo?.name,
-            email: job.contactInfo?.email,
-            phone: job.contactInfo?.phone,
-          },
-        });
-
-        if (response.status === 201) {
-          applyJob(job); // Save the job to the applications context
-          alert("Application submitted successfully!");
-        } else {
-          throw new Error(response.data.message || "Failed to apply.");
-        }
-      } catch (error) {
-        console.error("Error submitting application:", error);
-        alert(error.response?.data?.message || "Failed to apply.");
-        setIsApplied(false); // Reset state to allow retry
-      }
-    }
-  };
-
-  const toggleSaveJob = () => {
-    if (savedJobs.some((savedJob) => savedJob.jobTitle === job.jobTitle)) {
-      removeJob(job);
-    } else {
-      saveJob(job); // Save job to saved jobs
-    }
-  };
+ 
 
   return (
     <div className="relative bg-white rounded-lg shadow-lg max-w-full mx-auto p-4 sm:p-6 lg:p-8 xl:p-12 overflow-auto">

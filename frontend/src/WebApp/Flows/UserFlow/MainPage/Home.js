@@ -20,7 +20,7 @@ const Home = () => {
       try {
         const response = await fetch("/api/interns/");
         const data = await response.json();
-        const approvedJobs = data.filter((job) => job.isApproved);
+        const approvedJobs = data.filter((job) => job.adminApproved);
         setJobData(approvedJobs);
       } catch (error) {
         console.error("Error fetching job data:", error);

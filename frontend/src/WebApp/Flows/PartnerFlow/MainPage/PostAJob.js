@@ -4,7 +4,6 @@ import firebase from "firebase/compat/app";
 import "firebase/compat/storage"; // Import Firebase storage
 import { useTabContext } from "./UserHomePageContext/HomePageContext";
 
-
 const PostAJob = () => {
   const { saveJob } = useTabContext(); // Get saveJob from context
 
@@ -28,6 +27,8 @@ const PostAJob = () => {
     },
     applicationLinkOrEmail: "",
     imgUrl: "",
+    studentApplied: false, // New field
+    adminApproved: false, // New field
   });
 
   const [uploading, setUploading] = useState(false);
@@ -74,6 +75,8 @@ const PostAJob = () => {
       },
       applicationLinkOrEmail: "",
       imgUrl: "",
+      studentApplied: false, // Reset new field
+      adminApproved: false, // Reset new field
     });
     setPreviewUrl(null);
   };
@@ -215,6 +218,7 @@ const PostAJob = () => {
             className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring focus:ring-teal-500"
             placeholder="Describe the application process"
             rows="3"
+            required
           />
         </div>
 
