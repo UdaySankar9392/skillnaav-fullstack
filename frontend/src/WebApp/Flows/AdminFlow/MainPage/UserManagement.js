@@ -2,17 +2,18 @@ import React, { useState, useEffect } from "react";
 import axios from "axios";
 
 const UserManagement = () => {
-  const [internships, setInternships] = useState([]);
+  const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [reviewingId, setReviewingId] = useState(null); // Track which application is being reviewed
+  const [selectedUser, setSelectedUser] = useState(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
-  // Fetch data from the API on component mount
+  // Fetch data from the new API endpoint on component mount
   useEffect(() => {
-    const fetchApplications = async () => {
+    const fetchUsers = async () => {
       try {
-        const response = await axios.get("/api/applications"); // Replace with your API endpoint
-        setInternships(response.data);
+        const response = await axios.get("/api/users/users");
+        setUsers(response.data);
         setLoading(false);
       } catch (err) {
         setError(err.message);
@@ -20,171 +21,159 @@ const UserManagement = () => {
       }
     };
 
-    fetchApplications();
+    fetchUsers();
   }, []);
 
-  const handleApprove = async (id) => {
+  const handleApprove = async (userId) => {
     try {
-      setLoading(true); // Optionally add loading state
-      const response = await axios.patch(`/api/applications/${id}`, {
-        status: "approved",
-      });
-
-      if (response.status === 200) {
-        setInternships((prevInternships) =>
-          prevInternships.map((internship) =>
-            internship._id === id
-              ? { ...internship, status: "approved" }
-              : internship
-          )
-        );
-      } else {
-        throw new Error("Failed to approve the application.");
-      }
+      await axios.patch(`/api/users/approve/${userId}`);
+      setUsers(users.map(user => user._id === userId ? { ...user, isApproved: true } : user));
     } catch (err) {
-      console.error("Error approving application:", err.message);
-    } finally {
-      setReviewingId(null); // Close the action buttons after action
-      setLoading(false);
+      console.error("Error approving user:", err);
     }
   };
 
-  const handleReject = async (id) => {
+  const handleReject = async (userId) => {
     try {
-      await axios.patch(`/api/applications/${id}`, { status: "rejected" });
-      setInternships((prevInternships) =>
-        prevInternships.map((internship) =>
-          internship._id === id
-            ? { ...internship, status: "rejected" }
-            : internship
-        )
-      );
-      setReviewingId(null); // Close the action buttons after rejecting
+      await axios.patch(`/api/users/reject/${userId}`);
+      setUsers(users.map(user => user._id === userId ? { ...user, isApproved: false } : user));
     } catch (err) {
-      console.error("Error rejecting application:", err.message);
+      console.error("Error rejecting user:", err);
     }
   };
 
-  const handleReview = (id) => {
-    if (reviewingId === id) {
-      setReviewingId(null); // If already reviewing, toggle it off
-    } else {
-      setReviewingId(id); // Set the current ID to show action buttons
-    }
+  const handleUserClick = (user) => {
+    setSelectedUser(user);
+    setIsModalOpen(true);
+  };
+
+  const closeModal = () => {
+    setIsModalOpen(false);
+    setSelectedUser(null);
   };
 
   if (loading) {
-    return <div>Loading applications...</div>;
+    return (
+      <div className="flex justify-center items-center h-screen">
+        <div className="loader ease-linear rounded-full border-8 border-t-8 border-gray-200 h-16 w-16"></div>
+      </div>
+    );
   }
 
   if (error) {
-    return <div>Error fetching data: {error}</div>;
+    return <div className="text-center text-red-500">Error fetching data: {error}</div>;
   }
 
   return (
     <div className="p-6 bg-white rounded-lg shadow-lg max-w-6xl mx-auto">
-      <h2 className="text-2xl font-bold mb-6 text-center text-gray-800">
-        Internship Applications
+      <h2 className="text-3xl font-bold mb-6 text-center text-gray-800">
+        Pending Student Registrations
       </h2>
       <div className="overflow-x-auto">
         <table className="min-w-full table-auto divide-y divide-gray-200">
-          <thead className="bg-gray-100">
+          <thead className="bg-gray-200">
             <tr>
-              <th className="px-4 py-3 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">
-                S No.
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">
-                Title
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">
-                Company Name
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">
-                Location
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">
-                Stipend/Salary
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">
-                Status
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">
-                Actions
-              </th>
+              <th className="px-4 py-3 text-left text-sm font-medium text-gray-600 uppercase tracking-wider">S No.</th>
+              <th className="px-20 py-3 text-left text-sm font-medium text-gray-600 uppercase tracking-wider">Name</th>
+              <th className="px-20 py-3 text-left text-sm font-medium text-gray-600 uppercase tracking-wider">Email</th>
+              <th className="px-6 py-3 text-left text-sm font-medium text-gray-600 uppercase tracking-wider">Status</th>
+              <th className="px-6 py-3 text-left text-sm font-medium text-gray-600 uppercase tracking-wider">Actions</th>
             </tr>
           </thead>
           <tbody className="bg-white divide-y divide-gray-200">
-            {internships.map((internship, index) => (
-              <tr
-                key={internship._id}
-                className="hover:bg-gray-50 transition duration-200"
-              >
-                <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-700">
+            {users.map((user, index) => (
+              <tr key={user._id} className="hover:bg-gray-50 transition duration-200">
+                <td className="px-4 py-4 text-sm text-gray-700" onClick={() => handleUserClick(user)}>
                   {index + 1}
                 </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
-                  {internship.jobTitle}
+                <td className="px-6 py-4 text-sm font-medium text-gray-900" onClick={() => handleUserClick(user)}>
+                  {user.name}
                 </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
-                  {internship.companyName}
+                <td className="px-6 py-4 text-sm text-gray-700" onClick={() => handleUserClick(user)}>
+                  {user.email}
                 </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
-                  {internship.location}
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
-                  {internship.stipendOrSalary}
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap">
+                <td className="px-6 py-4">
                   <span
                     className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
-                      internship.status === "pending"
-                        ? "bg-yellow-100 text-yellow-600"
-                        : internship.status === "approved"
-                        ? "bg-green-100 text-green-600"
-                        : "bg-red-100 text-red-600"
+                      user.isAdmin ? "bg-green-100 text-green-600" : "bg-yellow-100 text-yellow-600"
                     }`}
                   >
-                    {internship.status}
+                    {user.isAdmin ? "Admin" : "User"}
                   </span>
                 </td>
-                <td className="px-6 py-4 whitespace-nowrap">
-                  {internship.status === "pending" ? (
-                    <>
-                      {reviewingId === internship._id ? (
-                        <div className="flex space-x-2">
-                          <button
-                            onClick={() => handleApprove(internship._id)}
-                            className="bg-green-500 text-white px-3 py-1 rounded hover:bg-green-600 transition duration-200 text-sm"
-                          >
-                            Approve
-                          </button>
-                          <button
-                            onClick={() => handleReject(internship._id)}
-                            className="bg-red-500 text-white px-3 py-1 rounded hover:bg-red-600 transition duration-200 text-sm"
-                          >
-                            Reject
-                          </button>
-                        </div>
-                      ) : (
-                        <button
-                          onClick={() => handleReview(internship._id)}
-                          className="bg-blue-500 text-white px-3 py-1 rounded hover:bg-blue-600 transition duration-200 text-sm"
-                        >
-                          Review
-                        </button>
-                      )}
-                    </>
-                  ) : (
-                    <span className="text-gray-500 text-sm">
-                      No actions available
-                    </span>
-                  )}
+                <td className="px-6 py-4 flex space-x-4">
+                  <button
+                    className={`px-3 py-1 bg-green-500 text-white text-xs font-bold rounded hover:bg-green-600 ${user.isApproved ? "opacity-50 cursor-not-allowed" : ""}`}
+                    onClick={() => handleApprove(user._id)}
+                    disabled={user.isApproved}
+                  >
+                    Approve
+                  </button>
+                  <button
+                    className={`px-3 py-1 bg-red-500 text-white text-xs font-bold rounded hover:bg-red-600 ${!user.isApproved ? "opacity-50 cursor-not-allowed" : ""}`}
+                    onClick={() => handleReject(user._id)}
+                    disabled={!user.isApproved}
+                  >
+                    Reject
+                  </button>
                 </td>
               </tr>
             ))}
           </tbody>
         </table>
       </div>
+
+      {isModalOpen && selectedUser && (
+  <div className="fixed inset-0 flex items-center justify-center z-50 bg-black bg-opacity-50">
+    <div className="bg-white rounded-lg shadow-lg max-w-lg w-full">
+      <h3 className="text-xl font-bold text-center mb-4 bg-blue-200 p-3 rounded-t">
+        User Profile Details
+      </h3>
+      <div className="bg-green-50 p-6 rounded-b-lg">
+        <div className="mb-4">
+          <label className="block text-sm font-semibold text-gray-700">University Details:</label>
+          <input type="text" className="border border-gray-300 rounded w-full px-3 py-2 mt-1 text-sm" placeholder="Enter University Details" />
+        </div>
+        <div className="mb-4">
+          <label className="block text-sm font-semibold text-gray-700">User Dob:</label>
+          <input type="text" className="border border-gray-300 rounded w-full px-3 py-2 mt-1 text-sm" placeholder="Enter User Dob" />
+          <span className="text-red-500 text-xs">* Required</span> {/* Required field indicator */}
+        </div>
+        <div className="mb-4">
+          <label className="block text-sm font-semibold text-gray-700">Application Name:</label>
+          <input type="text" className="border border-gray-300 rounded w-full px-3 py-2 mt-1 text-sm" placeholder="Enter Application Name" />
+        </div>
+        <div className="mb-4">
+          <label className="block text-sm font-semibold text-gray-700">Application Type:</label>
+          <input type="text" className="border border-gray-300 rounded w-full px-3 py-2 mt-1 text-sm" placeholder="Enter Application Type" />
+        </div>
+        <div className="mb-4">
+          <label className="block text-sm font-semibold text-gray-700">Duration:</label>
+          <input type="text" className="border border-gray-300 rounded w-full px-3 py-2 mt-1 text-sm" placeholder="Enter Duration" />
+        </div>
+        <div className="mb-4">
+          <label className="block text-sm font-semibold text-gray-700">Payment:</label>
+          <input type="text" className="border border-gray-300 rounded w-full px-3 py-2 mt-1 text-sm" placeholder="Enter Payment" />
+        </div>
+      </div>
+      <div className="flex justify-between p-4 bg-gray-100 rounded-b-lg">
+        <button className="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600 transition duration-200" onClick={closeModal}>
+          Close
+        </button>
+        <button className="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600 transition duration-200">
+          Comments
+        </button>
+        <button className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition duration-200">
+          About User
+        </button>
+      </div>
+    </div>
+  </div>
+)}
+
+
+
+
     </div>
   );
 };
