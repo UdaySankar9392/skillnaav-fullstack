@@ -80,4 +80,14 @@ const updateUserProfile = asyncHandler(async (req, res) => {
   }
 });
 
-module.exports = { registerUser, authUser, updateUserProfile };
+const getAllUsers = asyncHandler(async (req, res) => {
+  const users = await Userwebapp.find({}, "name email"); // Fetch only name and email
+
+  if (users) {
+    res.status(200).json(users);
+  } else {
+    res.status(404);
+    throw new Error("No users found!");
+  }
+});
+module.exports = { registerUser, authUser, updateUserProfile,getAllUsers };
