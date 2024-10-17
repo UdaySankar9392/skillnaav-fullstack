@@ -66,9 +66,7 @@ const UserManagement = () => {
 
   return (
     <div className="p-6 bg-white rounded-lg shadow-lg max-w-6xl mx-auto">
-      <h2 className="text-3xl font-bold mb-6 text-center text-gray-800">
-        Pending Student Registrations
-      </h2>
+      <h2 className="text-3xl font-bold mb-6 text-center text-gray-800">Pending Student Registrations</h2>
       <div className="overflow-x-auto">
         <table className="min-w-full table-auto divide-y divide-gray-200">
           <thead className="bg-gray-200">
@@ -124,54 +122,82 @@ const UserManagement = () => {
         </table>
       </div>
 
+      {/* Modal for User Profile Details */}
       {isModalOpen && selectedUser && (
         <div className="fixed inset-0 flex items-center justify-center z-50 bg-black bg-opacity-50">
           <div className="bg-white rounded-lg shadow-lg max-w-lg w-full max-h-screen overflow-y-auto">
-            <h3 className="text-xl font-bold text-center mb-4 bg-blue-200 p-3 rounded-t">
-              User Profile Details
-            </h3>
+            <h3 className="text-xl font-bold text-center mb-4 bg-blue-200 p-3 rounded-t">User Profile Details</h3>
             <div className="bg-green-50 p-6">
+              {/* University Name */}
               <div className="mb-4">
                 <label className="block text-sm font-semibold text-gray-700">University Name:</label>
-                <input type="text" className="border border-gray-300 rounded w-full px-3 py-2 mt-1 text-sm" placeholder="Enter University Details" />
+                <input 
+                  type="text" 
+                  value={selectedUser.universityName} 
+                  readOnly 
+                  className="border border-gray-300 rounded w-full px-3 py-2 mt1 text-sm" 
+                />
               </div>
-              <div className="mb-4">
-                <label className="block text-sm font-semibold text-gray-700">User Dob:</label>
-                <input type="text" className="border border-gray-300 rounded w-full px-3 py-2 mt-1 text-sm" placeholder="Enter User Dob" />
-                {/* <span className="text-red-500 text-xs">* Required</span> */}
+
+              {/* User Dob */}
+              <div className="mb4">
+                <label className="block text-sm font-semibold text-gray700">User Dob:</label>
+                <input 
+                  type="text" 
+                  value={selectedUser.dob} 
+                  readOnly 
+                  className="border border-gray300 rounded w-full px3 py2 mt1 text-sm" 
+                />
               </div>
-              <div className="mb-4">
-                <label className="block text-sm font-semibold text-gray-700">Educational Level:</label>
-                <input type="text" className="border border-gray-300 rounded w-full px-3 py-2 mt-1 text-sm" placeholder="Enter Application Name" />
+
+              {/* Educational Level */}
+              <div className="mb4">
+                <label className="block text-sm font-semibold text-gray700">Educational Level:</label>
+                <input 
+                  type="text" 
+                  value={selectedUser.educationLevel} 
+                  readOnly 
+                  className="border border-gray300 rounded w-full px3 py2 mt1 text-sm" 
+                />
               </div>
-              <div className="mb-4">
-                <label className="block text-sm font-semibold text-gray-700">Field of Study:</label>
-                <input type="text" className="border border-gray-300 rounded w-full px-3 py-2 mt-1 text-sm" placeholder="Enter Application Type" />
+
+              {/* Field of Study */}
+              <div className="mb4">
+                <label className="block text-sm font-semibold text-gray700">Field of Study:</label>
+                <input 
+                  type="text" 
+                  value={selectedUser.fieldOfStudy} 
+                  readOnly 
+                  className="border border-gray300 rounded w-full px3 py2 mt1 text-sm" 
+                />
               </div>
-              <div className="mb-4">
-                <label className="block text-sm font-semibold text-gray-700">Desired Field of Intenship:</label>
-                <input type="text" className="border border-gray-300 rounded w-full px-3 py-2 mt-1 text-sm" placeholder="Enter Duration" />
+
+              {/* Desired Field of Internship */}
+              <div className="mb4">
+                <label className="block text-sm font-semibold text-gray700">Desired Field of Internship:</label>
+                <input 
+                  type="text" 
+                  value={selectedUser.desiredField} 
+                  readOnly 
+                  className="border border-gray300 rounded w-full px3 py2 mt1 text-sm" 
+                />
               </div>
-              {/* <div className="mb-4">
-          <label className="block text-sm font-semibold text-gray-700">Payment:</label>
-          <input type="text" className="border border-gray-300 rounded w-full px-3 py-2 mt-1 text-sm" placeholder="Enter Payment" />
-          </div> */}
+
             </div>
-            <div className="flex justify-between p-4 bg-gray-100 rounded-b-lg">
-              <button className="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600 transition duration-200" onClick={closeModal}>
+
+            {/* Modal Footer */}
+            <div className="flex justify-between p4 bg-gray100 rounded-b-lg">
+              <button 
+                className="px4 py2 bg-red500 text-white rounded hover:bg-red600 transition duration200" 
+                onClick={closeModal}
+              >
                 Close
               </button>
-              <button className="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600 transition duration-200">
-                Comments
-              </button>
-              <button className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition duration-200">
-                About User
-              </button>
+              {/* Additional buttons can be added here */}
             </div>
           </div>
         </div>
       )}
-
     </div>
   );
 };
