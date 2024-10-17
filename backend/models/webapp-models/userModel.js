@@ -17,15 +17,47 @@ const userwebappSchema = new mongoose.Schema(
       type: String,
       required: true,
     },
-    isAdmin: {
-      type: Boolean,
-      required: true,
-      default: false,
-    },
-    pic: {
+    // isAdmin: {
+    //   type: Boolean,
+    //   required: true,
+    //   default: false,
+    // },
+    profilePicture: {
       type: String,
-      required: true,
-      default: "https://example.com/default-pic.png", // Replace with actual default URL
+      required: false, 
+      default: "https://example.com/default-pic.png", 
+    },
+    universityName: {
+      type: String,
+      required: false,
+    },
+    dob: { // Renamed from 'userDob' to 'dob'
+      type: String,
+      required: false, // Optional (you can change this to Date type if necessary)
+    },
+    educationLevel: {
+      type: String,
+      required: false,
+    },
+    fieldOfStudy: {
+      type: String,
+      required: false,
+    },
+    desiredField: {
+      type: String,
+      required: false,
+    },
+    linkedin: {
+      type: String,
+      required: false,
+    },
+    portfolio: {
+      type: String,
+      required: false,
+    },
+    resume: {
+      type: String,
+      required: false,
     },
   },
   {
@@ -33,6 +65,7 @@ const userwebappSchema = new mongoose.Schema(
   }
 );
 
+// Hash password before saving
 userwebappSchema.pre("save", async function (next) {
   if (!this.isModified("password")) {
     next();
@@ -41,6 +74,7 @@ userwebappSchema.pre("save", async function (next) {
   this.password = await bcrypt.hash(this.password, salt);
 });
 
+// Compare hashed password with entered password
 userwebappSchema.methods.matchPassword = async function (enteredPassword) {
   return await bcrypt.compare(enteredPassword, this.password);
 };

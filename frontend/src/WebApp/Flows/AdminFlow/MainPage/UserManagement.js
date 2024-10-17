@@ -8,7 +8,7 @@ const UserManagement = () => {
   const [selectedUser, setSelectedUser] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
-  // Fetch data from the new API endpoint on component mount
+  // Fetch data from the API on component mount
   useEffect(() => {
     const fetchUsers = async () => {
       try {
@@ -26,8 +26,8 @@ const UserManagement = () => {
 
   const handleApprove = async (userId) => {
     try {
-      await axios.patch(`/api/users/approve/${userId}`);
-      setUsers(users.map(user => user._id === userId ? { ...user, isApproved: true } : user));
+      await axios.patch(`/api/users/approve/${userId}`, { status: "Approved" });
+      setUsers(users.map(user => user._id === userId ? { ...user, status: "Approved" } : user));
     } catch (err) {
       console.error("Error approving user:", err);
     }
@@ -35,8 +35,8 @@ const UserManagement = () => {
 
   const handleReject = async (userId) => {
     try {
-      await axios.patch(`/api/users/reject/${userId}`);
-      setUsers(users.map(user => user._id === userId ? { ...user, isApproved: false } : user));
+      await axios.patch(`/api/users/reject/${userId}`, { status: "Rejected" });
+      setUsers(users.map(user => user._id === userId ? { ...user, status: "Rejected" } : user));
     } catch (err) {
       console.error("Error rejecting user:", err);
     }
@@ -94,25 +94,26 @@ const UserManagement = () => {
                 </td>
                 <td className="px-6 py-4">
                   <span
-                    className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
-                      user.isAdmin ? "bg-green-100 text-green-600" : "bg-yellow-100 text-yellow-600"
-                    }`}
+                    className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${user.status === "Approved" ? "bg-green-100 text-green-600"
+                      : user.status === "Rejected" ? "bg-red-100 text-red-600"
+                        : "bg-yellow-100 text-yellow-600"
+                      }`}
                   >
-                    {user.isAdmin ? "Admin" : "User"}
+                    {user.status}
                   </span>
                 </td>
                 <td className="px-6 py-4 flex space-x-4">
                   <button
-                    className={`px-3 py-1 bg-green-500 text-white text-xs font-bold rounded hover:bg-green-600 ${user.isApproved ? "opacity-50 cursor-not-allowed" : ""}`}
+                    className="px-3 py-1 bg-green-500 text-white text-xs font-bold rounded hover:bg-green-600"
                     onClick={() => handleApprove(user._id)}
-                    disabled={user.isApproved}
+                    disabled={user.status === "Approved"} // Disable if already approved
                   >
                     Approve
                   </button>
                   <button
-                    className={`px-3 py-1 bg-red-500 text-white text-xs font-bold rounded hover:bg-red-600 ${!user.isApproved ? "opacity-50 cursor-not-allowed" : ""}`}
+                    className="px-3 py-1 bg-red-500 text-white text-xs font-bold rounded hover:bg-red-600"
                     onClick={() => handleReject(user._id)}
-                    disabled={!user.isApproved}
+                    disabled={user.status === "Rejected"} // Disable if already rejected
                   >
                     Reject
                   </button>
@@ -124,55 +125,52 @@ const UserManagement = () => {
       </div>
 
       {isModalOpen && selectedUser && (
-  <div className="fixed inset-0 flex items-center justify-center z-50 bg-black bg-opacity-50">
-    <div className="bg-white rounded-lg shadow-lg max-w-lg w-full">
-      <h3 className="text-xl font-bold text-center mb-4 bg-blue-200 p-3 rounded-t">
-        User Profile Details
-      </h3>
-      <div className="bg-green-50 p-6 rounded-b-lg">
-        <div className="mb-4">
-          <label className="block text-sm font-semibold text-gray-700">University Details:</label>
-          <input type="text" className="border border-gray-300 rounded w-full px-3 py-2 mt-1 text-sm" placeholder="Enter University Details" />
-        </div>
-        <div className="mb-4">
-          <label className="block text-sm font-semibold text-gray-700">User Dob:</label>
-          <input type="text" className="border border-gray-300 rounded w-full px-3 py-2 mt-1 text-sm" placeholder="Enter User Dob" />
-          <span className="text-red-500 text-xs">* Required</span> {/* Required field indicator */}
-        </div>
-        <div className="mb-4">
-          <label className="block text-sm font-semibold text-gray-700">Application Name:</label>
-          <input type="text" className="border border-gray-300 rounded w-full px-3 py-2 mt-1 text-sm" placeholder="Enter Application Name" />
-        </div>
-        <div className="mb-4">
-          <label className="block text-sm font-semibold text-gray-700">Application Type:</label>
-          <input type="text" className="border border-gray-300 rounded w-full px-3 py-2 mt-1 text-sm" placeholder="Enter Application Type" />
-        </div>
-        <div className="mb-4">
-          <label className="block text-sm font-semibold text-gray-700">Duration:</label>
-          <input type="text" className="border border-gray-300 rounded w-full px-3 py-2 mt-1 text-sm" placeholder="Enter Duration" />
-        </div>
-        <div className="mb-4">
+        <div className="fixed inset-0 flex items-center justify-center z-50 bg-black bg-opacity-50">
+          <div className="bg-white rounded-lg shadow-lg max-w-lg w-full max-h-screen overflow-y-auto">
+            <h3 className="text-xl font-bold text-center mb-4 bg-blue-200 p-3 rounded-t">
+              User Profile Details
+            </h3>
+            <div className="bg-green-50 p-6">
+              <div className="mb-4">
+                <label className="block text-sm font-semibold text-gray-700">University Name:</label>
+                <input type="text" className="border border-gray-300 rounded w-full px-3 py-2 mt-1 text-sm" placeholder="Enter University Details" />
+              </div>
+              <div className="mb-4">
+                <label className="block text-sm font-semibold text-gray-700">User Dob:</label>
+                <input type="text" className="border border-gray-300 rounded w-full px-3 py-2 mt-1 text-sm" placeholder="Enter User Dob" />
+                {/* <span className="text-red-500 text-xs">* Required</span> */}
+              </div>
+              <div className="mb-4">
+                <label className="block text-sm font-semibold text-gray-700">Educational Level:</label>
+                <input type="text" className="border border-gray-300 rounded w-full px-3 py-2 mt-1 text-sm" placeholder="Enter Application Name" />
+              </div>
+              <div className="mb-4">
+                <label className="block text-sm font-semibold text-gray-700">Field of Study:</label>
+                <input type="text" className="border border-gray-300 rounded w-full px-3 py-2 mt-1 text-sm" placeholder="Enter Application Type" />
+              </div>
+              <div className="mb-4">
+                <label className="block text-sm font-semibold text-gray-700">Desired Field of Intenship:</label>
+                <input type="text" className="border border-gray-300 rounded w-full px-3 py-2 mt-1 text-sm" placeholder="Enter Duration" />
+              </div>
+              {/* <div className="mb-4">
           <label className="block text-sm font-semibold text-gray-700">Payment:</label>
           <input type="text" className="border border-gray-300 rounded w-full px-3 py-2 mt-1 text-sm" placeholder="Enter Payment" />
+          </div> */}
+            </div>
+            <div className="flex justify-between p-4 bg-gray-100 rounded-b-lg">
+              <button className="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600 transition duration-200" onClick={closeModal}>
+                Close
+              </button>
+              <button className="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600 transition duration-200">
+                Comments
+              </button>
+              <button className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition duration-200">
+                About User
+              </button>
+            </div>
+          </div>
         </div>
-      </div>
-      <div className="flex justify-between p-4 bg-gray-100 rounded-b-lg">
-        <button className="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600 transition duration-200" onClick={closeModal}>
-          Close
-        </button>
-        <button className="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600 transition duration-200">
-          Comments
-        </button>
-        <button className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition duration-200">
-          About User
-        </button>
-      </div>
-    </div>
-  </div>
-)}
-
-
-
+      )}
 
     </div>
   );
