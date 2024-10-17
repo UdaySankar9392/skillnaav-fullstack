@@ -17,15 +17,10 @@ const userwebappSchema = new mongoose.Schema(
       type: String,
       required: true,
     },
-    // isAdmin: {
-    //   type: Boolean,
-    //   required: true,
-    //   default: false,
-    // },
     profilePicture: {
       type: String,
-      required: false, 
-      default: "https://example.com/default-pic.png", 
+      required: false,
+      default: "https://example.com/default-pic.png",
     },
     universityName: {
       type: String,
@@ -33,7 +28,7 @@ const userwebappSchema = new mongoose.Schema(
     },
     dob: { // Renamed from 'userDob' to 'dob'
       type: String,
-      required: false, // Optional (you can change this to Date type if necessary)
+      required: false, // Optional
     },
     educationLevel: {
       type: String,
@@ -59,6 +54,10 @@ const userwebappSchema = new mongoose.Schema(
       type: String,
       required: false,
     },
+    conformpassword: {
+      type: String,
+      required: false,
+    }
   },
   {
     timestamps: true,
@@ -68,7 +67,7 @@ const userwebappSchema = new mongoose.Schema(
 // Hash password before saving
 userwebappSchema.pre("save", async function (next) {
   if (!this.isModified("password")) {
-    next();
+    return next();
   }
   const salt = await bcrypt.genSalt(10);
   this.password = await bcrypt.hash(this.password, salt);

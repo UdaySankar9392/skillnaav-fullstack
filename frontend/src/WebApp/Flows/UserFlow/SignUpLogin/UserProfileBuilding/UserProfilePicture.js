@@ -43,9 +43,35 @@ const UserProfilePicture = () => {
       ...formData,
     };
 
-    // Log both desired field and field of study along with other data
-    console.log("Complete Profile Data:", completeProfileData);
-    
+    // Log only the specified fields
+    const {
+      confirmPassword,
+      desiredField,
+      dob,
+      educationLevel,
+      email,
+      fieldOfStudy,
+      linkedin,
+      name,
+      password,
+      portfolio,
+      universityName,
+    } = completeProfileData;
+
+    console.log({
+      confirmPassword,
+      desiredField,
+      dob,
+      educationLevel,
+      email,
+      fieldOfStudy,
+      linkedin,
+      name,
+      password,
+      portfolio,
+      universityName,
+    });
+
     // Here you would handle the data submission to your backend/database
     navigate("/user-main-page");
   };
