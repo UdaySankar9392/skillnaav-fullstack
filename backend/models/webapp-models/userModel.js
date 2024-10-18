@@ -1,3 +1,4 @@
+// userModel.js
 const mongoose = require("mongoose");
 const bcrypt = require("bcrypt");
 
@@ -17,46 +18,33 @@ const userwebappSchema = new mongoose.Schema(
       type: String,
       required: true,
     },
-    profilePicture: {
-      type: String,
-      required: false,
-      default: "https://example.com/default-pic.png",
-    },
     universityName: {
       type: String,
-      required: false,
+      required: true,
     },
-    dob: { // Renamed from 'userDob' to 'dob'
+    dob: {
       type: String,
-      required: false, // Optional
+      required: true,
     },
     educationLevel: {
       type: String,
-      required: false,
+      required: true,
     },
     fieldOfStudy: {
       type: String,
-      required: false,
+      required: true,
     },
     desiredField: {
       type: String,
-      required: false,
+      required: true,
     },
     linkedin: {
       type: String,
-      required: false,
+      required: true,
     },
     portfolio: {
       type: String,
-      required: false,
-    },
-    resume: {
-      type: String,
-      required: false,
-    },
-    conformpassword: {
-      type: String,
-      required: false,
+      required: true,
     }
   },
   {
