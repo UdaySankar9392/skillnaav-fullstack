@@ -125,79 +125,84 @@ const UserManagement = () => {
       {/* Modal for User Profile Details */}
       {isModalOpen && selectedUser && (
         <div className="fixed inset-0 flex items-center justify-center z-50 bg-black bg-opacity-50">
-          <div className="bg-white rounded-lg shadow-lg max-w-lg w-full max-h-screen overflow-y-auto">
-            <h3 className="text-xl font-bold text-center mb-4 bg-blue-200 p-3 rounded-t">User Profile Details</h3>
-            <div className="bg-green-50 p-6">
+          <div className="bg-white rounded-lg shadow-lg w-full max-w-lg max-h-screen overflow-y-auto">
+            {/* Modal Header */}
+            <div className="bg-blue-500 p-4 rounded-t-lg">
+              <h3 className="text-xl font-bold text-white text-center">User Profile Details</h3>
+            </div>
+
+            {/* Modal Body */}
+            <div className="bg-white p-6 space-y-4">
               {/* University Name */}
-              <div className="mb-4">
+              <div>
                 <label className="block text-sm font-semibold text-gray-700">University Name:</label>
-                <input 
-                  type="text" 
-                  value={selectedUser.universityName} 
-                  readOnly 
-                  className="border border-gray-300 rounded w-full px-3 py-2 mt1 text-sm" 
+                <input
+                  type="text"
+                  value={selectedUser.universityName || 'N/A'}
+                  readOnly
+                  className="border border-gray-300 rounded w-full px-3 py-2 mt-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
                 />
               </div>
 
               {/* User Dob */}
-              <div className="mb4">
-                <label className="block text-sm font-semibold text-gray700">User Dob:</label>
-                <input 
-                  type="text" 
-                  value={selectedUser.dob} 
-                  readOnly 
-                  className="border border-gray300 rounded w-full px3 py2 mt1 text-sm" 
+              <div>
+                <label className="block text-sm font-semibold text-gray-700">Date of Birth:</label>
+                <input
+                  type="text"
+                  value={selectedUser.dob || 'N/A'}
+                  readOnly
+                  className="border border-gray-300 rounded w-full px-3 py-2 mt-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
                 />
               </div>
 
               {/* Educational Level */}
-              <div className="mb4">
-                <label className="block text-sm font-semibold text-gray700">Educational Level:</label>
-                <input 
-                  type="text" 
-                  value={selectedUser.educationLevel} 
-                  readOnly 
-                  className="border border-gray300 rounded w-full px3 py2 mt1 text-sm" 
+              <div>
+                <label className="block text-sm font-semibold text-gray-700">Educational Level:</label>
+                <input
+                  type="text"
+                  value={selectedUser.educationLevel || 'N/A'}
+                  readOnly
+                  className="border border-gray-300 rounded w-full px-3 py-2 mt-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
                 />
               </div>
 
               {/* Field of Study */}
-              <div className="mb4">
-                <label className="block text-sm font-semibold text-gray700">Field of Study:</label>
-                <input 
-                  type="text" 
-                  value={selectedUser.fieldOfStudy} 
-                  readOnly 
-                  className="border border-gray300 rounded w-full px3 py2 mt1 text-sm" 
+              <div>
+                <label className="block text-sm font-semibold text-gray-700">Field of Study:</label>
+                <input
+                  type="text"
+                  value={selectedUser.fieldOfStudy || 'N/A'}
+                  readOnly
+                  className="border border-gray-300 rounded w-full px-3 py-2 mt-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
                 />
               </div>
 
               {/* Desired Field of Internship */}
-              <div className="mb4">
-                <label className="block text-sm font-semibold text-gray700">Desired Field of Internship:</label>
-                <input 
-                  type="text" 
-                  value={selectedUser.desiredField} 
-                  readOnly 
-                  className="border border-gray300 rounded w-full px3 py2 mt1 text-sm" 
+              <div>
+                <label className="block text-sm font-semibold text-gray-700">Desired Field of Internship:</label>
+                <input
+                  type="text"
+                  value={selectedUser.desiredField || 'N/A'}
+                  readOnly
+                  className="border border-gray-300 rounded w-full px-3 py-2 mt-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
                 />
               </div>
-
             </div>
 
             {/* Modal Footer */}
-            <div className="flex justify-between p4 bg-gray100 rounded-b-lg">
-              <button 
-                className="px4 py2 bg-red500 text-white rounded hover:bg-red600 transition duration200" 
+            <div className="flex justify-end p-4 bg-gray-100 rounded-b-lg space-x-2">
+              <button
+                className="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600 transition duration-200"
                 onClick={closeModal}
               >
                 Close
               </button>
-              {/* Additional buttons can be added here */}
+              {/* Additional buttons like 'Save' or 'Approve' can be added here */}
             </div>
           </div>
         </div>
       )}
+
     </div>
   );
 };

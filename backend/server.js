@@ -1,7 +1,7 @@
 const express = require("express");
 const dotenv = require("dotenv");
 const path = require("path");
-const cors = require("cors");
+const cors = require("cors"); // Declare cors only once
 const connectDB = require("./config/dbConfig");
 const { notFound, errorHandler } = require("./middlewares/errorMiddleware");
 
@@ -15,11 +15,18 @@ connectDB(); // Establish MongoDB connection
 // Middleware
 app.use(express.json()); // For parsing application/json
 
+app.use(cors({
+  origin: "*", // or "*" to allow all origins
+  methods: "GET,POST,PUT,DELETE", // Adjust as per your needs
+  credentials: true,
+}));
+
 // Routes
 const userRoutes = require("./routes/webapp-routes/userRoutes");
 const internRoutes = require("./routes/webapp-routes/internshipPostRoutes");
 const skillnaavRoute = require("./routes/skillnaavRoute");
 const applicationRoutes = require("./routes/webapp-routes/applicationRoutes");
+
 // Define routes
 app.use("/api/users", userRoutes); // User Web App routes
 app.use("/api/interns", internRoutes); //Partner to Admin Intern Posts
