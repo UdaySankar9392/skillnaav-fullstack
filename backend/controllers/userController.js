@@ -1,4 +1,3 @@
-// userController.js
 const asyncHandler = require("express-async-handler");
 const Userwebapp = require("../models/webapp-models/userModel");
 const generateToken = require("../utils/generateToken");
@@ -19,7 +18,6 @@ const registerUser = asyncHandler(async (req, res) => {
     portfolio,
   } = req.body;
 
-  // Validate required fields
   if (!name || !email || !password || !confirmPassword || !universityName || !dob || !educationLevel || !fieldOfStudy || !desiredField || !linkedin || !portfolio) {
     res.status(400);
     throw new Error("Please fill all required fields.");
@@ -42,7 +40,7 @@ const registerUser = asyncHandler(async (req, res) => {
   const user = await Userwebapp.create({
     name,
     email,
-    password, // Do not include confirmPassword
+    password, // Password will be hashed in the model pre-save hook
     universityName,
     dob,
     educationLevel,
@@ -50,6 +48,7 @@ const registerUser = asyncHandler(async (req, res) => {
     desiredField,
     linkedin,
     portfolio,
+    adminApproved: false, // Set default to false
   });
 
   if (user) {
@@ -64,7 +63,8 @@ const registerUser = asyncHandler(async (req, res) => {
       desiredField: user.desiredField,
       linkedin: user.linkedin,
       portfolio: user.portfolio,
-      token: generateToken(user._id),
+      token: generateToken(user._id), // Generate token here
+      adminApproved: user.adminApproved, // Include admin approval status
     });
   } else {
     res.status(400);
@@ -78,25 +78,39 @@ const authUser = asyncHandler(async (req, res) => {
 
   const user = await Userwebapp.findOne({ email });
 
-  if (user && (await user.matchPassword(password))) {
-    res.json({
-      _id: user._id,
-      name: user.name,
-      email: user.email,
-      universityName: user.universityName,
-      dob: user.dob,
-      educationLevel: user.educationLevel,
-      fieldOfStudy: user.fieldOfStudy,
-      desiredField: user.desiredField,
-      linkedin: user.linkedin,
-      portfolio: user.portfolio,
-      token: generateToken(user._id),
-    });
+  if (user) {
+    // Check if the password matches
+    if (await user.matchPassword(password)) {
+      // Check if the user is approved by an admin
+      if (user.adminApproved) {
+        res.json({
+          _id: user._id,
+          name: user.name,
+          email: user.email,
+          universityName: user.universityName,
+          dob: user.dob,
+          educationLevel: user.educationLevel,
+          fieldOfStudy: user.fieldOfStudy,
+          desiredField: user.desiredField,
+          linkedin: user.linkedin,
+          portfolio: user.portfolio,
+          token: generateToken(user._id), // Generate token here
+        });
+      } else {
+        // User is not approved by admin
+        res.status(403);
+        throw new Error("User account is not approved by an admin.");
+      }
+    } else {
+      res.status(400);
+      throw new Error("Invalid email or password.");
+    }
   } else {
     res.status(400);
     throw new Error("Invalid email or password.");
   }
 });
+
 
 // Update user profile
 const updateUserProfile = asyncHandler(async (req, res) => {
@@ -144,13 +158,13 @@ const updateUserProfile = asyncHandler(async (req, res) => {
     desiredField: updatedUser.desiredField,
     linkedin: updatedUser.linkedin,
     portfolio: updatedUser.portfolio,
-    token: generateToken(updatedUser._id),
+    token: generateToken(updatedUser._id), // Generate new token upon profile update
   });
 });
 
 // Get all users with additional fields
 const getAllUsers = asyncHandler(async (req, res) => {
-  const users = await Userwebapp.find({}, "name email universityName dob educationLevel fieldOfStudy desiredField linkedin portfolio");
+  const users = await Userwebapp.find({}, "name email universityName dob educationLevel fieldOfStudy desiredField linkedin portfolio adminApproved");
 
   if (users && users.length > 0) {
     res.status(200).json(users);
@@ -160,4 +174,38 @@ const getAllUsers = asyncHandler(async (req, res) => {
   }
 });
 
-module.exports = { registerUser, authUser, updateUserProfile, getAllUsers };
+// Admin approve user
+const approveUser = asyncHandler(async (req, res) => {
+  const userId = req.params.id; // Get user ID from URL parameter
+
+  // Find user by ID
+  const user = await Userwebapp.findById(userId);
+
+  if (!user) {
+    res.status(404);
+    throw new Error("User not found.");
+  }
+
+  // Update adminApproved field to true
+  user.adminApproved = true;
+
+  const updatedUser = await user.save();
+
+  res.json({
+    _id: updatedUser._id,
+    name: updatedUser.name,
+    email: updatedUser.email,
+    universityName: updatedUser.universityName,
+    dob: updatedUser.dob,
+    educationLevel: updatedUser.educationLevel,
+    fieldOfStudy: updatedUser.fieldOfStudy,
+    desiredField: updatedUser.desiredField,
+    linkedin: updatedUser.linkedin,
+    portfolio: updatedUser.portfolio,
+    adminApproved: updatedUser.adminApproved, // Return updated approval status
+  });
+}) ;
+
+
+module.exports = { registerUser, authUser, updateUserProfile, getAllUsers, approveUser };
+``
