@@ -1,5 +1,3 @@
-//User Profile Form
-
 import React, { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 
@@ -113,7 +111,7 @@ const UserProfileForm = () => {
                 />
                 <label
                   htmlFor="highschool"
-                  className="ml-3 mt-5 block text-sm text-gray-700"
+                  className="ml-3 block text-sm text-gray-700"
                 >
                   Highschool
                 </label>
@@ -130,7 +128,7 @@ const UserProfileForm = () => {
                 />
                 <label
                   htmlFor="undergraduate"
-                  className="ml-3 mt-5 block text-sm text-gray-700"
+                  className="ml-3 block text-sm text-gray-700"
                 >
                   Undergraduate
                 </label>
@@ -147,7 +145,7 @@ const UserProfileForm = () => {
                 />
                 <label
                   htmlFor="graduate"
-                  className="ml-3 mt-5 block text-sm text-gray-700"
+                  className="ml-3 block text-sm text-gray-700"
                 >
                   Graduate
                 </label>

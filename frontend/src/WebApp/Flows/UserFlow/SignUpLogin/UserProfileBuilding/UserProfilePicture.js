@@ -162,4 +162,3 @@ const UserProfilePicture = () => {
 };
 
 export default UserProfilePicture;
- 

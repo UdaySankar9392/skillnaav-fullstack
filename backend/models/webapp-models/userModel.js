@@ -1,3 +1,4 @@
+// userModel.js
 const mongoose = require("mongoose");
 const bcrypt = require("bcrypt");
 
@@ -22,18 +23,14 @@ const userwebappSchema = new mongoose.Schema(
       required: true,
     },
     dob: {
-      type: Date,
+      type: String,
       required: true,
     },
-    currentLevelOfEducation: {
+    educationLevel: {
       type: String,
       required: true,
     },
     fieldOfStudy: {
-      type: String,
-      required: true, // Ensured this field is required
-    },
-    fieldOfInterest: {
       type: String,
       required: true,
     },
@@ -49,21 +46,26 @@ const userwebappSchema = new mongoose.Schema(
       type: String,
       required: true,
     },
+    adminApproved: {
+      type: Boolean,
+      required: false,
+    },
   },
   {
     timestamps: true,
   }
 );
 
+// Hash password before saving
 userwebappSchema.pre("save", async function (next) {
   if (!this.isModified("password")) {
     return next();
   }
   const salt = await bcrypt.genSalt(10);
   this.password = await bcrypt.hash(this.password, salt);
-  // Removed hashing for confirmPassword
 });
 
+// Compare hashed password with entered password
 userwebappSchema.methods.matchPassword = async function (enteredPassword) {
   return await bcrypt.compare(enteredPassword, this.password);
 };
