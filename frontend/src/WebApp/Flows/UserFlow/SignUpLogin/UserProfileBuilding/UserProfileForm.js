@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 
 const UserProfileForm = () => {
   const [formData, setFormData] = useState({
-    name: "",
+    universityName: "",
     dob: "",
     educationLevel: "",
     fieldOfStudy: "",
@@ -13,12 +13,8 @@ const UserProfileForm = () => {
 
   // Validate form on every change
   useEffect(() => {
-    const { name, dob, educationLevel, fieldOfStudy } = formData;
-    if (name && dob && educationLevel && fieldOfStudy) {
-      setIsFormValid(true);
-    } else {
-      setIsFormValid(false);
-    }
+    const { universityName, dob, educationLevel, fieldOfStudy } = formData;
+    setIsFormValid(universityName && dob && educationLevel && fieldOfStudy);
   }, [formData]);
 
   const handleChange = (e) => {
@@ -44,27 +40,27 @@ const UserProfileForm = () => {
       <div className="w-full max-w-xl p-8 space-y-6 bg-white shadow-md rounded-lg">
         <div className="space-y-4">
           <div className="w-full h-12 p-3 bg-[#F9F0FF] border-b border-[#E6C4FB]">
-            <h2 className="text-16px font-bold text-gray-700">
+            <h2 className="text-lg font-bold text-gray-700">
               BASIC INFORMATION
             </h2>
           </div>
           <div>
             <label
-              htmlFor="name"
+              htmlFor="universityName"
               className="block text-sm font-medium text-gray-700"
             >
-              Name
+              University Name
             </label>
             <input
-              id="name"
+              id="universityName"
               type="text"
-              name="name"
-              value={formData.name}
+              name="universityName"
+              value={formData.universityName}
               onChange={handleChange}
               className={`mt-1 block w-full px-3 py-2 border ${
-                formData.name ? "border-gray-300" : "border-gray-200"
+                formData.universityName ? "border-gray-300" : "border-gray-200"
               } rounded-md shadow-sm focus:outline-none focus:ring-purple-500 focus:border-purple-500`}
-              placeholder="Enter your Name"
+              placeholder="Enter your University Name"
             />
           </div>
           <div>
@@ -89,66 +85,34 @@ const UserProfileForm = () => {
 
         <div className="space-y-4">
           <div className="w-full h-12 p-3 bg-[#F9F0FF] border-b border-[#E6C4FB]">
-            <h2 className="text-16px font-bold text-gray-700">
+            <h2 className="text-lg font-bold text-gray-700">
               EDUCATIONAL INFORMATION
             </h2>
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700">
-              Current level of education
+              Current Level of Education
             </label>
             <div className="mt-2 space-y-2">
-              <div className="flex items-center">
-                <input
-                  type="radio"
-                  id="highschool"
-                  name="educationLevel"
-                  value="highschool"
-                  checked={formData.educationLevel === "highschool"}
-                  onChange={handleChange}
-                  className="h-4 w-4 text-purple-600 border-gray-300 focus:ring-purple-500"
-                />
-                <label
-                  htmlFor="highschool"
-                  className="ml-3 mt-5 block text-sm text-gray-700"
-                >
-                  Highschool
-                </label>
-              </div>
-              <div className="flex items-center">
-                <input
-                  type="radio"
-                  id="undergraduate"
-                  name="educationLevel"
-                  value="undergraduate"
-                  checked={formData.educationLevel === "undergraduate"}
-                  onChange={handleChange}
-                  className="h-4 w-4 text-purple-600 border-gray-300 focus:ring-purple-500"
-                />
-                <label
-                  htmlFor="undergraduate"
-                  className="ml-3 mt-5 block text-sm text-gray-700"
-                >
-                  Undergraduate
-                </label>
-              </div>
-              <div className="flex items-center">
-                <input
-                  type="radio"
-                  id="graduate"
-                  name="educationLevel"
-                  value="graduate"
-                  checked={formData.educationLevel === "graduate"}
-                  onChange={handleChange}
-                  className="h-4 w-4 text-purple-600 border-gray-300 focus:ring-purple-500"
-                />
-                <label
-                  htmlFor="graduate"
-                  className="ml-3 mt-5  block text-sm text-gray-700"
-                >
-                  Graduate
-                </label>
-              </div>
+              {["highschool", "undergraduate", "graduate"].map((level) => (
+                <div key={level} className="flex items-center">
+                  <input
+                    type="radio"
+                    id={level}
+                    name="educationLevel"
+                    value={level}
+                    checked={formData.educationLevel === level}
+                    onChange={handleChange}
+                    className="h-4 w-4 text-purple-600 border-gray-300 focus:ring-purple-500"
+                  />
+                  <label
+                    htmlFor={level}
+                    className="ml-3 block text-sm text-gray-700"
+                  >
+                    {level.charAt(0).toUpperCase() + level.slice(1)}
+                  </label>
+                </div>
+              ))}
             </div>
           </div>
           <div>

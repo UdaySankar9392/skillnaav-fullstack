@@ -17,15 +17,21 @@ const userwebappSchema = new mongoose.Schema(
       type: String,
       required: true,
     },
-    isAdmin: {
-      type: Boolean,
-      required: true,
-      default: false,
-    },
-    pic: {
+    universityName: {
       type: String,
-      required: true,
-      default: "https://example.com/default-pic.png", // Replace with actual default URL
+      required: true, 
+    },
+    dob: {
+      type: Date,
+      required: true, // Optional: set to false if this field is not required
+    },
+    currentLevelOfEducation: {
+      type: String,
+      required: true, // Optional: set to false if this field is not required
+    },
+    fieldOfInterest: {
+      type: String,
+      required: true, // Optional: set to false if this field is not required
     },
   },
   {
@@ -35,7 +41,7 @@ const userwebappSchema = new mongoose.Schema(
 
 userwebappSchema.pre("save", async function (next) {
   if (!this.isModified("password")) {
-    next();
+    return next();
   }
   const salt = await bcrypt.genSalt(10);
   this.password = await bcrypt.hash(this.password, salt);
