@@ -1,20 +1,31 @@
+//User Profile Form
+
 import React, { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 
 const UserProfileForm = () => {
+  const location = useLocation();
+  const userData = location.state?.userData || {}; // Access user data
+
   const [formData, setFormData] = useState({
     universityName: "",
     dob: "",
     educationLevel: "",
     fieldOfStudy: "",
+    ...userData, // Initialize formData with userData if available
   });
+
   const [isFormValid, setIsFormValid] = useState(false);
   const navigate = useNavigate();
 
   // Validate form on every change
   useEffect(() => {
     const { universityName, dob, educationLevel, fieldOfStudy } = formData;
-    setIsFormValid(universityName && dob && educationLevel && fieldOfStudy);
+    if (universityName && dob && educationLevel && fieldOfStudy) {
+      setIsFormValid(true);
+    } else {
+      setIsFormValid(false);
+    }
   }, [formData]);
 
   const handleChange = (e) => {
@@ -27,20 +38,16 @@ const UserProfileForm = () => {
 
   const handleSubmit = () => {
     if (isFormValid) {
-      navigate("/user-profile-picture");
+      console.log("Form Data:", formData);
+      navigate("/user-profile-picture", { state: { formData } });
     }
   };
-
-  const handleSkip = () => {
-    navigate("/user-profile-picture");
-  };
-
   return (
     <div className="flex justify-center items-center min-h-screen bg-gray-100 font-poppins">
       <div className="w-full max-w-xl p-8 space-y-6 bg-white shadow-md rounded-lg">
         <div className="space-y-4">
           <div className="w-full h-12 p-3 bg-[#F9F0FF] border-b border-[#E6C4FB]">
-            <h2 className="text-lg font-bold text-gray-700">
+            <h2 className="text-16px font-bold text-gray-700">
               BASIC INFORMATION
             </h2>
           </div>
@@ -52,15 +59,15 @@ const UserProfileForm = () => {
               University Name
             </label>
             <input
-              id="universityName"
+              id="universityName" // Updated id
               type="text"
-              name="universityName"
-              value={formData.universityName}
+              name="universityName" // Updated name
+              value={formData.universityName} // Updated value
               onChange={handleChange}
               className={`mt-1 block w-full px-3 py-2 border ${
                 formData.universityName ? "border-gray-300" : "border-gray-200"
               } rounded-md shadow-sm focus:outline-none focus:ring-purple-500 focus:border-purple-500`}
-              placeholder="Enter your University Name"
+              placeholder="Enter your University Name" // Updated placeholder
             />
           </div>
           <div>
@@ -85,40 +92,72 @@ const UserProfileForm = () => {
 
         <div className="space-y-4">
           <div className="w-full h-12 p-3 bg-[#F9F0FF] border-b border-[#E6C4FB]">
-            <h2 className="text-lg font-bold text-gray-700">
+            <h2 className="text-16px font-bold text-gray-700">
               EDUCATIONAL INFORMATION
             </h2>
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700">
-              Current Level of Education
+              Current level of education
             </label>
             <div className="mt-2 space-y-2">
-              {["highschool", "undergraduate", "graduate"].map((level) => (
-                <div key={level} className="flex items-center">
-                  <input
-                    type="radio"
-                    id={level}
-                    name="educationLevel"
-                    value={level}
-                    checked={formData.educationLevel === level}
-                    onChange={handleChange}
-                    className="h-4 w-4 text-purple-600 border-gray-300 focus:ring-purple-500"
-                  />
-                  <label
-                    htmlFor={level}
-                    className="ml-3 block text-sm text-gray-700"
-                  >
-                    {level.charAt(0).toUpperCase() + level.slice(1)}
-                  </label>
-                </div>
-              ))}
+              <div className="flex items-center">
+                <input
+                  type="radio"
+                  id="highschool"
+                  name="educationLevel"
+                  value="highschool"
+                  checked={formData.educationLevel === "highschool"}
+                  onChange={handleChange}
+                  className="h-4 w-4 text-purple-600 border-gray-300 focus:ring-purple-500"
+                />
+                <label
+                  htmlFor="highschool"
+                  className="ml-3 mt-5 block text-sm text-gray-700"
+                >
+                  Highschool
+                </label>
+              </div>
+              <div className="flex items-center">
+                <input
+                  type="radio"
+                  id="undergraduate"
+                  name="educationLevel"
+                  value="undergraduate"
+                  checked={formData.educationLevel === "undergraduate"}
+                  onChange={handleChange}
+                  className="h-4 w-4 text-purple-600 border-gray-300 focus:ring-purple-500"
+                />
+                <label
+                  htmlFor="undergraduate"
+                  className="ml-3 mt-5 block text-sm text-gray-700"
+                >
+                  Undergraduate
+                </label>
+              </div>
+              <div className="flex items-center">
+                <input
+                  type="radio"
+                  id="graduate"
+                  name="educationLevel"
+                  value="graduate"
+                  checked={formData.educationLevel === "graduate"}
+                  onChange={handleChange}
+                  className="h-4 w-4 text-purple-600 border-gray-300 focus:ring-purple-500"
+                />
+                <label
+                  htmlFor="graduate"
+                  className="ml-3 mt-5 block text-sm text-gray-700"
+                >
+                  Graduate
+                </label>
+              </div>
             </div>
           </div>
           <div>
             <label
               htmlFor="fieldOfStudy"
-              className="block text-sm mt-6 font-medium text-gray-700"
+              className="block text-sm font-medium text-gray-700"
             >
               Field of Interest
             </label>
@@ -153,13 +192,6 @@ const UserProfileForm = () => {
             } focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500`}
           >
             Continue
-          </button>
-          <button
-            type="button"
-            onClick={handleSkip}
-            className="w-full py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-gray-500 hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-400"
-          >
-            Skip
           </button>
         </div>
       </div>

@@ -1,12 +1,10 @@
+//usercreateacc
+
 import React, { useState } from "react";
 import { Formik, Form, Field, ErrorMessage } from "formik";
 import * as Yup from "yup";
 import { useNavigate } from "react-router-dom";
-import axios from "axios";
 import createAccountImage from "../../../../assets-webapp/login-image.png"; // Update the path as needed
-import googleIcon from "../../../../assets-webapp/Google-icon.png";
-import facebookIcon from "../../../../assets-webapp/Facebook-icon.png";
-import appleIcon from "../../../../assets-webapp/Apple-icon.png";
 import { EyeIcon, EyeSlashIcon } from "@heroicons/react/24/solid"; // Ensure these are the correct imports
 import { Link } from "react-router-dom";
 
@@ -29,21 +27,16 @@ const UserCreateAccount = () => {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   // Function to handle form submission
-  const handleSubmit = async (values, { setSubmitting }) => {
+  const handleSubmit = (values, { setSubmitting }) => {
     try {
-      const response = await axios.post("/api/users/register", values);
-      navigate("/user-profile-form");
-      localStorage.setItem("userInfo", JSON.stringify(response.data));
+      console.log("User Data Submitted:", values); // Log user data to console
+      // Simulate successful registration (skip the API call)
+      navigate("/user-profile-form", { state: { userData: values } });
+
+      // You can also store the form data in localStorage if needed
+      localStorage.setItem("userInfo", JSON.stringify(values));
     } catch (error) {
-      if (
-        error.response &&
-        error.response.data &&
-        error.response.data.message
-      ) {
-        setErrorMessage(error.response.data.message);
-      } else {
-        setErrorMessage("Error registering user. Please try again.");
-      }
+      setErrorMessage("Error registering user. Please try again.");
     }
     setSubmitting(false);
   };
@@ -155,7 +148,7 @@ const UserCreateAccount = () => {
                   </button>
 
                   <ErrorMessage
-                    name="password"
+                    name="confirmPassword" // Corrected field name here
                     component="div"
                     className="text-red-500 text-sm mt-1"
                   />
@@ -164,44 +157,17 @@ const UserCreateAccount = () => {
                 <button
                   type="submit"
                   disabled={isSubmitting}
-                  className="w-full bg-purple-500 text-white p-3 rounded-lg hover:bg-purple-600 mb-4"
+                  className={`w-full bg-purple-${
+                    isSubmitting ? "300" : "500"
+                  } text-white p-3 rounded-lg hover:bg-purple-${
+                    isSubmitting ? "300" : "600"
+                  } mb-4`}
                 >
-                  <a href="/user-profile-form">Register</a>
+                  Register
                 </button>
               </Form>
             )}
           </Formik>
-
-          <div className="flex items-center my-4">
-            <hr className="w-full border-t border-gray-300" />
-            <span className="px-3 text-gray-500">OR</span>
-            <hr className="w-full border-t border-gray-300" />
-          </div>
-
-          {/* <button className="w-full bg-white text-gray-800 p-3 rounded-lg border border-gray-300 hover:bg-gray-100 mb-4 flex items-center justify-center">
-            <span className="mr-2">
-              <img src={googleIcon} alt="Google" className="h-5 w-5" />
-            </span>
-            <span className="font-poppins font-semibold text-base leading-6">
-              Sign Up with Google
-            </span>
-          </button>
-          <button className="w-full bg-white text-gray-800 p-3 rounded-lg border border-gray-300 hover:bg-gray-100 mb-4 flex items-center justify-center">
-            <span className="mr-2">
-              <img src={facebookIcon} alt="Facebook" className="h-5 w-5" />
-            </span>
-            <span className="font-poppins font-semibold text-base leading-6">
-              Sign Up with Facebook
-            </span>
-          </button>
-          <button className="w-full bg-white text-gray-800 p-3 rounded-lg border border-gray-300 hover:bg-gray-100 mb-4 flex items-center justify-center">
-            <span className="mr-2">
-              <img src={appleIcon} alt="Apple" className="h-5 w-5" />
-            </span>
-            <span className="font-poppins font-semibold text-base leading-6">
-              Sign Up with Apple
-            </span>
-          </button> */}
 
           <p className="text-center text-gray-500 font-poppins font-medium text-base leading-6">
             Already have an account?{" "}

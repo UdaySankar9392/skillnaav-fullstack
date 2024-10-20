@@ -19,19 +19,35 @@ const userwebappSchema = new mongoose.Schema(
     },
     universityName: {
       type: String,
-      required: true, 
+      required: true,
     },
     dob: {
       type: Date,
-      required: true, // Optional: set to false if this field is not required
+      required: true,
     },
     currentLevelOfEducation: {
       type: String,
-      required: true, // Optional: set to false if this field is not required
+      required: true,
+    },
+    fieldOfStudy: {
+      type: String,
+      required: true, // Ensured this field is required
     },
     fieldOfInterest: {
       type: String,
-      required: true, // Optional: set to false if this field is not required
+      required: true,
+    },
+    desiredField: {
+      type: String,
+      required: true,
+    },
+    linkedin: {
+      type: String,
+      required: true,
+    },
+    portfolio: {
+      type: String,
+      required: true,
     },
   },
   {
@@ -45,6 +61,7 @@ userwebappSchema.pre("save", async function (next) {
   }
   const salt = await bcrypt.genSalt(10);
   this.password = await bcrypt.hash(this.password, salt);
+  // Removed hashing for confirmPassword
 });
 
 userwebappSchema.methods.matchPassword = async function (enteredPassword) {
