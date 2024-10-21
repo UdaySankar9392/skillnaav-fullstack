@@ -53,8 +53,8 @@ const UserLogin = () => {
     try {
       await account.createOAuth2Session(
         "google",
-        "http://localhost:3000/user-main-page", // Redirect URL on success
-        "http://localhost:3000" // Redirect URL on failure
+        "https://www.skillnaav.com/user-main-page", // Redirect URL on success
+        "https://www.skillnaav.com" // Redirect URL on failure
       );
     } catch (err) {
       setError("Google Sign-In failed. Please try again.");
@@ -67,8 +67,8 @@ const UserLogin = () => {
     try {
       await account.createOAuth2Session(
         "github",
-        "http://localhost:3000/user-main-page", // Redirect URL on success
-        "http://localhost:3000" // Redirect URL on failure
+        "https://www.skillnaav.com/user-main-page", // Redirect URL on success
+        "https://www.skillnaav.com" // Redirect URL on failure
       );
     } catch (err) {
       setError("GitHub Sign-In failed. Please try again.");

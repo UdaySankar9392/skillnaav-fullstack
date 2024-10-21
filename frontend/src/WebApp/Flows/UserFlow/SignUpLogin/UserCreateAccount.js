@@ -51,8 +51,8 @@ const UserCreateAccount = () => {
     try {
       await account.createOAuth2Session(
         "google",
-        "http://localhost:3000/user-main-page", // Success redirect
-        "http://localhost:3000" // Failure redirect
+        "https://www.skillnaav.com/user-main-page", // Success redirect
+        "https://www.skillnaav.com" // Failure redirect
       );
     } catch (error) {
       setErrorMessage("Google Sign-Up failed. Please try again.");
@@ -64,8 +64,8 @@ const UserCreateAccount = () => {
     try {
       await account.createOAuth2Session(
         "github",
-        "http://localhost:3000/user-main-page", // Success redirect
-        "http://localhost:3000" // Failure redirect
+        "https://www.skillnaav.com/user-main-page", // Success redirect
+        "https://www.skillnaav.com" // Failure redirect
       );
     } catch (error) {
       setErrorMessage("GitHub Sign-Up failed. Please try again.");
@@ -77,8 +77,8 @@ const UserCreateAccount = () => {
     try {
       await account.createOAuth2Session(
         "facebook",
-        "http://localhost:3000/user-main-page", // Success redirect
-        "http://localhost:3000" // Failure redirect
+        "https://www.skillnaav.com/user-main-page", // Success redirect
+        "https://www.skillnaav.com" // Failure redirect
       );
     } catch (error) {
       setErrorMessage("Facebook Sign-Up failed. Please try again.");
@@ -263,8 +263,6 @@ const UserCreateAccount = () => {
               />
               Sign up with GitHub
             </button>
-
-          
           </div>
 
           <p className="text-center text-gray-500 mt-5 font-poppins font-medium text-base leading-6">
