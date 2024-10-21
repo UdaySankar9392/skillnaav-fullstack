@@ -31,7 +31,7 @@ const UserCreateAccount = () => {
       // Simulate successful registration (skip the API call)
       navigate("/user-profile-form", { state: { userData: values } });
 
-      // You ca also store the form data in localStorage if needed
+      // You can also store the form data in localStorage if needed
       localStorage.setItem("userInfo", JSON.stringify(values));
     } catch (error) {
       setErrorMessage("Error registering user. Please try again.");
