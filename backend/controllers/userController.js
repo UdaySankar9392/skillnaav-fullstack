@@ -144,6 +144,7 @@ const updateUserProfile = asyncHandler(async (req, res) => {
     linkedin,
     portfolio,
     password,
+    adminApproved, // Include adminApproved here
   } = req.body;
 
   if (
@@ -177,6 +178,12 @@ const updateUserProfile = asyncHandler(async (req, res) => {
     user.password = password; // Ensure password is hashed in pre-save hook
   }
 
+  // Update admin approval status if provided
+  if (adminApproved !== undefined) {
+    // Check if adminApproved is in the request
+    user.adminApproved = adminApproved; // Update admin approval status
+  }
+
   const updatedUser = await user.save();
 
   res.json({
@@ -190,7 +197,8 @@ const updateUserProfile = asyncHandler(async (req, res) => {
     desiredField: updatedUser.desiredField,
     linkedin: updatedUser.linkedin,
     portfolio: updatedUser.portfolio,
-    token: generateToken(updatedUser._id), // Generate new token upon profile update
+    adminApproved: updatedUser.adminApproved,
+    token: generateToken(updatedUser._id),
   });
 });
 
@@ -202,7 +210,7 @@ const getAllUsers = asyncHandler(async (req, res) => {
   );
 
   if (users && users.length > 0) {
-    res.status(200).json(users);
+    res.status(200).json({ users });
   } else {
     res.status(404);
     throw new Error("No users found.");
@@ -210,36 +218,27 @@ const getAllUsers = asyncHandler(async (req, res) => {
 });
 
 // Admin approve user
-const approveUser = asyncHandler(async (req, res) => {
-  const userId = req.params.id; // Get user ID from URL parameter
+const approveUser = async (req, res) => {
+  const { id } = req.params; // Get user ID from the request parameters
 
-  // Find user by ID
-  const user = await Userwebapp.findById(userId);
+  try {
+    const user = await User.findById(id); // Find the user by ID
 
-  if (!user) {
-    res.status(404);
-    throw new Error("User not found.");
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    user.adminApproved = true; // Set adminApproved to true
+    await user.save(); // Save the updated user
+
+    res.status(200).json({
+      message: "User approved successfully",
+      user,
+    });
+  } catch (error) {
+    res.status(500).json({ message: "Server error", error });
   }
-
-  // Update adminApproved field to true
-  user.adminApproved = true;
-
-  const updatedUser = await user.save();
-
-  res.json({
-    _id: updatedUser._id,
-    name: updatedUser.name,
-    email: updatedUser.email,
-    universityName: updatedUser.universityName,
-    dob: updatedUser.dob,
-    educationLevel: updatedUser.educationLevel,
-    fieldOfStudy: updatedUser.fieldOfStudy,
-    desiredField: updatedUser.desiredField,
-    linkedin: updatedUser.linkedin,
-    portfolio: updatedUser.portfolio,
-    adminApproved: updatedUser.adminApproved, // Return updated approval status
-  });
-});
+};
 
 module.exports = {
   registerUser,
