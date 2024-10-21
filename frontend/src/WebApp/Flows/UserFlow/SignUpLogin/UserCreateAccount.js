@@ -51,11 +51,13 @@ const UserCreateAccount = () => {
     try {
       await account.createOAuth2Session(
         "google",
-        "https://www.skillnaav.com/user-main-page", // Success redirect
-        "https://www.skillnaav.com" // Failure redirect
+        "https://www.skillnaav.com/user-main-page", // Redirect URL on success
+        "https://www.skillnaav.com" // Redirect URL on failure
       );
-    } catch (error) {
-      setErrorMessage("Google Sign-Up failed. Please try again.");
+    } catch (err) {
+      setError("Google Sign-In failed. Redirecting to home...");
+      console.error(err);
+      window.location.href = "https://www.skillnaav.com"; // Redirect to main site on failure
     }
   };
 
@@ -64,11 +66,13 @@ const UserCreateAccount = () => {
     try {
       await account.createOAuth2Session(
         "github",
-        "https://www.skillnaav.com/user-main-page", // Success redirect
-        "https://www.skillnaav.com" // Failure redirect
+        "https://www.skillnaav.com/user-main-page", // Redirect URL on success
+        "https://www.skillnaav.com" // Redirect URL on failure
       );
-    } catch (error) {
-      setErrorMessage("GitHub Sign-Up failed. Please try again.");
+    } catch (err) {
+      setError("GitHub Sign-In failed. Redirecting to home...");
+      console.error(err);
+      window.location.href = "https://www.skillnaav.com"; // Redirect to main site on failure
     }
   };
 
