@@ -32,7 +32,7 @@ const AdminCreateAccount = () => {
     setError("");
     setLoading(true);
     try {
-      const response = await axios.post("/api/users/register", values);
+      const response = await axios.post("/api/admins/register", values);
       localStorage.setItem("adminInfo", JSON.stringify(response.data));
       navigate("/admin-main-page");
     } catch (err) {

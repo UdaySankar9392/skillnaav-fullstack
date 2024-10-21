@@ -30,7 +30,7 @@ const AdminLogin = () => {
           "Content-Type": "application/json",
         },
       };
-      const { data } = await axios.post("/api/users/login", values, config);
+      const { data } = await axios.post("/api/admins/login", values, config);
       localStorage.setItem("adminInfo", JSON.stringify(data));
       navigate("/admin-main-page");
     } catch (err) {

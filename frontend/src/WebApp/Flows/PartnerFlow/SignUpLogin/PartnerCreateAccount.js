@@ -32,7 +32,7 @@ const PartnerCreateAccount = () => {
   // Function to handle form submission
   const handleSubmit = async (values, { setSubmitting }) => {
     try {
-      const response = await axios.post("/api/users/register", values);
+      const response = await axios.post("/api/partners/register", values);
       navigate("/partner-main-page");
       localStorage.setItem("partnerInfo", JSON.stringify(response.data));
     } catch (error) {

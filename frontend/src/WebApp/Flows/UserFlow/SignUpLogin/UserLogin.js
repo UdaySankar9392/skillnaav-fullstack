@@ -7,6 +7,9 @@ import axios from "axios";
 import Loading from "../../../Warnings/Loading/Loading";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faEye, faEyeSlash } from "@fortawesome/free-solid-svg-icons";
+import { account } from "../../../../appwriteConfig";
+import googleIcon from "../../../../assets-webapp/Google-icon.png";
+import githubIcon from "../../../../assets-webapp/github-mark-white.svg"; // Make sure to add the GitHub icon
 
 const validationSchema = Yup.object({
   email: Yup.string().email("Invalid email address").required("Required"),
@@ -28,9 +31,8 @@ const UserLogin = () => {
           "Content-type": "application/json",
         },
       };
-      // Ensure this path is correct
       const { data } = await axios.post("/api/users/login", values, config);
-      const token = data.token; // Use data to get the token
+      const token = data.token;
       localStorage.setItem("token", JSON.stringify(token));
       localStorage.setItem("userInfo", JSON.stringify(data));
       setLoading(false);
@@ -43,6 +45,34 @@ const UserLogin = () => {
           : "Something went wrong"
       );
       setSubmitting(false);
+    }
+  };
+
+  // Function to handle Google Sign-In
+  const signInWithGoogle = async () => {
+    try {
+      await account.createOAuth2Session(
+        "google",
+        "http://localhost:3000/user-main-page", // Redirect URL on success
+        "http://localhost:3000" // Redirect URL on failure
+      );
+    } catch (err) {
+      setError("Google Sign-In failed. Please try again.");
+      console.error(err);
+    }
+  };
+
+  // Function to handle GitHub Sign-In
+  const signInWithGitHub = async () => {
+    try {
+      await account.createOAuth2Session(
+        "github",
+        "http://localhost:3000/user-main-page", // Redirect URL on success
+        "http://localhost:3000" // Redirect URL on failure
+      );
+    } catch (err) {
+      setError("GitHub Sign-In failed. Please try again.");
+      console.error(err);
     }
   };
 
@@ -102,7 +132,6 @@ const UserLogin = () => {
 
                   {/* Password Field */}
                   <div className="relative">
-                    {/* Password Input Field */}
                     <Field
                       type={showPassword ? "text" : "password"}
                       name="password"
@@ -110,7 +139,6 @@ const UserLogin = () => {
                       className="w-full p-4 pr-16 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-400"
                     />
 
-                    {/* Show/Hide Password Icon */}
                     <button
                       type="button"
                       className="absolute inset-y-0 right-4 mt-3 flex items-center justify-center h-full text-gray-600"
@@ -122,7 +150,6 @@ const UserLogin = () => {
                       />
                     </button>
 
-                    {/* Error Message */}
                     <ErrorMessage
                       name="password"
                       component="div"
@@ -132,7 +159,6 @@ const UserLogin = () => {
 
                   {/* Remember Me and Forgot Password */}
                   <div className="flex justify-between items-center mb-6">
-                    {/* Checkbox and Label */}
                     <div className="flex items-center space-x-2">
                       <Field
                         type="checkbox"
@@ -142,13 +168,12 @@ const UserLogin = () => {
                       />
                       <label
                         htmlFor="rememberMe"
-                        className="block text-sm mt-4  text-gray-700"
+                        className="block text-sm mt-4 text-gray-700"
                       >
                         Remember me
                       </label>
                     </div>
 
-                    {/* Forgot Password Link */}
                     <Link
                       to="/forgot-password"
                       className="text-sm font-medium mt-4 text-purple-500 hover:text-purple-700 transition duration-150 ease-in-out"
@@ -161,7 +186,7 @@ const UserLogin = () => {
                   <button
                     type="submit"
                     disabled={isSubmitting}
-                    className="w-full bg-purple-500 text-white  p-4 rounded-lg hover:bg-purple-600 transition-colors duration-300 shadow-md"
+                    className="w-full bg-purple-500 text-white p-4 rounded-lg hover:bg-purple-600 transition-colors duration-300 shadow-md"
                   >
                     Sign In
                   </button>
@@ -177,8 +202,34 @@ const UserLogin = () => {
             <hr className="w-full border-gray-300" />
           </div>
 
+          {/* Google Sign-In Button */}
+          <button
+            onClick={signInWithGoogle}
+            className="flex items-center justify-center w-full bg-blue-600 text-white p-3 rounded-lg hover:bg-blue-700 transition-colors duration-200 shadow-md"
+          >
+            <img
+              src={googleIcon}
+              alt="Google Icon"
+              className="w-6 h-6 mr-2" // Adjust width and height as needed
+            />
+            Sign in with Google
+          </button>
+
+          {/* GitHub Sign-In Button */}
+          <button
+            onClick={signInWithGitHub}
+            className="flex items-center justify-center w-full bg-gray-800 text-white p-3 rounded-lg hover:bg-gray-900 transition-colors duration-200 shadow-md mt-4"
+          >
+            <img
+              src={githubIcon}
+              alt="GitHub Icon"
+              className="w-6 h-6 mr-2" // Adjust width and height as needed
+            />
+            Sign in with GitHub
+          </button>
+
           {/* Sign Up */}
-          <p className="text-center text-gray-500">
+          <p className="text-center mt-5 text-gray-500">
             Don’t have an account?{" "}
             <Link
               to="/user-create-account"

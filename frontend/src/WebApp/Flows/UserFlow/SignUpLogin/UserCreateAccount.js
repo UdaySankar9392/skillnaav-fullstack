@@ -1,10 +1,16 @@
-import React, { useState } from "react";
+// UserCreateAccount.js
+import React, { useState, useEffect } from "react";
 import { Formik, Form, Field, ErrorMessage } from "formik";
 import * as Yup from "yup";
 import { useNavigate } from "react-router-dom";
 import createAccountImage from "../../../../assets-webapp/login-image.png"; // Update the path as needed
 import { EyeIcon, EyeSlashIcon } from "@heroicons/react/24/solid"; // Ensure these are the correct imports
 import { Link } from "react-router-dom";
+import { account } from "../../../../appwriteConfig";
+import googleIcon from "../../../../assets-webapp/Google-icon.png";
+import githubIcon from "../../../../assets-webapp/github-mark-white.svg"; // Make sure to have this image
+import facebookIcon from "../../../../assets-webapp/Facebook-icon.png"; // Make sure to have this image
+import axios from "axios"; // For backend API call (optional)
 
 // Validation schema for Formik
 const validationSchema = Yup.object({
@@ -23,21 +29,86 @@ const UserCreateAccount = () => {
   const [errorMessage, setErrorMessage] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [userInfo, setUserInfo] = useState(null);
 
-  // Function to handle form submission
+  // Function to handle manual form submission
   const handleSubmit = (values, { setSubmitting }) => {
     try {
       console.log("User Data Submitted:", values); // Log user data to console
-      // Simulate successful registration (skip the API call)
+      // Simulate successful registration
       navigate("/user-profile-form", { state: { userData: values } });
 
-      // You can also store the form data in localStorage if needed
+      // Store form data in localStorage (optional)
       localStorage.setItem("userInfo", JSON.stringify(values));
     } catch (error) {
       setErrorMessage("Error registering user. Please try again.");
     }
     setSubmitting(false);
   };
+
+  // Function to handle Google Sign-Up
+  const signUpWithGoogle = async () => {
+    try {
+      await account.createOAuth2Session(
+        "google",
+        "http://localhost:3000/user-main-page", // Success redirect
+        "http://localhost:3000" // Failure redirect
+      );
+    } catch (error) {
+      setErrorMessage("Google Sign-Up failed. Please try again.");
+    }
+  };
+
+  // Function to handle GitHub Sign-Up
+  const signUpWithGitHub = async () => {
+    try {
+      await account.createOAuth2Session(
+        "github",
+        "http://localhost:3000/user-main-page", // Success redirect
+        "http://localhost:3000" // Failure redirect
+      );
+    } catch (error) {
+      setErrorMessage("GitHub Sign-Up failed. Please try again.");
+    }
+  };
+
+  // Function to handle Facebook Sign-Up
+  const signUpWithFacebook = async () => {
+    try {
+      await account.createOAuth2Session(
+        "facebook",
+        "http://localhost:3000/user-main-page", // Success redirect
+        "http://localhost:3000" // Failure redirect
+      );
+    } catch (error) {
+      setErrorMessage("Facebook Sign-Up failed. Please try again.");
+    }
+  };
+
+  // Function to fetch and store user details after successful sign-up
+  const fetchUserDetails = async () => {
+    try {
+      const user = await account.get(); // Fetch user details from Appwrite
+      setUserInfo(user); // Store in state
+      console.log("User Info:", user); // Log for debugging
+
+      // Store user details locally
+      localStorage.setItem("userInfo", JSON.stringify(user));
+
+      // Optionally send user data to your backend for permanent storage
+      // await axios.post("/api/storeUser", user);
+
+      // Navigate to user dashboard or any route after sign-up
+      navigate("/user-main-page");
+    } catch (error) {
+      console.error("Error fetching user details:", error);
+    }
+  };
+
+  // Fetch user details after OAuth2 sign-up
+  useEffect(() => {
+    fetchUserDetails();
+  }, []);
 
   return (
     <div className="flex flex-col lg:flex-row min-h-screen font-poppins">
@@ -146,7 +217,7 @@ const UserCreateAccount = () => {
                   </button>
 
                   <ErrorMessage
-                    name="confirmPassword" // Corrected field name here
+                    name="confirmPassword"
                     component="div"
                     className="text-red-500 text-sm mt-1"
                   />
@@ -167,7 +238,36 @@ const UserCreateAccount = () => {
             )}
           </Formik>
 
-          <p className="text-center text-gray-500 font-poppins font-medium text-base leading-6">
+          {/* Updated Sign-Up Buttons */}
+          <div className="mt-6 space-y-4">
+            <button
+              onClick={signUpWithGoogle}
+              className="flex items-center justify-center w-full bg-blue-600 text-white p-3 rounded-lg hover:bg-blue-700 transition-colors duration-200 shadow-md"
+            >
+              <img
+                src={googleIcon}
+                alt="Google Icon"
+                className="w-6 h-6 mr-2"
+              />
+              Sign up with Google
+            </button>
+
+            <button
+              onClick={signUpWithGitHub}
+              className="flex items-center justify-center w-full bg-gray-800 text-white p-3 rounded-lg hover:bg-gray-900 transition-colors duration-200 shadow-md"
+            >
+              <img
+                src={githubIcon}
+                alt="GitHub Icon"
+                className="w-6 h-6 mr-2"
+              />
+              Sign up with GitHub
+            </button>
+
+          
+          </div>
+
+          <p className="text-center text-gray-500 mt-5 font-poppins font-medium text-base leading-6">
             Already have an account?{" "}
             <Link to="/user/login" className="text-blue-500 hover:underline">
               Login

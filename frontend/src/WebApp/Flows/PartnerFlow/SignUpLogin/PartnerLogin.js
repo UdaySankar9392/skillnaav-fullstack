@@ -29,7 +29,7 @@ const PartnerLogin = () => {
           "Content-type": "application/json",
         },
       };
-      const { data } = await axios.post("/api/users/login", values, config);
+      const { data } = await axios.post("/api/partners/login", values, config);
       localStorage.setItem("userInfo", JSON.stringify(data));
       setLoading(false);
       navigate("/partner-main-page");

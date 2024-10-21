@@ -46,7 +46,7 @@ const YourJobPosts = () => {
       setInternships((prevInternships) =>
         prevInternships.map((internship) =>
           internship._id === internId
-            ? { ...internship, isApproved: true }
+            ? { ...internship, adminApproved: true }
             : internship
         )
       );
@@ -165,12 +165,12 @@ const YourJobPosts = () => {
               <strong>Status:</strong>{" "}
               <span
                 className={`inline-block px-2 py-1 rounded-full font-bold ${
-                  internship.isApproved
+                  internship.adminApproved
                     ? "bg-green-200 text-green-800"
                     : "bg-red-200 text-red-800"
                 }`}
               >
-                {internship.isApproved ? "Accepted" : "Not Approved"}
+                {internship.adminApproved ? "Accepted" : "Not Approved"}
               </span>
             </div>
             <div className="flex space-x-2 mt-4">

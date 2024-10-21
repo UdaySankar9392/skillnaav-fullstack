@@ -1,179 +1,73 @@
-import React, { useState, useEffect } from "react";
-import axios from "axios";
+import React, { useEffect, useState } from "react";
+import axios from "axios"; // Import Axios
 
 const UserManagement = () => {
-  const [users, setUsers] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-  const [selectedUser, setSelectedUser] = useState(null);
-  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [applications, setApplications] = useState([]); // State to store applications
+  const [loading, setLoading] = useState(true); // State to manage loading status
+  const [error, setError] = useState(null); // State to handle errors
 
-  // Fetch data from the new API endpoint on component mount
+  // Function to fetch applications from the API
+  const fetchApplications = async () => {
+    try {
+      const response = await axios.get("/api/applications"); // Adjust the API endpoint as necessary
+      setApplications(response.data); // Update state with the fetched data
+    } catch (error) {
+      setError(error.message); // Set error message if fetching fails
+    } finally {
+      setLoading(false); // Set loading to false after fetching
+    }
+  };
+
   useEffect(() => {
-    const fetchUsers = async () => {
-      try {
-        const response = await axios.get("/api/users/users");
-        setUsers(response.data);
-        setLoading(false);
-      } catch (err) {
-        setError(err.message);
-        setLoading(false);
-      }
-    };
+    fetchApplications(); // Call the fetch function on component mount
+  }, []); // Empty dependency array means this runs once on mount
 
-    fetchUsers();
-  }, []);
-
-  const handleApprove = async (userId) => {
-    try {
-      await axios.patch(`/api/users/approve/${userId}`);
-      setUsers(users.map(user => user._id === userId ? { ...user, isApproved: true } : user));
-    } catch (err) {
-      console.error("Error approving user:", err);
-    }
-  };
-
-  const handleReject = async (userId) => {
-    try {
-      await axios.patch(`/api/users/reject/${userId}`);
-      setUsers(users.map(user => user._id === userId ? { ...user, isApproved: false } : user));
-    } catch (err) {
-      console.error("Error rejecting user:", err);
-    }
-  };
-
-  const handleUserClick = (user) => {
-    setSelectedUser(user);
-    setIsModalOpen(true);
-  };
-
-  const closeModal = () => {
-    setIsModalOpen(false);
-    setSelectedUser(null);
-  };
-
-  if (loading) {
-    return (
-      <div className="flex justify-center items-center h-screen">
-        <div className="loader ease-linear rounded-full border-8 border-t-8 border-gray-200 h-16 w-16"></div>
-      </div>
-    );
-  }
-
-  if (error) {
-    return <div className="text-center text-red-500">Error fetching data: {error}</div>;
-  }
+  // Render loading state, error message, or applications
+  if (loading) return <div>Loading applications...</div>;
+  if (error) return <div>Error: {error}</div>;
 
   return (
-    <div className="p-6 bg-white rounded-lg shadow-lg max-w-6xl mx-auto">
-      <h2 className="text-3xl font-bold mb-6 text-center text-gray-800">
-        Pending Student Registrations
-      </h2>
-      <div className="overflow-x-auto">
-        <table className="min-w-full table-auto divide-y divide-gray-200">
-          <thead className="bg-gray-200">
-            <tr>
-              <th className="px-4 py-3 text-left text-sm font-medium text-gray-600 uppercase tracking-wider">S No.</th>
-              <th className="px-20 py-3 text-left text-sm font-medium text-gray-600 uppercase tracking-wider">Name</th>
-              <th className="px-20 py-3 text-left text-sm font-medium text-gray-600 uppercase tracking-wider">Email</th>
-              <th className="px-6 py-3 text-left text-sm font-medium text-gray-600 uppercase tracking-wider">Status</th>
-              <th className="px-6 py-3 text-left text-sm font-medium text-gray-600 uppercase tracking-wider">Actions</th>
-            </tr>
-          </thead>
-          <tbody className="bg-white divide-y divide-gray-200">
-            {users.map((user, index) => (
-              <tr key={user._id} className="hover:bg-gray-50 transition duration-200">
-                <td className="px-4 py-4 text-sm text-gray-700" onClick={() => handleUserClick(user)}>
-                  {index + 1}
-                </td>
-                <td className="px-6 py-4 text-sm font-medium text-gray-900" onClick={() => handleUserClick(user)}>
-                  {user.name}
-                </td>
-                <td className="px-6 py-4 text-sm text-gray-700" onClick={() => handleUserClick(user)}>
-                  {user.email}
-                </td>
-                <td className="px-6 py-4">
-                  <span
-                    className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
-                      user.isAdmin ? "bg-green-100 text-green-600" : "bg-yellow-100 text-yellow-600"
-                    }`}
-                  >
-                    {user.isAdmin ? "Admin" : "User"}
-                  </span>
-                </td>
-                <td className="px-6 py-4 flex space-x-4">
-                  <button
-                    className={`px-3 py-1 bg-green-500 text-white text-xs font-bold rounded hover:bg-green-600 ${user.isApproved ? "opacity-50 cursor-not-allowed" : ""}`}
-                    onClick={() => handleApprove(user._id)}
-                    disabled={user.isApproved}
-                  >
-                    Approve
-                  </button>
-                  <button
-                    className={`px-3 py-1 bg-red-500 text-white text-xs font-bold rounded hover:bg-red-600 ${!user.isApproved ? "opacity-50 cursor-not-allowed" : ""}`}
-                    onClick={() => handleReject(user._id)}
-                    disabled={!user.isApproved}
-                  >
-                    Reject
-                  </button>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-
-      {isModalOpen && selectedUser && (
-  <div className="fixed inset-0 flex items-center justify-center z-50 bg-black bg-opacity-50">
-    <div className="bg-white rounded-lg shadow-lg max-w-lg w-full">
-      <h3 className="text-xl font-bold text-center mb-4 bg-blue-200 p-3 rounded-t">
-        User Profile Details
-      </h3>
-      <div className="bg-green-50 p-6 rounded-b-lg">
-        <div className="mb-4">
-          <label className="block text-sm font-semibold text-gray-700">University Details:</label>
-          <input type="text" className="border border-gray-300 rounded w-full px-3 py-2 mt-1 text-sm" placeholder="Enter University Details" />
-        </div>
-        <div className="mb-4">
-          <label className="block text-sm font-semibold text-gray-700">User Dob:</label>
-          <input type="text" className="border border-gray-300 rounded w-full px-3 py-2 mt-1 text-sm" placeholder="Enter User Dob" />
-          <span className="text-red-500 text-xs">* Required</span> {/* Required field indicator */}
-        </div>
-        <div className="mb-4">
-          <label className="block text-sm font-semibold text-gray-700">Application Name:</label>
-          <input type="text" className="border border-gray-300 rounded w-full px-3 py-2 mt-1 text-sm" placeholder="Enter Application Name" />
-        </div>
-        <div className="mb-4">
-          <label className="block text-sm font-semibold text-gray-700">Application Type:</label>
-          <input type="text" className="border border-gray-300 rounded w-full px-3 py-2 mt-1 text-sm" placeholder="Enter Application Type" />
-        </div>
-        <div className="mb-4">
-          <label className="block text-sm font-semibold text-gray-700">Duration:</label>
-          <input type="text" className="border border-gray-300 rounded w-full px-3 py-2 mt-1 text-sm" placeholder="Enter Duration" />
-        </div>
-        <div className="mb-4">
-          <label className="block text-sm font-semibold text-gray-700">Payment:</label>
-          <input type="text" className="border border-gray-300 rounded w-full px-3 py-2 mt-1 text-sm" placeholder="Enter Payment" />
-        </div>
-      </div>
-      <div className="flex justify-between p-4 bg-gray-100 rounded-b-lg">
-        <button className="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600 transition duration-200" onClick={closeModal}>
-          Close
-        </button>
-        <button className="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600 transition duration-200">
-          Comments
-        </button>
-        <button className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition duration-200">
-          About User
-        </button>
-      </div>
-    </div>
-  </div>
-)}
-
-
-
-
+    <div>
+      <h2>User Applications</h2>
+      {applications.length === 0 ? (
+        <p>No applications found.</p>
+      ) : (
+        <ul>
+          {applications.map((application) => (
+            <li
+              key={application._id}
+              className="border p-2 my-2 rounded shadow"
+            >
+              <h3 className="font-bold">
+                {application.jobTitle} at {application.companyName}
+              </h3>
+              <p>
+                <strong>Location:</strong> {application.location}
+              </p>
+              <p>
+                <strong>Job Type:</strong> {application.jobType}
+              </p>
+              <p>
+                <strong>Contact Name:</strong> {application.contactInfo.name}
+              </p>
+              <p>
+                <strong>Email:</strong> {application.contactInfo.email}
+              </p>
+              <p>
+                <strong>Phone:</strong> {application.contactInfo.phone}
+              </p>
+              <p>
+                <strong>Status:</strong>{" "}
+                {application.isApplied ? "Applied" : "Not Applied"}
+              </p>
+              <p>
+                <strong>Posted On:</strong>{" "}
+                {new Date(application.createdAt).toLocaleDateString()}
+              </p>
+            </li>
+          ))}
+        </ul>
+      )}
     </div>
   );
 };
