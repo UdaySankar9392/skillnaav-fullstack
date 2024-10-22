@@ -7,6 +7,7 @@ const PartnerManagement = () => {
   const [error, setError] = useState(null);
   const [selectedPartner, setSelectedPartner] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [confirmAction, setConfirmAction] = useState(null); // State for confirmation action
 
   // Fetch data from the API on component mount
   useEffect(() => {
@@ -24,22 +25,42 @@ const PartnerManagement = () => {
     fetchPartners();
   }, []);
 
-  const handleApprove = async (partnerId) => {
-//     try {
-//       await axios.patch(`/api/partners/approve/${partnerId}`, { status: "Approved" });
-//       setPartners(partners.map(partner => partner._id === partnerId ? { ...partner, status: "Approved" } : partner));
-//     } catch (err) {
-//       console.error("Error approving partner:", err);
-//     }
-//   };
+  // Handlers for Approve and Reject actions
+  const handleApprove = async () => {
+    try {
+      await axios.patch(`/api/partners/approve/${confirmAction.partnerId}`, { status: "Approved" });
+      setPartners(
+        partners.map((partner) =>
+          partner._id === confirmAction.partnerId ? { ...partner, status: "Approved" } : partner
+        )
+      );
+      setConfirmAction(null); // Close the modal after confirmation
+    } catch (err) {
+      console.error("Error approving partner:", err);
+    }
+  };
 
-//   const handleReject = async (partnerId) => {
-//     try {
-//       await axios.patch(`/api/partners/reject/${partnerId}`, { status: "Rejected" });
-//       setPartners(partners.map(partner => partner._id === partnerId ? { ...partner, status: "Rejected" } : partner));
-//     } catch (err) {
-//       console.error("Error rejecting partner:", err);
-//     }
+  const handleReject = async () => {
+    try {
+      await axios.patch(`/api/partners/reject/${confirmAction.partnerId}`, { status: "Rejected" });
+      setPartners(
+        partners.map((partner) =>
+          partner._id === confirmAction.partnerId ? { ...partner, status: "Rejected" } : partner
+        )
+      );
+      setConfirmAction(null); // Close the modal after confirmation
+    } catch (err) {
+      console.error("Error rejecting partner:", err);
+    }
+  };
+
+  // Handle action confirmation
+  const confirmActionHandler = () => {
+    if (confirmAction.type === "approve") {
+      handleApprove();
+    } else {
+      handleReject();
+    }
   };
 
   const handlePartnerClick = (partner) => {
@@ -50,6 +71,10 @@ const PartnerManagement = () => {
   const closeModal = () => {
     setIsModalOpen(false);
     setSelectedPartner(null);
+  };
+
+  const openConfirmationModal = (partnerId, type) => {
+    setConfirmAction({ partnerId, type });
   };
 
   if (loading) {
@@ -73,7 +98,7 @@ const PartnerManagement = () => {
             <tr>
               <th className="px-4 py-3 text-left text-sm font-medium text-gray-600 uppercase tracking-wider">S No.</th>
               <th className="px-20 py-3 text-left text-sm font-medium text-gray-600 uppercase tracking-wider">University Name</th>
-              <th className="px-20 py-3 text-left text-sm font-medium text-gray-600 uppercase tracking-wider">Institution ID</th>
+              <th className="px-20 py-3 text-left text-sm font-medium text-gray-600 uppercase tracking-wider">E-mail</th>
               <th className="px-6 py-3 text-left text-sm font-medium text-gray-600 uppercase tracking-wider">Status</th>
               <th className="px-6 py-3 text-left text-sm font-medium text-gray-600 uppercase tracking-wider">Actions</th>
             </tr>
@@ -88,7 +113,7 @@ const PartnerManagement = () => {
                   {partner.universityName}
                 </td>
                 <td className="px-6 py-4 text-sm text-gray-700" onClick={() => handlePartnerClick(partner)}>
-                  {partner.institutionId}
+                  {partner.email}
                 </td>
                 <td className="px-6 py-4">
                   <span
@@ -103,14 +128,14 @@ const PartnerManagement = () => {
                 <td className="px-6 py-4 flex space-x-4">
                   <button
                     className="px-3 py-1 bg-green-500 text-white text-xs font-bold rounded hover:bg-green-600"
-                    onClick={() => handleApprove(partner._id)}
+                    onClick={() => openConfirmationModal(partner._id, "approve")}
                     disabled={partner.status === "Approved"} // Disable if already approved
                   >
                     Approve
                   </button>
                   <button
                     className="px-3 py-1 bg-red-500 text-white text-xs font-bold rounded hover:bg-red-600"
-                    onClick={() => handleReject(partner._id)}
+                    onClick={() => openConfirmationModal(partner._id, "reject")}
                     disabled={partner.status === "Rejected"} // Disable if already rejected
                   >
                     Reject
@@ -163,6 +188,25 @@ const PartnerManagement = () => {
                 onClick={closeModal}
               >
                 Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Confirmation Modal */}
+      {confirmAction && (
+        <div className="fixed inset-0 flex items-center justify-center z-50 bg-black bg-opacity-50">
+          <div className="bg-white rounded-lg shadow-lg w-full max-w-sm p-6">
+            <h3 className="text-lg font-semibold mb-4">
+              {`Are you sure you want to ${confirmAction.type} this partner?`}
+            </h3>
+            <div className="flex justify-end space-x-2">
+              <button onClick={() => setConfirmAction(null)} className="px-4 py-2 bg-gray-300 rounded hover:bg-gray-400">
+                Cancel
+              </button>
+              <button onClick={confirmActionHandler} className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600">
+                Confirm
               </button>
             </div>
           </div>
