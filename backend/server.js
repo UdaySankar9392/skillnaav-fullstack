@@ -1,7 +1,7 @@
 const express = require("express");
 const dotenv = require("dotenv");
 const path = require("path");
-const cors = require("cors"); // Declare cors only once
+const cors = require("cors"); 
 const connectDB = require("./config/dbConfig");
 const { notFound, errorHandler } = require("./middlewares/errorMiddleware");
 
@@ -26,13 +26,15 @@ const userRoutes = require("./routes/webapp-routes/userRoutes");
 const internRoutes = require("./routes/webapp-routes/internshipPostRoutes");
 const skillnaavRoute = require("./routes/skillnaavRoute");
 const applicationRoutes = require("./routes/webapp-routes/applicationRoutes");
+const partnerRoutes = require("./routes/webapp-routes/partnerRoutes"); // Import Partner routes
 
 // Define routes
 app.use("/api/users", userRoutes); // User Web App routes
-app.use("/api/interns", internRoutes); //Partner to Admin Intern Posts
+app.use("/api/interns", internRoutes); // Partner to Admin Intern Posts
 app.use("/api/applications", applicationRoutes); // Add application routes
 app.use("/api/skillnaav", skillnaavRoute); // Skillnaav routes
 app.use("/api/contact", skillnaavRoute); // Contact route (Verify if this is correct)
+app.use('/api/partners', partnerRoutes); // Partner routes for registration and login
 
 // Serve static assets if in production
 if (process.env.NODE_ENV === "production") {

@@ -3,7 +3,7 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faHome,
   faUsers, // For User Management
-  faClipboardList, // For Task Management
+  faClipboardList, // For Task Management and Partner Accounts
   faChartBar, // For Analytics
   faCogs, // For Settings
   faSignOutAlt, // For Logout
@@ -46,6 +46,11 @@ const Sidebar = () => {
               id: "task-management",
               icon: faClipboardList,
               label: "Partner Management",
+            },
+            {
+              id: "partner-accounts",
+              icon: faClipboardList,
+              label: "Partner Accounts",
             },
             { id: "analytics", icon: faChartBar, label: "Analytics" },
             { id: "settings", icon: faCogs, label: "Settings" },

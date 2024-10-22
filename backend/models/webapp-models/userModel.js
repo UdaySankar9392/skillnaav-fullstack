@@ -1,4 +1,3 @@
-// userModel.js
 const mongoose = require("mongoose");
 const bcrypt = require("bcrypt");
 
@@ -48,7 +47,11 @@ const userwebappSchema = new mongoose.Schema(
     },
     adminApproved: {
       type: Boolean,
-      required: false,
+      default: false,
+    },
+    isActive: {
+      type: Boolean,
+      default: false,
     },
   },
   {

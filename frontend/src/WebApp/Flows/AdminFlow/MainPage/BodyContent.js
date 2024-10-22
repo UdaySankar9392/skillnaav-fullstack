@@ -8,6 +8,7 @@ import {
 } from "react-icons/fa"; // Import icons
 import UserManagement from "./UserManagement";
 import PartnerManagement from "./PartnerManagement";
+import PartnerAccounts from "./PartnerAccounts";
 const BodyContent = () => {
   const { selectedTab } = useTabContext();
   console.log("Selected Tab:", selectedTab);
@@ -70,6 +71,13 @@ const BodyContent = () => {
         return (
           <div className="text-center mt-4">
             <PartnerManagement />
+          </div>
+        );
+
+      case "partner-accounts":
+        return (
+          <div className="text-center mt-4">
+          <PartnerAccounts />
           </div>
         );
 

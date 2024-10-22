@@ -1,9 +1,15 @@
 const asyncHandler = require("express-async-handler");
 const Userwebapp = require("../models/webapp-models/userModel");
 const generateToken = require("../utils/generateToken");
+const notifyUser = require("../utils/notifyUser"); // Import the notifyUser function
+
+// Helper function to check required fields
+const areFieldsFilled = (fields) => fields.every((field) => field);
 
 // Register a new user
 const registerUser = asyncHandler(async (req, res) => {
+  console.log('Request Body:', req.body); // Log the request body
+
   const {
     name,
     email,
@@ -18,7 +24,8 @@ const registerUser = asyncHandler(async (req, res) => {
     portfolio,
   } = req.body;
 
-  if (!name || !email || !password || !confirmPassword || !universityName || !dob || !educationLevel || !fieldOfStudy || !desiredField || !linkedin || !portfolio) {
+  // Check for required fields
+  if (!areFieldsFilled([name, email, password, confirmPassword, universityName, dob, educationLevel, fieldOfStudy, desiredField, linkedin, portfolio])) {
     res.status(400);
     throw new Error("Please fill all required fields.");
   }
@@ -40,7 +47,7 @@ const registerUser = asyncHandler(async (req, res) => {
   const user = await Userwebapp.create({
     name,
     email,
-    password, // Password will be hashed in the model pre-save hook
+    password, // Ensure password hashing occurs in the model pre-save hook
     universityName,
     dob,
     educationLevel,
@@ -48,7 +55,7 @@ const registerUser = asyncHandler(async (req, res) => {
     desiredField,
     linkedin,
     portfolio,
-    adminApproved: false, // Set default to false
+    adminApproved: false, // Default to false
   });
 
   if (user) {
@@ -63,7 +70,7 @@ const registerUser = asyncHandler(async (req, res) => {
       desiredField: user.desiredField,
       linkedin: user.linkedin,
       portfolio: user.portfolio,
-      token: generateToken(user._id), // Generate token here
+      token: generateToken(user._id), // Generate token
       adminApproved: user.adminApproved, // Include admin approval status
     });
   } else {
@@ -78,39 +85,32 @@ const authUser = asyncHandler(async (req, res) => {
 
   const user = await Userwebapp.findOne({ email });
 
-  if (user) {
-    // Check if the password matches
-    if (await user.matchPassword(password)) {
-      // Check if the user is approved by an admin
-      if (user.adminApproved) {
-        res.json({
-          _id: user._id,
-          name: user.name,
-          email: user.email,
-          universityName: user.universityName,
-          dob: user.dob,
-          educationLevel: user.educationLevel,
-          fieldOfStudy: user.fieldOfStudy,
-          desiredField: user.desiredField,
-          linkedin: user.linkedin,
-          portfolio: user.portfolio,
-          token: generateToken(user._id), // Generate token here
-        });
-      } else {
-        // User is not approved by admin
-        res.status(403);
-        throw new Error("User account is not approved by an admin.");
-      }
+  if (user && await user.matchPassword(password)) {
+    // Check if the user is approved by an admin
+    if (user.adminApproved) {
+      res.json({
+        _id: user._id,
+        name: user.name,
+        email: user.email,
+        universityName: user.universityName,
+        dob: user.dob,
+        educationLevel: user.educationLevel,
+        fieldOfStudy: user.fieldOfStudy,
+        desiredField: user.desiredField,
+        linkedin: user.linkedin,
+        portfolio: user.portfolio,
+        token: generateToken(user._id), // Generate token here
+      });
     } else {
-      res.status(400);
-      throw new Error("Invalid email or password.");
+      // User is not approved by admin
+      res.status(403);
+      throw new Error("User account is not approved by an admin.");
     }
   } else {
     res.status(400);
     throw new Error("Invalid email or password.");
   }
 });
-
 
 // Update user profile
 const updateUserProfile = asyncHandler(async (req, res) => {
@@ -121,28 +121,19 @@ const updateUserProfile = asyncHandler(async (req, res) => {
     throw new Error("User not found.");
   }
 
-  // Ensure all fields are updated or retained
-  const { name, email, universityName, dob, educationLevel, fieldOfStudy, desiredField, linkedin, portfolio, password } = req.body;
+  // Update fields if they are provided, otherwise retain existing values
+  user.name = req.body.name || user.name;
+  user.email = req.body.email || user.email;
+  user.universityName = req.body.universityName || user.universityName;
+  user.dob = req.body.dob || user.dob;
+  user.educationLevel = req.body.educationLevel || user.educationLevel;
+  user.fieldOfStudy = req.body.fieldOfStudy || user.fieldOfStudy;
+  user.desiredField = req.body.desiredField || user.desiredField;
+  user.linkedin = req.body.linkedin || user.linkedin;
+  user.portfolio = req.body.portfolio || user.portfolio;
 
-  if (!name || !email || !universityName || !dob || !educationLevel || !fieldOfStudy || !desiredField || !linkedin || !portfolio) {
-    res.status(400);
-    throw new Error("Please fill all required fields.");
-  }
-
-  // Update user's information
-  user.name = name;
-  user.email = email;
-  user.universityName = universityName;
-  user.dob = dob;
-  user.educationLevel = educationLevel;
-  user.fieldOfStudy = fieldOfStudy;
-  user.desiredField = desiredField;
-  user.linkedin = linkedin;
-  user.portfolio = portfolio;
-
-  // Update password if provided
-  if (password) {
-    user.password = password; // Ensure password is hashed in pre-save hook
+  if (req.body.password) {
+    user.password = req.body.password;
   }
 
   const updatedUser = await user.save();
@@ -158,7 +149,7 @@ const updateUserProfile = asyncHandler(async (req, res) => {
     desiredField: updatedUser.desiredField,
     linkedin: updatedUser.linkedin,
     portfolio: updatedUser.portfolio,
-    token: generateToken(updatedUser._id), // Generate new token upon profile update
+    token: generateToken(updatedUser._id), // Regenerate token
   });
 });
 
@@ -175,37 +166,56 @@ const getAllUsers = asyncHandler(async (req, res) => {
 });
 
 // Admin approve user
+// Admin approve user
 const approveUser = asyncHandler(async (req, res) => {
-  const userId = req.params.id; // Get user ID from URL parameter
+  const { userId } = req.params; // Use the correct parameter name
+  console.log("Approving User ID:", userId); // Log the userId
 
-  // Find user by ID
   const user = await Userwebapp.findById(userId);
+  if (!user) {
+      res.status(404);
+      throw new Error("User not found.");
+  }
 
+  // Approve the user
+  user.adminApproved = true;
+  await user.save();
+
+  // Send a notification email to the user about their approval
+  await notifyUser(user.email, "Your SkillNaav account has been approved!", "Congratulations! Your SkillNaav account has been approved by the admin.");
+
+  res.status(200).json({ message: "User approved successfully." });
+});
+
+
+
+// Admin reject user
+const rejectUser = asyncHandler(async (req, res) => {
+  const { userId } = req.params; // Use the correct parameter name
+  console.log("Rejecting User ID:", userId); // Log the userId
+
+  const user = await Userwebapp.findById(userId);
   if (!user) {
     res.status(404);
     throw new Error("User not found.");
   }
 
-  // Update adminApproved field to true
-  user.adminApproved = true;
+  user.adminApproved = false;
+  await user.save(); 
 
-  const updatedUser = await user.save();
+  // Optionally, you can log the rejection reason if provided
+  const rejectionReason = req.body.reason || "Your SkillNaav account has been rejected by the admin.";
+  
+  // Send a notification email to the user about their rejection
+  await notifyUser(user.email, "Your SkillNaav account has been rejected.", rejectionReason);
 
-  res.json({
-    _id: updatedUser._id,
-    name: updatedUser.name,
-    email: updatedUser.email,
-    universityName: updatedUser.universityName,
-    dob: updatedUser.dob,
-    educationLevel: updatedUser.educationLevel,
-    fieldOfStudy: updatedUser.fieldOfStudy,
-    desiredField: updatedUser.desiredField,
-    linkedin: updatedUser.linkedin,
-    portfolio: updatedUser.portfolio,
-    adminApproved: updatedUser.adminApproved, // Return updated approval status
-  });
-}) ;
+  // Optionally, you can perform any additional actions here (like setting a rejection status)
+  
+  res.status(200).json({ message: "User rejected successfully." });
+});
+
+module.exports = { registerUser, authUser, updateUserProfile, getAllUsers, approveUser, rejectUser };
 
 
-module.exports = { registerUser, authUser, updateUserProfile, getAllUsers, approveUser };
-``
+
+
