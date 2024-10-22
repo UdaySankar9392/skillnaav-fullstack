@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { Formik, Form, Field, ErrorMessage } from "formik";
 import * as Yup from "yup";
 import { useNavigate } from "react-router-dom";
-import { EyeIcon, EyeSlashIcon } from "@heroicons/react/24/solid"; // Ensure these are the correct imports
+import { EyeIcon, EyeSlashIcon } from "@heroicons/react/24/solid";
 import { Link } from "react-router-dom";
 import partner2Image from "../../../../assets-webapp/partner2_img.jpg";
 
@@ -29,11 +29,15 @@ const PartnerCreateAccount = () => {
     try {
       console.log("User Data Submitted:", values); // Log user data to console
 
-      // Simulate successful registration (skip the API call)
-      navigate("/partner-profile-picture", { state: { userData: values } });
+      // Simulate successful registration (you'll replace this with your actual API call)
+      // Here is where you would normally call your API, e.g.:
+      // const response = await axios.post("your-api-url/register", values);
 
-      // Optionally store the form data in localStorage if needed
+      // Store the form data in localStorage
       localStorage.setItem("userInfo", JSON.stringify(values));
+
+      // Navigate to the profile picture page
+      navigate("/partner-profile-picture", { state: { userData: values } });
     } catch (error) {
       setErrorMessage("Error registering user. Please try again.");
     }

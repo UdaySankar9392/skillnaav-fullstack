@@ -12,7 +12,7 @@ const PartnerManagement = () => {
   useEffect(() => {
     const fetchPartners = async () => {
       try {
-        const response = await axios.get("/api/partners");
+        const response = await axios.get("/api/partners/partners");
         setPartners(response.data);
         setLoading(false);
       } catch (err) {
