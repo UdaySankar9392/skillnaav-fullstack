@@ -1,227 +1,155 @@
-import React, { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
-import uploadButtonIcon from "../../../../../assets-webapp/Upload-button.png"; // Adjust path if needed
+import React, { useState } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
+import axios from 'axios';
 
-const PartnerProfilePicture = ({ onSubmit }) => {
-  const [formData, setFormData] = useState({
-    fieldOfStudy: "",
-    profilePicture: null,
-    resume: null,
-    linkedin: "",
-    portfolio: "",
-  });
-  const [preview, setPreview] = useState(null);
-  const navigate = useNavigate(); 
+const PartnerProfile = () => {
+  const location = useLocation();
+  const [companyName, setCompanyName] = useState('');
+  const [institutionalID, setInstitutionalID] = useState('');
+  const [profileImage, setProfileImage] = useState(null);
+  const [isSubmitted, setIsSubmitted] = useState(false);
+  const navigate = useNavigate();
 
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setFormData({ ...formData, [name]: value });
-  };
+  // Function to check if all fields are filled
+  const isFormComplete = companyName && institutionalID && profileImage;
 
-  const handleFileChange = (e) => {
-    const { name, files } = e.target;
-    setFormData({ ...formData, [name]: files[0] });
-    if (files[0]) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setPreview(reader.result);
-      };
-      reader.readAsDataURL(files[0]);
+  // Handle file upload and set image preview
+  const handleFileUpload = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      setProfileImage(URL.createObjectURL(file));
     }
   };
 
-  const handleDeleteFile = (fieldName) => {
-    setFormData({ ...formData, [fieldName]: null });
-    setPreview(null);
-  };
-
-  const handleSubmit = () => {
-    if (isFormValid()) {
-      // onSubmit();
-      navigate("/partner-main-page"); // Navigate to the homepage after form submission
+  // Handle form submission
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+  
+    // Log the location state
+    console.log("Location State:", location.state);
+  
+    // Extract previous user data if it exists
+    const { name, email, password } = location.state?.formData || { name: '', email: '', password: '' };
+  
+    // Prepare the data to send to the backend
+    const completeProfileData = {
+      companyName,
+      institutionalID,
+      name,
+      email,
+      password,
+    };
+  
+    // Validate all required fields
+    if (!completeProfileData.companyName || !completeProfileData.institutionalID) {
+      alert("Please fill all required fields.");
+      return;
+    }
+  
+    // Log the relevant data to the console
+    console.log("Profile Data:", completeProfileData);
+  
+    try {
+      // Submit the data to your backend/database using Axios
+      const response = await axios.post('/api/partners/register', completeProfileData);
+  
+      if (response.status === 201) {
+        setIsSubmitted(true);
+        navigate("/partner-main-page"); // Redirect after successful submission
+      }
+    } catch (error) {
+      console.error("Error submitting form:", error);
+      alert("Registration failed. Please try again.");
     }
   };
-
-  const isFormValid = () => {
-    const { fieldOfStudy, profilePicture, resume, linkedin, portfolio } =
-      formData;
-    return fieldOfStudy && profilePicture && resume && linkedin && portfolio;
-  };
-
-  useEffect(() => {
-    if (formData.profilePicture) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setPreview(reader.result);
-      };
-      reader.readAsDataURL(formData.profilePicture);
-    } else {
-      setPreview(null);
-    }
-  }, [formData.profilePicture]);
-
-  const buttonDisabled = !isFormValid();
+  
 
   return (
     <div className="flex justify-center items-center min-h-screen bg-gray-100 font-poppins">
-      <div className="w-full max-w-xl p-8 space-y-6 bg-white shadow-md rounded-lg">
-        <div className="space-y-4">
-          <div className="w-full h-12 p-3 bg-purple-100 border-b border-purple-300">
-            <h2 className="text-lg font-bold text-gray-700">
-              PROFESSIONAL INFORMATION
-            </h2>
+      <div className="bg-white shadow-md rounded-lg p-10 w-full max-w-lg">
+        <h2 className="text-xl font-semibold text-gray-700 bg-purple-100 p-3 rounded-md mb-6">BASIC INFORMATION</h2>
+        <form onSubmit={handleSubmit}>
+          {/* University or Company Name */}
+          <div className="mb-4">
+            <label className="block text-sm font-medium text-gray-700 mb-2">University or Company name</label>
+            <input
+              type="text"
+              placeholder="Tesla Inc"
+              value={companyName}
+              onChange={(e) => setCompanyName(e.target.value)}
+              className="w-full border border-gray-300 rounded-md p-3 focus:outline-none focus:ring-2 focus:ring-purple-200"
+            />
           </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700">
-              Desired field of Internship/Job
-            </label>
-            <select
-              name="fieldOfStudy"
-              value={formData.fieldOfStudy}
-              onChange={handleChange}
-              className="mt-1 block w-full px-3 py-2 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-purple-500 focus:border-purple-500"
-            >
-              <option value="">Select Your Field</option>
-              <option value="CSE">CSE</option>
-              <option value="ECE">ECE</option>
-              <option value="MECH">MECH</option>
-              <option value="CIVIL">CIVIL</option>
-              <option value="IT">IT</option>
-              <option value="EEE">EEE</option>
-            </select>
+
+          {/* Institutional ID */}
+          <div className="mb-4">
+            <label className="block text-sm font-medium text-gray-700 mb-2">Institutional ID</label>
+            <input
+              type="text"
+              placeholder="XXXXXXXXXX"
+              value={institutionalID}
+              onChange={(e) => setInstitutionalID(e.target.value)}
+              className="w-full border border-gray-300 rounded-md p-3 focus:outline-none focus:ring-2 focus:ring-purple-200"
+            />
           </div>
-        </div>
-        <div className="space-y-4">
-          <div className="w-full h-12 p-3 bg-purple-100 border-b border-purple-300">
-            <h2 className="text-lg font-bold text-gray-700">
-              LINKS AND DOCUMENTS
-            </h2>
-          </div>
-          <div className="flex flex-col items-center space-y-2">
-            <label className="block text-sm font-medium text-gray-700">
-              Profile Picture
-            </label>
-            <div className="flex flex-col items-center">
-              <input
-                type="file"
-                name="profilePicture"
-                onChange={handleFileChange}
-                id="profilePictureInput"
-                className="hidden"
-              />
-              {preview ? (
-                <div className="relative">
+
+          {/* Profile Picture */}
+          <div className="mb-6">
+            <label className="block text-sm font-medium text-gray-700 mb-2">Profile picture</label>
+            <div className="flex justify-center items-center w-full">
+              <label
+                htmlFor="profile-picture"
+                className="flex flex-col items-center justify-center w-24 h-24 bg-gray-50 rounded-full shadow-sm cursor-pointer hover:bg-gray-100 transition duration-200"
+              >
+                {profileImage ? (
                   <img
-                    src={preview}
+                    src={profileImage}
                     alt="Profile Preview"
-                    className="w-16 h-16 object-cover rounded-full"
+                    className="w-full h-full object-cover rounded-full"
                   />
-                  <button
-                    type="button"
-                    onClick={() => handleDeleteFile("profilePicture")}
-                    className="absolute top-0 right-0 px-2 py-1 text-xs text-white bg-red-600 rounded-md hover:bg-red-700"
+                ) : (
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    className="w-8 h-8 text-gray-400"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
                   >
-                    Delete
-                  </button>
-                </div>
-              ) : (
-                <label
-                  htmlFor="profilePictureInput"
-                  className="cursor-pointer block w-full text-center text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:bg-gray-100 file:text-gray-700 hover:file:bg-gray-200"
-                >
-                  <img
-                    src={uploadButtonIcon}
-                    alt="Choose File"
-                    className="w-16 h-16 object-cover"
-                  />
-                </label>
-              )}
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M5 12h14M12 5v14"
+                    />
+                  </svg>
+                )}
+                <input id="profile-picture" type="file" className="hidden" onChange={handleFileUpload} />
+              </label>
             </div>
           </div>
-          <div className="flex flex-col items-center space-y-2">
-            <label className="block text-sm font-medium text-gray-700">
-              Resume or CV
-            </label>
-            <div className="flex flex-col items-center">
-              <input
-                type="file"
-                name="resume"
-                onChange={handleFileChange}
-                id="resumeInput"
-                className="hidden"
-              />
-              {formData.resume ? (
-                <div className="relative">
-                  <span className="block w-16 h-16 text-center leading-16">
-                    {formData.resume.name}
-                  </span>
-                  <button
-                    type="button"
-                    onClick={() => handleDeleteFile("resume")}
-                    className="absolute top-0 right-0 px-2 py-1 text-xs text-white bg-red-600 rounded-md hover:bg-red-700"
-                  >
-                    Delete
-                  </button>
-                </div>
-              ) : (
-                <label
-                  htmlFor="resumeInput"
-                  className="cursor-pointer block w-full text-center text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:bg-gray-100 file:text-gray-700 hover:file:bg-gray-200"
-                >
-                  <img
-                    src={uploadButtonIcon}
-                    alt="Choose File"
-                    className="w-16 h-16 object-cover"
-                  />
-                </label>
-              )}
-            </div>
-            <span className="text-xs text-gray-500">PDF (max. 10MB)</span>
+
+          {/* Continue Button */}
+          <div>
+            <button
+              type="submit"
+              className={`w-full py-3 rounded-md font-semibold text-center text-white transition duration-200 ${
+                isFormComplete ? 'bg-purple-400 hover:bg-purple-700' : 'bg-purple-100 cursor-not-allowed'
+              }`}
+              disabled={!isFormComplete}
+            >
+              Continue
+            </button>
           </div>
-          <div className="space-y-2">
-            <label className="block text-sm font-medium text-gray-700">
-              LinkedIn Profile
-            </label>
-            <input
-              type="url"
-              name="linkedin"
-              value={formData.linkedin}
-              onChange={handleChange}
-              className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-purple-500 focus:border-purple-500"
-              placeholder="Enter LinkedIn URL"
-            />
+        </form>
+
+        {isSubmitted && (
+          <div className="mt-6 text-center text-green-500">
+            <p>Form submitted successfully!</p>
           </div>
-          <div className="space-y-2">
-            <label className="block text-sm font-medium text-gray-700">
-              Portfolio Website
-            </label>
-            <input
-              type="url"
-              name="portfolio"
-              value={formData.portfolio}
-              onChange={handleChange}
-              className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-purple-500 focus:border-purple-500"
-              placeholder="Enter Portfolio URL"
-            />
-          </div>
-        </div>
-        <div>
-          <button
-            type="button"
-            onClick={handleSubmit}
-            className={`w-full py-2 px-4 border rounded-md shadow-sm text-sm font-medium ${
-              buttonDisabled
-                ? "bg-[#E9D7FE] text-[#B4A0D1]"
-                : "bg-purple-600 text-white hover:bg-purple-700"
-            }`}
-            disabled={buttonDisabled}
-          >
-            Submit
-          </button>
-        </div>
+        )}
       </div>
     </div>
   );
 };
 
-export default PartnerProfilePicture;
+export default PartnerProfile;

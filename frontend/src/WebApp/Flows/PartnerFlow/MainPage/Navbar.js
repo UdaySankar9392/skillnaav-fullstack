@@ -27,7 +27,7 @@ const Navbar = () => {
     // Clear user information from localStorage
     localStorage.removeItem("userInfo");
     // Redirect to login page
-    navigate("/user/login");
+    navigate("/partner/login");
   };
 
   // Handle clicks outside of the dropdown
