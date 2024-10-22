@@ -1,15 +1,20 @@
 const express = require("express");
 const router = express.Router();
-const { registerPartner, loginPartner, getAllPartners } = require("../../controllers/partnerController");
+const {
+  registerPartner,
+  authPartner,
+  updatePartnerProfile,
+  getAllPartners,
+  approvePartner,
+  rejectPartner,
+} = require("../../controllers/partnerController");
+const { protect } = require("../../middlewares/authMiddleware");
 
-// Partner registration route
-router.post("/register", registerPartner);
+router.post("/register", registerPartner); 
+router.post("/login", authPartner); 
+router.post("/profile", protect, updatePartnerProfile); // Protected route to update partner profile
+router.get("/partners", getAllPartners); // Get all partners route
+router.patch("/approve/:partnerId", approvePartner); // Approve partner by ID, add protect middleware if needed
+router.patch("/reject/:partnerId", rejectPartner);
 
-// Partner login route
-router.post("/login", loginPartner);
-
-// Get all partners route
-router.get("/all", getAllPartners); // New route to get all partners
-
-// Export routes
 module.exports = router;

@@ -1,100 +1,211 @@
 const asyncHandler = require("express-async-handler");
-const Partner = require("../models/webapp-models/partnerModel"); // Adjust path as necessary
-const bcrypt = require("bcryptjs");
-const jwt = require("jsonwebtoken");
+const Partnerwebapp = require("../models/webapp-models/partnerModel");
+const generateToken = require("../utils/generateToken");
+const notifyUser = require("../utils/notifyUser"); // Import the notifyUser function
 
-const JWT_SECRET = process.env.JWT_SECRET || "your_jwt_secret_key";
+// Helper function to check required fields
+const areFieldsFilled = (fields) => fields.every((field) => field);
 
-/// Register Partner
+// Register a new partner
 const registerPartner = asyncHandler(async (req, res) => {
-  const { name, email, password, universityName, institutionId } = req.body;
+  console.log("Request Body:", req.body); // Log the request body
 
-  try {
-    // Check if the partner already exists
-    const existingPartner = await Partner.findOne({ email });
-    if (existingPartner) {
-      return res.status(400).json({ success: false, message: "Partner already exists" });
-    }
+  const {
+    name,
+    email,
+    password,
+    confirmPassword,
+    universityName,
+    institutionId,
+  } = req.body;
 
-    // Hash the password
-    const hashedPassword = await bcrypt.hash(password, 10);
-
-    // Create new partner
-    const newPartner = new Partner({
+  // Check for required fields
+  if (
+    !areFieldsFilled([
       name,
       email,
-      password: hashedPassword,
+      password,
+      confirmPassword,
       universityName,
       institutionId,
-    });
+    ])
+  ) {
+    res.status(400);
+    throw new Error("Please fill all required fields.");
+  }
 
-    // Save partner to database
-    await newPartner.save();
+  // Check if passwords match
+  if (password !== confirmPassword) {
+    res.status(400);
+    throw new Error("Passwords do not match.");
+  }
 
-    // Respond with partner details including _id
+  // Check if the partner already exists
+  const partnerExists = await Partnerwebapp.findOne({ email });
+  if (partnerExists) {
+    res.status(400);
+    throw new Error("Partner already exists");
+  }
+
+  // Create new partner
+  const partner = await Partnerwebapp.create({
+    name,
+    email,
+    password, // Ensure password hashing occurs in the model pre-save hook
+    universityName,
+    institutionId,
+    adminApproved: false, // Default to false
+  });
+
+  if (partner) {
     res.status(201).json({
-      _id: newPartner._id, // Include the _id of the new partner
-      success: true,
-      message: "Partner registered successfully",
+      _id: partner._id,
+      name: partner.name,
+      email: partner.email,
+      universityName: partner.universityName,
+      institutionId: partner.institutionId,
+      token: generateToken(partner._id), // Generate token
+      adminApproved: partner.adminApproved, // Include admin approval status
     });
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ success: false, message: "Error registering partner", error });
+  } else {
+    res.status(400);
+    throw new Error("Error occurred while registering partner.");
   }
 });
 
-// Login Partner
-const loginPartner = asyncHandler(async (req, res) => {
+// Authenticate partner (login)
+const authPartner = asyncHandler(async (req, res) => {
   const { email, password } = req.body;
 
-  try {
-    // Check if partner exists
-    const partner = await Partner.findOne({ email });
-    if (!partner) {
-      return res.status(404).json({ success: false, message: "Partner not found" });
-    }
+  const partner = await Partnerwebapp.findOne({ email });
 
-    // Compare password with hashed password
-    const isPasswordValid = await bcrypt.compare(password, partner.password);
-    if (!isPasswordValid) {
-      return res.status(401).json({ success: false, message: "Invalid credentials" });
-    }
-
-    // Generate JWT token
-    const token = jwt.sign(
-      { id: partner._id, email: partner.email },
-      JWT_SECRET,
-      { expiresIn: "1h" }
-    );
-
-    res.json({
-      success: true,
-      message: "Login successful",
-      token,
-      partner: {
-        id: partner._id,
+  if (partner && (await partner.matchPassword(password))) {
+    // Check if the partner is approved by an admin and is active
+    if (partner.adminApproved && partner.active) {
+      res.json({
+        _id: partner._id,
         name: partner.name,
         email: partner.email,
         universityName: partner.universityName,
         institutionId: partner.institutionId,
-      },
-    });
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ success: false, message: "Error logging in", error });
+        token: generateToken(partner._id), // Generate token here
+      });
+    } else {
+      // Partner is not approved or not active
+      res.status(403);
+      throw new Error("Partner account is not approved or is inactive.");
+    }
+  } else {
+    res.status(400);
+    throw new Error("Invalid email or password.");
   }
 });
-// Get All Partners
+
+// Update partner profile
+const updatePartnerProfile = asyncHandler(async (req, res) => {
+  const partner = await Partnerwebapp.findById(req.partner._id);
+
+  if (!partner) {
+    res.status(404);
+    throw new Error("Partner not found.");
+  }
+
+  // Update fields if they are provided, otherwise retain existing values
+  partner.name = req.body.name || partner.name;
+  partner.email = req.body.email || partner.email;
+  partner.universityName = req.body.universityName || partner.universityName;
+  partner.institutionId = req.body.institutionId || partner.institutionId;
+
+  if (req.body.password) {
+    partner.password = req.body.password;
+  }
+
+  const updatedPartner = await partner.save();
+
+  res.json({
+    _id: updatedPartner._id,
+    name: updatedPartner.name,
+    email: updatedPartner.email,
+    universityName: updatedPartner.universityName,
+    institutionId: updatedPartner.institutionId,
+    token: generateToken(updatedPartner._id), // Regenerate token
+  });
+});
+
+// Get all partners
 const getAllPartners = asyncHandler(async (req, res) => {
-  try {
-    const partners = await Partner.find(); // Retrieve all partners from the database
-    res.json({ success: true, partners });
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ success: false, message: "Error retrieving partners", error });
+  const partners = await Partnerwebapp.find(
+    {},
+    "name email universityName institutionId adminApproved"
+  );
+
+  if (partners && partners.length > 0) {
+    res.status(200).json(partners);
+  } else {
+    res.status(404);
+    throw new Error("No partners found.");
   }
 });
 
-// Export functions
-module.exports = { registerPartner, loginPartner, getAllPartners };
+// Admin approve partner
+const approvePartner = asyncHandler(async (req, res) => {
+  const { partnerId } = req.params; // Use the correct parameter name
+  console.log("Approving Partner ID:", partnerId); // Log the partnerId
 
+  const partner = await Partnerwebapp.findById(partnerId);
+  if (!partner) {
+    res.status(404);
+    throw new Error("Partner not found.");
+  }
+
+  // Approve the partner and set active to true
+  partner.adminApproved = true;
+  partner.active = true; // Set the active field to true
+  await partner.save();
+
+  // Send a notification email to the partner about their approval
+  await notifyUser(
+    partner.email,
+    "Your SkillNaav account has been approved!",
+    "Congratulations! Your SkillNaav account has been approved by the admin."
+  );
+
+  res.status(200).json({ message: "Partner approved successfully." });
+});
+
+// Admin reject partner
+const rejectPartner = asyncHandler(async (req, res) => {
+  const { partnerId } = req.params; // Use the correct parameter name
+  console.log("Rejecting Partner ID:", partnerId); // Log the partnerId
+
+  const partner = await Partnerwebapp.findById(partnerId);
+  if (!partner) {
+    res.status(404);
+    throw new Error("Partner not found.");
+  }
+
+  partner.adminApproved = false;
+  await partner.save();
+
+  // Optionally, you can log the rejection reason if provided
+  const rejectionReason =
+    req.body.reason || "Your SkillNaav account has been rejected by the admin.";
+
+  // Send a notification email to the partner about their rejection
+  await notifyUser(
+    partner.email,
+    "Your SkillNaav account has been rejected.",
+    rejectionReason
+  );
+
+  res.status(200).json({ message: "Partner rejected successfully." });
+});
+
+module.exports = {
+  registerPartner,
+  authPartner,
+  updatePartnerProfile,
+  getAllPartners,
+  approvePartner,
+  rejectPartner,
+};

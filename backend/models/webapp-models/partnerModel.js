@@ -1,16 +1,34 @@
-const mongoose = require('mongoose');
-
-const partnerSchema = new mongoose.Schema({
+const mongoose = require("mongoose");
+const bcrypt = require("bcrypt");
+const partnerwebappSchema = mongoose.Schema(
+  {
     name: { type: String, required: true },
     email: { type: String, required: true, unique: true },
     password: { type: String, required: true },
     universityName: { type: String, required: true },
     institutionId: { type: String, required: true },
-    // Add any other fields you need
-}, {
-    collection: 'partnerReg' // Specify the collection name here
+    adminApproved: { type: Boolean, default: false },
+    active: { type: Boolean, default: false },
+  },
+  {
+    timestamps: true,
+  }
+);
+
+// Hash password before saving
+partnerwebappSchema.pre("save", async function (next) {
+  if (!this.isModified("password")) {
+    return next();
+  }
+  const salt = await bcrypt.genSalt(10);
+  this.password = await bcrypt.hash(this.password, salt);
 });
 
-const Partner = mongoose.model('Partner', partnerSchema);
+// Compare hashed password with entered password
+partnerwebappSchema.methods.matchPassword = async function (enteredPassword) {
+  return await bcrypt.compare(enteredPassword, this.password);
+};
 
-module.exports = Partner;
+const Partnerwebapp = mongoose.model("Partnerwebapp", partnerwebappSchema);
+
+module.exports = Partnerwebapp;
