@@ -1,12 +1,14 @@
 import React, { useState } from "react";
 import { Formik, Form, Field, ErrorMessage } from "formik";
-import * as Yup from "yup";
 import { useNavigate } from "react-router-dom";
-import createAccountImage from "../../../../assets-webapp/login-image.png"; // Update the path as needed
-import { EyeIcon, EyeSlashIcon } from "@heroicons/react/24/solid"; // Ensure these are the correct imports
+import { account, googleOAuth } from "../../../../config";
+import * as Yup from "yup";
+import { EyeIcon, EyeSlashIcon } from "@heroicons/react/24/solid";
 import { Link } from "react-router-dom";
-
-// Validation schema for Formik
+import createAccountImage from "../../../../assets-webapp/login-image.png"; // Adjust the path if needed
+import GoogleIcon from "../../../../assets-webapp/Google-icon.png";
+import { FcGoogle } from "react-icons/fc";
+// Validation schema
 const validationSchema = Yup.object({
   name: Yup.string().required("Required"),
   email: Yup.string().email("Invalid email address").required("Required"),
@@ -24,19 +26,23 @@ const UserCreateAccount = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
-  // Function to handle form submission
   const handleSubmit = (values, { setSubmitting }) => {
     try {
-      console.log("User Data Submitted:", values); // Log user data to console
-      // Simulate successful registration (skip the API call)
+      console.log("User Data Submitted:", values);
       navigate("/user-profile-form", { state: { userData: values } });
-
-      // You can also store the form data in localStorage if needed
       localStorage.setItem("userInfo", JSON.stringify(values));
     } catch (error) {
       setErrorMessage("Error registering user. Please try again.");
     }
     setSubmitting(false);
+  };
+
+  const handleGoogleSignIn = () => {
+    account.createOAuth2Session(
+      "google",
+      "http://localhost:3000/user-main-page",
+      "http://localhost:3000"
+    );
   };
 
   return (
@@ -118,7 +124,6 @@ const UserCreateAccount = () => {
                       <EyeSlashIcon className="h-5 w-5 mt-4 text-gray-500" />
                     )}
                   </button>
-
                   <ErrorMessage
                     name="password"
                     component="div"
@@ -144,9 +149,8 @@ const UserCreateAccount = () => {
                       <EyeSlashIcon className="h-5 w-5 mt-4 text-gray-500" />
                     )}
                   </button>
-
                   <ErrorMessage
-                    name="confirmPassword" // Corrected field name here
+                    name="confirmPassword"
                     component="div"
                     className="text-red-500 text-sm mt-1"
                   />
@@ -155,7 +159,11 @@ const UserCreateAccount = () => {
                 <button
                   type="submit"
                   disabled={isSubmitting}
-                  className={`w-full bg-purple-${isSubmitting ? '300' : '500'} text-white p-3 rounded-lg hover:bg-purple-${isSubmitting ? '300' : '600'} mb-4`}
+                  className={`w-full bg-purple-${
+                    isSubmitting ? "300" : "500"
+                  } text-white p-3 rounded-lg hover:bg-purple-${
+                    isSubmitting ? "300" : "600"
+                  } mb-4`}
                 >
                   Register
                 </button>
@@ -163,6 +171,13 @@ const UserCreateAccount = () => {
             )}
           </Formik>
 
+          <button
+            onClick={handleGoogleSignIn}
+            className="w-full bg-red-500 text-white p-3 rounded-lg hover:bg-red-600 mb-4 flex items-center justify-center space-x-2"
+          >
+            <FcGoogle className="h-5 w-5" /> {/* Google Icon */}
+            <span>Sign up with Google</span>
+          </button>
           <p className="text-center text-gray-500 font-poppins font-medium text-base leading-6">
             Already have an account?{" "}
             <Link to="/user/login" className="text-blue-500 hover:underline">
