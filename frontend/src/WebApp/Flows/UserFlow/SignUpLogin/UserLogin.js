@@ -7,6 +7,15 @@ import axios from "axios";
 import Loading from "../../../Warnings/Loading/Loading";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faEye, faEyeSlash } from "@fortawesome/free-solid-svg-icons";
+import { Client, Account } from "appwrite";
+import { FcGoogle } from "react-icons/fc";
+
+const client = new Client();
+client
+  .setEndpoint("https://cloud.appwrite.io/v1") // Replace with your Appwrite endpoint
+  .setProject("6715ee9b0034e652fb17"); // Replace with your actual project ID
+
+const account = new Account(client);
 
 const validationSchema = Yup.object({
   email: Yup.string().email("Invalid email address").required("Required"),
@@ -19,6 +28,15 @@ const UserLogin = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
+  const handleGoogleSignIn = async () => {
+    try {
+      await account.createOAuth2Session("google");
+      navigate("/user-main-page"); // Redirect on successful login
+    } catch (err) {
+      setError("Failed to sign in with Google. Please try again.");
+    }
+  };
+
   const handleSubmit = async (values, { setSubmitting }) => {
     setError("");
     setLoading(true);
@@ -28,9 +46,8 @@ const UserLogin = () => {
           "Content-type": "application/json",
         },
       };
-      // Ensure this path is correct
       const { data } = await axios.post("/api/users/login", values, config);
-      const token = data.token; // Use data to get the token
+      const token = data.token;
       localStorage.setItem("token", JSON.stringify(token));
       localStorage.setItem("userInfo", JSON.stringify(data));
       setLoading(false);
@@ -102,7 +119,6 @@ const UserLogin = () => {
 
                   {/* Password Field */}
                   <div className="relative">
-                    {/* Password Input Field */}
                     <Field
                       type={showPassword ? "text" : "password"}
                       name="password"
@@ -110,7 +126,6 @@ const UserLogin = () => {
                       className="w-full p-4 pr-16 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-400"
                     />
 
-                    {/* Show/Hide Password Icon */}
                     <button
                       type="button"
                       className="absolute inset-y-0 right-4 mt-3 flex items-center justify-center h-full text-gray-600"
@@ -122,7 +137,6 @@ const UserLogin = () => {
                       />
                     </button>
 
-                    {/* Error Message */}
                     <ErrorMessage
                       name="password"
                       component="div"
@@ -130,34 +144,6 @@ const UserLogin = () => {
                     />
                   </div>
 
-                  {/* Remember Me and Forgot Password */}
-                  <div className="flex justify-between items-center mb-6">
-                    {/* Checkbox and Label */}
-                    <div className="flex items-center space-x-2">
-                      <Field
-                        type="checkbox"
-                        name="rememberMe"
-                        id="rememberMe"
-                        className="form-checkbox h-4 w-4 text-purple-500 transition duration-150 ease-in-out"
-                      />
-                      <label
-                        htmlFor="rememberMe"
-                        className="block text-sm mt-4  text-gray-700"
-                      >
-                        Remember me
-                      </label>
-                    </div>
-
-                    {/* Forgot Password Link */}
-                    <Link
-                      to="/forgot-password"
-                      className="text-sm font-medium mt-4 text-purple-500 hover:text-purple-700 transition duration-150 ease-in-out"
-                    >
-                      Forgot password?
-                    </Link>
-                  </div>
-
-                  {/* Sign In Button */}
                   <button
                     type="submit"
                     disabled={isSubmitting}
@@ -170,14 +156,21 @@ const UserLogin = () => {
             </Formik>
           )}
 
-          {/* Divider */}
           <div className="flex items-center my-6">
             <hr className="w-full border-gray-300" />
             <span className="px-3 text-gray-500">OR</span>
             <hr className="w-full border-gray-300" />
           </div>
 
-          {/* Sign Up */}
+          {/* Google Sign-In Button */}
+          <button
+            onClick={handleGoogleSignIn}
+            className="w-full bg-red-500 text-white p-3 rounded-lg hover:bg-red-600 mb-4 flex items-center justify-center space-x-2"
+          >
+            <FcGoogle className="h-5 w-5" />
+            <span>Sign in with Google</span>
+          </button>
+
           <p className="text-center text-gray-500">
             Don’t have an account?{" "}
             <Link

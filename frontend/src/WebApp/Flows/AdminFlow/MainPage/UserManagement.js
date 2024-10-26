@@ -8,6 +8,7 @@ const UserManagement = () => {
   const [selectedUser, setSelectedUser] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [confirmAction, setConfirmAction] = useState(null); // For confirmation modal
+  const [confirmLoading, setConfirmLoading] = useState(false); // Loading state for confirmation modal
 
   useEffect(() => {
     const fetchUsers = async () => {
@@ -34,6 +35,7 @@ const UserManagement = () => {
 
   const confirmActionHandler = async () => {
     const { type, userId } = confirmAction;
+    setConfirmLoading(true); // Start loading
 
     try {
       const action = type === "approve" ? "Approved" : "Rejected";
@@ -48,6 +50,7 @@ const UserManagement = () => {
       console.error(`Error ${type} user:`, err.response ? err.response.data : err.message);
       setError(`Failed to ${type} user: ${err.response ? err.response.data.message : err.message}`);
     } finally {
+      setConfirmLoading(false); // End loading
       setConfirmAction(null);
     }
   };
@@ -197,15 +200,25 @@ const UserManagement = () => {
       {confirmAction && (
         <div className="fixed inset-0 flex items-center justify-center z-50 bg-black bg-opacity-50">
           <div className="bg-white rounded-lg shadow-lg w-full max-w-sm p-6">
-            <h3 className="text-lg font-semibold mb-4">
-              {`Are you sure you want to ${confirmAction.type} this user?`}
+            <h3 className="text-lg font-bold text-center mb-4">
+              {confirmAction.type === "approve" ? "Approve User" : "Reject User"}
             </h3>
-            <div className="flex justify-end space-x-2">
-              <button onClick={() => setConfirmAction(null)} className="px-4 py-2 bg-gray-300 rounded hover:bg-gray-400">
+            <p className="text-center">
+              Are you sure you want to {confirmAction.type} this user?
+            </p>
+            <div className="mt-4 flex justify-between">
+              <button
+                onClick={() => setConfirmAction(null)}
+                className="px-4 py-2 bg-gray-300 rounded hover:bg-gray-400"
+              >
                 Cancel
               </button>
-              <button onClick={confirmActionHandler} className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600">
-                Confirm
+              <button
+                onClick={confirmActionHandler}
+                className={`px-4 py-2 rounded ${confirmLoading ? "bg-gray-400" : (confirmAction.type === "approve" ? "bg-green-500" : "bg-red-500")} text-white`}
+                disabled={confirmLoading} // Disable button if loading
+              >
+                {confirmLoading ? "Processing..." : (confirmAction.type === "approve" ? "Approve" : "Reject")}
               </button>
             </div>
           </div>

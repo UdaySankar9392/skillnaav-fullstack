@@ -5,7 +5,8 @@ const cors = require("cors");
 const connectDB = require("./config/dbConfig");
 const { notFound, errorHandler } = require("./middlewares/errorMiddleware");
 
-dotenv.config(); // Load environment variables
+// Load environment variables
+dotenv.config();
 
 const app = express(); // Initialize express app
 
@@ -17,8 +18,8 @@ app.use(express.json()); // For parsing application/json
 
 app.use(
   cors({
-    origin: "*", // or "*" to allow all origins
-    methods: "GET,POST,PUT,DELETE", // Adjust as per your needs
+    origin: "*", // or specify your front-end origin
+    methods: "GET,POST,PUT,DELETE",
     credentials: true,
   })
 );
@@ -29,7 +30,7 @@ const internRoutes = require("./routes/webapp-routes/internshipPostRoutes");
 const skillnaavRoute = require("./routes/skillnaavRoute");
 const applicationRoutes = require("./routes/webapp-routes/applicationRoutes");
 const partnerRoutes = require("./routes/webapp-routes/partnerRoutes"); // Import Partner routes
-const adminRoutes = require("./routes/webapp-routes/adminRoutes");
+const adminRoutes = require("./routes/webapp-routes/adminRoutes"); // Import Admin routes
 
 // Define routes
 app.use("/api/users", userRoutes); // User Web App routes
