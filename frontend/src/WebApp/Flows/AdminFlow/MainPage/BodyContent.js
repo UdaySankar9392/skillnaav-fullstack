@@ -1,23 +1,25 @@
 import React from "react";
-import { useTabContext } from "./UserHomePageContext/HomePageContext"; // Correct path
+import { useTabContext } from "./UserHomePageContext/HomePageContext";
 import {
   FaUsers,
   FaUserFriends,
   FaBriefcase,
   FaDollarSign,
-} from "react-icons/fa"; // Import icons
+} from "react-icons/fa";
 import UserManagement from "./UserManagement";
-import PartnerManagement from "./PartnerManagement";
+import PartnerManagement from "./InternshipPosts";
 import PartnerAccounts from "./PartnerAccounts";
+import InternshipPosts from "./InternshipPosts"; // New Component for Internship Posts
+
 const BodyContent = () => {
   const { selectedTab } = useTabContext();
   console.log("Selected Tab:", selectedTab);
 
   // Dummy data for the dashboard; replace with actual data from your state or API
-  const partnersCount = 100; // Replace with actual data
-  const activeUsersCount = 250; // Replace with actual data
-  const internshipsCount = 75; // Replace with actual data
-  const totalRevenue = 5000; // Replace with actual data
+  const partnersCount = 100;
+  const activeUsersCount = 250;
+  const internshipsCount = 75;
+  const totalRevenue = 5000;
 
   const renderContent = () => {
     switch (selectedTab) {
@@ -50,7 +52,7 @@ const BodyContent = () => {
                 </div>
               </div>
               <div className="bg-red-100 p-6 rounded-lg shadow-lg flex items-center">
-                <div className="h-8 w-8 text-red-600 mr-4" />
+                <FaDollarSign className="h-8 w-8 text-red-600 mr-4" />
                 <div>
                   <h3 className="text-lg font-medium">Total Revenue</h3>
                   <p className="text-3xl font-bold">${totalRevenue}</p>
@@ -67,7 +69,7 @@ const BodyContent = () => {
           </div>
         );
 
-      case "task-management":
+      case "partner-management":
         return (
           <div className="text-center mt-4">
             <PartnerManagement />
@@ -77,21 +79,28 @@ const BodyContent = () => {
       case "partner-accounts":
         return (
           <div className="text-center mt-4">
-          <PartnerAccounts />
+            <PartnerAccounts />
+          </div>
+        );
+
+      case "internship-posts":
+        return (
+          <div className="text-center mt-4">
+            <InternshipPosts />
           </div>
         );
 
       case "analytics":
         return (
           <div className="text-center mt-4">
-            Analytics Content Coming Soon...
+            <h2>Analytics Content Coming Soon...</h2>
           </div>
         );
 
       case "settings":
         return (
           <div className="text-center mt-4">
-            Settings Content Coming Soon...
+            <h2>Settings Content Coming Soon...</h2>
           </div>
         );
 

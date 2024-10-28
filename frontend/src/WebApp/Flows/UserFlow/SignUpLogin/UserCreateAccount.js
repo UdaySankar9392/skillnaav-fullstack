@@ -8,12 +8,17 @@ import { Link } from "react-router-dom";
 import createAccountImage from "../../../../assets-webapp/login-image.png"; // Adjust the path if needed
 import GoogleIcon from "../../../../assets-webapp/Google-icon.png";
 import { FcGoogle } from "react-icons/fc";
-// Validation schema
+
+// Validation schema for Formik
 const validationSchema = Yup.object({
   name: Yup.string().required("Required"),
   email: Yup.string().email("Invalid email address").required("Required"),
   password: Yup.string()
     .min(6, "Password must be at least 6 characters")
+    .matches(/[A-Z]/, "Password must contain at least one uppercase letter")
+    .matches(/[a-z]/, "Password must contain at least one lowercase letter")
+    .matches(/[0-9]/, "Password must contain at least one number")
+    .matches(/[!@#$%^&*-_=+]/, "Password must contain at least one special character")
     .required("Required"),
   confirmPassword: Yup.string()
     .oneOf([Yup.ref("password"), null], "Passwords must match")

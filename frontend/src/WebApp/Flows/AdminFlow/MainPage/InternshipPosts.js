@@ -26,7 +26,6 @@ const PartnerManagement = () => {
     const fetchInternships = async () => {
       try {
         const response = await axios.get("/api/interns");
-        console.log("Fetched internships:", response.data);
         setInternships(response.data);
       } catch (error) {
         console.error("Error fetching internships:", error);
@@ -37,18 +36,12 @@ const PartnerManagement = () => {
 
   const handleApprove = async (internId) => {
     try {
-      console.log("Approving internship ID:", internId);
-      const response = await axios.patch(`/api/interns/${internId}/approve`, {
+      await axios.patch(`/api/interns/${internId}/approve`, {
         status: "approved",
       });
-
-      console.log("Intern approved:", response.data);
-      // Update the internships state with the approved internship
       setInternships((prevInternships) =>
         prevInternships.map((internship) =>
-          internship._id === internId
-            ? { ...internship, adminApproved: true } // Set adminApproved to true
-            : internship
+          internship._id === internId ? { ...internship, adminApproved: true } : internship
         )
       );
     } catch (error) {
@@ -65,24 +58,17 @@ const PartnerManagement = () => {
     if (!internshipToReject) return;
 
     try {
-      console.log("Rejecting internship ID:", internshipToReject._id);
       await axios.delete(`/api/interns/${internshipToReject._id}`);
-
-      // Remove internship from state
       setInternships((prevInternships) =>
-        prevInternships.filter(
-          (internship) => internship._id !== internshipToReject._id
-        )
+        prevInternships.filter((internship) => internship._id !== internshipToReject._id)
       );
-
-      console.log("Internship rejected and deleted successfully");
       setIsRejectModalOpen(false);
     } catch (error) {
       console.error("Error rejecting internship:", error);
     }
   };
 
-  const handleReadMore = (internship) => {
+  const handleReview = (internship) => {
     setSelectedInternship(internship);
     setIsModalOpen(true);
   };
@@ -95,7 +81,6 @@ const PartnerManagement = () => {
     setIsRejectModalOpen(false);
   };
 
-  // Sorting logic
   const sortInternships = (internships) => {
     return internships.sort((a, b) => {
       const aValue = a[sortCriteria].toLowerCase();
@@ -107,20 +92,16 @@ const PartnerManagement = () => {
     });
   };
 
-  // Filtering logic
   const filteredInternships = internships.filter((internship) => {
     const lowerCaseQuery = searchQuery.toLowerCase();
     return (
-      (internship.jobTitle &&
-        internship.jobTitle.toLowerCase().includes(lowerCaseQuery)) ||
-      (internship.companyName &&
-        internship.companyName.toLowerCase().includes(lowerCaseQuery)) ||
+      internship.jobTitle.toLowerCase().includes(lowerCaseQuery) ||
+      internship.companyName.toLowerCase().includes(lowerCaseQuery) ||
       (internship.organization &&
         internship.organization.toLowerCase().includes(lowerCaseQuery))
     );
   });
 
-  // Pagination logic
   const indexOfLastInternship = currentPage * applicationsPerPage;
   const indexOfFirstInternship = indexOfLastInternship - applicationsPerPage;
   const sortedInternships = sortInternships([...filteredInternships]);
@@ -128,15 +109,14 @@ const PartnerManagement = () => {
     indexOfFirstInternship,
     indexOfLastInternship
   );
-  const totalPages = Math.ceil(
-    filteredInternships.length / applicationsPerPage
-  );
+  const totalPages = Math.ceil(filteredInternships.length / applicationsPerPage);
 
   return (
-    <div className="p-6 rounded-lg shadow-md">
-      <h2 className="text-3xl font-bold mb-6 text-center text-gray-700">
-        Admin Dashboard - Posted Internships
+    <div className="p-6 rounded-lg shadow-md bg-gray-100 font-poppins text-sm">
+      <h2 className="text-2xl font-semibold mb-8 text-center text-gray-800">
+        Admin Dashboard - Internship Management
       </h2>
+
       {/* Search Input */}
       <div className="mb-4">
         <input
@@ -144,15 +124,16 @@ const PartnerManagement = () => {
           placeholder="Search by Organization, Role, or Company"
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
-          className="p-2 border rounded w-full focus:outline-none focus:ring focus:ring-indigo-300"
+          className="p-2 border rounded-md w-full focus:outline-none focus:ring focus:ring-indigo-400"
         />
       </div>
+
       {/* Sorting Controls */}
-      <div className="flex mb-4">
+      <div className="flex mb-4 space-x-4">
         <select
           value={sortCriteria}
           onChange={(e) => setSortCriteria(e.target.value)}
-          className="mr-4 p-2 border rounded focus:outline-none focus:ring focus:ring-indigo-300"
+          className="p-2 border rounded-md focus:outline-none focus:ring focus:ring-indigo-400"
         >
           <option value="jobTitle">Sort by Job Title</option>
           <option value="companyName">Sort by Company</option>
@@ -160,45 +141,35 @@ const PartnerManagement = () => {
         <select
           value={sortDirection}
           onChange={(e) => setSortDirection(e.target.value)}
-          className="p-2 border rounded focus:outline-none focus:ring focus:ring-indigo-300"
+          className="p-2 border rounded-md focus:outline-none focus:ring focus:ring-indigo-400"
         >
           <option value="asc">Ascending</option>
           <option value="desc">Descending</option>
         </select>
       </div>
-      <table className="min-w-full bg-white border border-gray-200 rounded-lg shadow-sm">
-        <thead className="bg-gray-50">
+
+      <table className="min-w-full bg-white rounded-lg shadow-lg">
+        <thead className="bg-gray-200">
           <tr>
-            <th className="px-6 py-4 text-left text-sm font-semibold text-gray-600">
-              Job Title
-            </th>
-            <th className="px-6 py-4 text-left text-sm font-semibold text-gray-600">
-              Company
-            </th>
-            <th className="px-6 py-4 text-left text-sm font-semibold text-gray-600">
-              Location
-            </th>
-            <th className="px-6 py-4 text-left text-sm font-semibold text-gray-600">
-              Stipend/Salary
-            </th>
-            <th className="px-6 py-4 text-left text-sm font-semibold text-gray-600">
-              Actions
-            </th>
+            <th className="px-4 py-2 text-left font-semibold text-gray-600">S.No</th>
+            <th className="px-4 py-2 text-left font-semibold text-gray-600">Job Title</th>
+            <th className="px-4 py-2 text-left font-semibold text-gray-600">Company</th>
+            <th className="px-4 py-2 text-left font-semibold text-gray-600">Location</th>
+            <th className="px-4 py-2 text-left font-semibold text-gray-600">Stipend/Salary</th>
+            <th className="px-4 py-2 text-left font-semibold text-gray-600">Actions</th>
           </tr>
         </thead>
         <tbody className="divide-y divide-gray-200">
-          {currentInternships.map((internship) => (
-            <tr
-              key={internship._id}
-              className="hover:bg-gray-50 transition-colors"
-            >
-              <td className="px-6 py-4">{internship.jobTitle}</td>
-              <td className="px-6 py-4">{internship.companyName}</td>
-              <td className="px-6 py-4">{internship.location}</td>
-              <td className="px-6 py-4">{internship.stipendOrSalary}</td>
-              <td className="px-6 py-4 flex space-x-2">
+          {currentInternships.map((internship, index) => (
+            <tr key={internship._id} className="hover:bg-gray-50 transition-colors">
+              <td className="px-4 py-2">{index + 1 + (currentPage - 1) * applicationsPerPage}</td>
+              <td className="px-4 py-2">{internship.jobTitle}</td>
+              <td className="px-4 py-2">{internship.companyName}</td>
+              <td className="px-4 py-2">{internship.location}</td>
+              <td className="px-4 py-2">{internship.stipendOrSalary}</td>
+              <td className="px-4 py-2 flex space-x-2">
                 <button
-                  className={`px-4 py-2 rounded-md text-white ${
+                  className={`px-3 py-1 rounded-md text-white ${
                     internship.adminApproved
                       ? "bg-green-500"
                       : "bg-blue-500 hover:bg-blue-700"
@@ -209,13 +180,13 @@ const PartnerManagement = () => {
                   {internship.adminApproved ? "Approved" : "Approve"}
                 </button>
                 <button
-                  className="px-4 py-2 bg-indigo-500 text-white rounded-md hover:bg-indigo-600"
-                  onClick={() => handleReadMore(internship)}
+                  className="px-3 py-1 bg-indigo-500 text-white rounded-md hover:bg-indigo-600"
+                  onClick={() => handleReview(internship)}
                 >
-                  Read More
+                  Review
                 </button>
                 <button
-                  className="px-4 py-2 bg-red-500 text-white rounded-md hover:bg-red-600"
+                  className="px-3 py-1 bg-red-500 text-white rounded-md hover:bg-red-600"
                   onClick={() => handleRejectClick(internship)}
                 >
                   Reject
@@ -225,41 +196,38 @@ const PartnerManagement = () => {
           ))}
         </tbody>
       </table>
+
       {/* Pagination controls */}
-      <div className="flex justify-between items-center mt-4">
+      <div className="flex justify-between items-center mt-6">
         <button
           onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
           disabled={currentPage === 1}
-          className="px-4 py-2 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400 disabled:opacity-50"
+          className="px-3 py-1 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400 disabled:opacity-50"
         >
           Previous
         </button>
-        <span className="self-center text-gray-700">
-          Page {currentPage} of {totalPages}
-        </span>
+        <span className="text-gray-700">Page {currentPage} of {totalPages}</span>
         <button
-          onClick={() =>
-            setCurrentPage((prev) => Math.min(prev + 1, totalPages))
-          }
+          onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
           disabled={currentPage === totalPages}
-          className="px-4 py-2 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400 disabled:opacity-50"
+          className="px-3 py-1 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400 disabled:opacity-50"
         >
           Next
         </button>
       </div>
 
-      {/* Internship Detail Modal */}
-      <Modal
+    {/* Internship Detail Modal */}
+    <Modal
         isOpen={isModalOpen}
         onRequestClose={closeModal}
         contentLabel="Internship Details"
         className="fixed inset-0 flex items-center justify-center"
         overlayClassName="fixed inset-0 bg-black bg-opacity-50"
       >
-        <div className="bg-white p-6 rounded-lg shadow-lg max-w-2xl w-full">
+        <div className="bg-white p-4 rounded-lg shadow-lg max-w-2xl w-full">
           {selectedInternship && (
             <>
-              <h2 className="text-2xl font-semibold mb-4">
+              <h2 className="text-lg font-semibold mb-4 text-gray-800">
                 {selectedInternship.jobTitle}
               </h2>
               <p className="mb-2">
@@ -269,18 +237,19 @@ const PartnerManagement = () => {
                 <strong>Location:</strong> {selectedInternship.location}
               </p>
               <p className="mb-2">
-                <strong>Stipend/Salary:</strong>{" "}
-                {selectedInternship.stipendOrSalary}
+                <strong>Stipend/Salary:</strong> {selectedInternship.stipendOrSalary}
               </p>
-              <p className="mb-4">{selectedInternship.description}</p>
+              <p className="mb-4">
+                <strong>Description:</strong> {selectedInternship.jobDescription}
+              </p>
+              <button
+                className="px-4 py-2 bg-red-500 text-white rounded-md hover:bg-red-600"
+                onClick={closeModal}
+              >
+                Close
+              </button>
             </>
           )}
-          <button
-            onClick={closeModal}
-            className="px-4 py-2 bg-red-500 text-white rounded-md hover:bg-red-600"
-          >
-            Close
-          </button>
         </div>
       </Modal>
 
@@ -288,29 +257,19 @@ const PartnerManagement = () => {
       <Modal
         isOpen={isRejectModalOpen}
         onRequestClose={closeRejectModal}
-        contentLabel="Reject Internship Confirmation"
+        contentLabel="Reject Confirmation"
         className="fixed inset-0 flex items-center justify-center"
         overlayClassName="fixed inset-0 bg-black bg-opacity-50"
       >
-        <div className="bg-white p-6 rounded-lg shadow-lg max-w-lg w-full">
-          <h2 className="text-xl font-semibold mb-4">Reject Internship</h2>
-          <p className="mb-4">
-            Are you sure you want to reject the internship "
-            {internshipToReject?.jobTitle}" by "
-            {internshipToReject?.companyName}"?
-          </p>
-          <div className="flex justify-end space-x-2">
-            <button
-              onClick={confirmReject}
-              className="px-4 py-2 bg-red-500 text-white rounded-md hover:bg-red-600"
-            >
-              Confirm
-            </button>
-            <button
-              onClick={closeRejectModal}
-              className="px-4 py-2 bg-gray-300 rounded-md hover:bg-gray-400"
-            >
+        <div className="bg-white p-6 rounded-md shadow-md">
+          <h2 className="text-xl font-semibold mb-4">Confirm Rejection</h2>
+          <p>Are you sure you want to reject the internship: <strong>{internshipToReject?.jobTitle}</strong>?</p>
+          <div className="flex justify-end mt-4">
+            <button className="mr-2 px-4 py-2 bg-gray-200 rounded-md" onClick={closeRejectModal}>
               Cancel
+            </button>
+            <button className="px-4 py-2 bg-red-500 text-white rounded-md" onClick={confirmReject}>
+              Reject
             </button>
           </div>
         </div>
