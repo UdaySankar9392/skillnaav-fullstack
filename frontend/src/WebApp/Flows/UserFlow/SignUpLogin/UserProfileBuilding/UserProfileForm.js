@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
+import DatePicker from "react-datepicker";
+import "react-datepicker/dist/react-datepicker.css";
 
 const UserProfileForm = () => {
   const location = useLocation();
@@ -7,12 +9,12 @@ const UserProfileForm = () => {
 
   const [formData, setFormData] = useState({
     universityName: "",
-    dob: "",
+    dob: null, // dob will be a Date object
     educationLevel: "",
     fieldOfStudy: "",
     ...userData // Initialize formData with userData if available
   });
-  
+
   const [isFormValid, setIsFormValid] = useState(false);
   const navigate = useNavigate();
 
@@ -34,12 +36,20 @@ const UserProfileForm = () => {
     }));
   };
 
+  const handleDateChange = (date) => {
+    setFormData((prevData) => ({
+      ...prevData,
+      dob: date,
+    }));
+  };
+
   const handleSubmit = () => {
     if (isFormValid) {
-      console.log("Form Data:", formData); 
-      navigate("/user-profile-picture", { state: { formData } }); 
+      console.log("Form Data:", formData);
+      navigate("/user-profile-picture", { state: { formData } });
     }
   };
+
   return (
     <div className="flex justify-center items-center min-h-screen bg-gray-100 font-poppins">
       <div className="w-full max-w-xl p-8 space-y-6 bg-white shadow-md rounded-lg">
@@ -52,32 +62,33 @@ const UserProfileForm = () => {
               University Name
             </label>
             <input
-              id="universityName" // Updated id
+              id="universityName"
               type="text"
-              name="universityName" // Updated name
-              value={formData.universityName} // Updated value
+              name="universityName"
+              value={formData.universityName}
               onChange={handleChange}
-              className={`mt-1 block w-full px-3 py-2 border ${
-                formData.universityName ? "border-gray-300" : "border-gray-200"
-              } rounded-md shadow-sm focus:outline-none focus:ring-purple-500 focus:border-purple-500`}
-              placeholder="Enter your University Name" // Updated placeholder
+              className={`mt-1 block w-full px-3 py-2 border ${formData.universityName ? "border-gray-300" : "border-gray-200"
+                } rounded-md shadow-sm focus:outline-none focus:ring-purple-500 focus:border-purple-500`}
+              placeholder="Enter your University Name"
             />
           </div>
           <div>
             <label htmlFor="dob" className="block text-sm font-medium text-gray-700">
               Date of Birth
             </label>
-            <input
-              id="dob"
-              type="date"
-              name="dob"
-              value={formData.dob}
-              onChange={handleChange}
-              className={`mt-1 block w-full px-3 py-2 border ${
-                formData.dob ? "border-gray-300" : "border-gray-200"
-              } rounded-md shadow-sm focus:outline-none focus:ring-purple-500 focus:border-purple-500`}
+            <DatePicker
+              selected={formData.dob}
+              onChange={handleDateChange}
+              dateFormat="dd/MM/yyyy" // Set format to dd/MM/yyyy
+              maxDate={new Date()} // Restrict to past dates
+              showYearDropdown
+              showMonthDropdown
+              dropdownMode="select"
+              placeholderText="DD/MM/YYYY" // Updated placeholder
+              className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-purple-500 focus:border-purple-500"
             />
           </div>
+
         </div>
 
         <div className="space-y-4">
@@ -142,9 +153,8 @@ const UserProfileForm = () => {
               name="fieldOfStudy"
               value={formData.fieldOfStudy}
               onChange={handleChange}
-              className={`mt-2 block w-full px-3 py-2 border ${
-                formData.fieldOfStudy ? "border-gray-300" : "border-gray-200"
-              } bg-white rounded-md shadow-sm focus:outline-none focus:ring-purple-500 focus:border-purple-500`}
+              className={`mt-2 block w-full px-3 py-2 border ${formData.fieldOfStudy ? "border-gray-300" : "border-gray-200"
+                } bg-white rounded-md shadow-sm focus:outline-none focus:ring-purple-500 focus:border-purple-500`}
             >
               <option value="">Select Your Field</option>
               <option value="space">Space Internships</option>
@@ -161,9 +171,8 @@ const UserProfileForm = () => {
             type="button"
             onClick={handleSubmit}
             disabled={!isFormValid}
-            className={`w-full py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white ${
-              isFormValid ? "bg-purple-600 hover:bg-purple-700" : "bg-purple-300 cursor-not-allowed"
-            } focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500`}
+            className={`w-full py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white ${isFormValid ? "bg-purple-600 hover:bg-purple-700" : "bg-purple-300 cursor-not-allowed"
+              } focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500`}
           >
             Continue
           </button>
