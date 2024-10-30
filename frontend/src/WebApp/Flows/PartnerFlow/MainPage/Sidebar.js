@@ -7,6 +7,7 @@ import {
   faLifeRing,
   faEnvelope,
   faSignOutAlt,
+  faFileAlt, // Import icon for Applications
 } from "@fortawesome/free-solid-svg-icons";
 import logo from "../../../../assets-webapp/Skillnaav-logo.png"; // Replace with your actual logo path
 import { useTabContext } from "./UserHomePageContext/HomePageContext"; // Adjust path as needed
@@ -34,6 +35,7 @@ const Sidebar = () => {
     { id: "your-job-posts", label: "Internship Posts", icon: faBriefcase },
     { id: "post-a-job", label: "Post An Internship", icon: faPlus },
     { id: "messages", label: "Messages", icon: faEnvelope },
+    { id: "applications", label: "Applications", icon: faFileAlt }, // New Applications item
     { id: "profile", label: "Profile", icon: faUser },
   ];
 

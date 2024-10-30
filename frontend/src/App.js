@@ -22,7 +22,7 @@ import PartnerLogin from "./WebApp/Flows/PartnerFlow/SignUpLogin/PartnerLogin";
 import PartnerProfileForm from "./WebApp/Flows/PartnerFlow/SignUpLogin/UserProfileBuilding/PartnerProfileForm";
 import PartnerProfilePicture from "./WebApp/Flows/PartnerFlow/SignUpLogin/UserProfileBuilding/PartnerProfilePicture";
 import PartnerMainPage from "./WebApp/Flows/PartnerFlow/MainPage/PartnerMainPage";
-import AdminFlow from "./WebApp/Flows/AdminFlow/AdminFlow";
+// import AdminFlow from "./WebApp/Flows/AdminFlow/AdminFlow";
 import AdminCreateAccount from "./WebApp/Flows/AdminFlow/SignUpLogin/AdminCreateAccount";
 import AdminLogin from "./WebApp/Flows/AdminFlow/SignUpLogin/AdminLogin";
 import AdminProfileForm from "./WebApp/Flows/AdminFlow/SignUpLogin/AdminProfileBuilding/AdminProfileForm";
@@ -71,20 +71,17 @@ function App() {
 
         {/* Partner Flow */}
         <Route path="/partner" element={<PartnerFlow />} />
-        <Route
-          path="/partner-create-account"
+        <Route path="/partner-create-account"
           element={<PartnerCreateAccount />}
         />
         <Route path="/partner/login" element={<PartnerLogin />} />
         <Route path="/partner-profile-form" element={<PartnerProfileForm />} />
-        <Route
-          path="/partner-profile-picture"
-          element={<PartnerProfilePicture />}
+        <Route path="/partner-profile-picture" element={<PartnerProfilePicture />}
         />
         <Route path="/partner-main-page" element={<PartnerMainPage />} />
 
         {/* Admin Flow */}
-        <Route path="/admin-account" element={<AdminFlow />} />
+        {/* <Route path="/admin-account" element={<AdminFlow />} /> */}
         <Route path="/admin-create-account" element={<AdminCreateAccount />} />
         <Route path="/admin/login" element={<AdminLogin />} />
         <Route path="/admin-profile-form" element={<AdminProfileForm />} />

@@ -59,7 +59,7 @@ const JobCard = ({ searchTerm }) => {
           >
             <div className="flex items-start gap-4">
               <img
-                src={getRandomImage()}
+                src={job.imgUrl}
                 alt="Company Logo"
                 className="w-10 h-10 rounded-full"
               />

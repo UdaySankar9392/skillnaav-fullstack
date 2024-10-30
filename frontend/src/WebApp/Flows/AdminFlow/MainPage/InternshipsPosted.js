@@ -10,6 +10,7 @@ const PartnerManagement = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isRejectModalOpen, setIsRejectModalOpen] = useState(false);
   const [internshipToReject, setInternshipToReject] = useState(null);
+  const [comment, setComment] = useState(""); // State for comment
 
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
@@ -75,10 +76,20 @@ const PartnerManagement = () => {
 
   const closeModal = () => {
     setIsModalOpen(false);
+    setSelectedInternship(null);
+    setComment(""); // Reset comment when closing modal
   };
 
   const closeRejectModal = () => {
     setIsRejectModalOpen(false);
+  };
+
+  const handleCommentSubmit = () => {
+    console.log("Comment submitted:", comment);
+    // Add your logic for submitting the comment here
+
+    // Reset comment after submission
+    setComment("");
   };
 
   const sortInternships = (internships) => {
@@ -110,7 +121,6 @@ const PartnerManagement = () => {
     indexOfLastInternship
   );
   const totalPages = Math.ceil(filteredInternships.length / applicationsPerPage);
-
   return (
     <div className="p-6 rounded-lg shadow-md bg-gray-100 font-poppins text-sm">
       <h2 className="text-2xl font-semibold mb-8 text-center text-gray-800">
@@ -169,11 +179,10 @@ const PartnerManagement = () => {
               <td className="px-4 py-2">{internship.stipendOrSalary}</td>
               <td className="px-4 py-2 flex space-x-2">
                 <button
-                  className={`px-3 py-1 rounded-md text-white ${
-                    internship.adminApproved
-                      ? "bg-green-500"
-                      : "bg-blue-500 hover:bg-blue-700"
-                  }`}
+                  className={`px-3 py-1 rounded-md text-white ${internship.adminApproved
+                    ? "bg-green-500"
+                    : "bg-blue-500 hover:bg-blue-700"
+                    }`}
                   onClick={() => handleApprove(internship._id)}
                   disabled={internship.adminApproved}
                 >
@@ -216,34 +225,56 @@ const PartnerManagement = () => {
         </button>
       </div>
 
-    {/* Internship Detail Modal */}
-    <Modal
+      {/* Internship Detail Modal */}
+      <Modal
         isOpen={isModalOpen}
         onRequestClose={closeModal}
         contentLabel="Internship Details"
         className="fixed inset-0 flex items-center justify-center"
         overlayClassName="fixed inset-0 bg-black bg-opacity-50"
       >
-        <div className="bg-white p-4 rounded-lg shadow-lg max-w-2xl w-full">
+        <div className="bg-white p-6 rounded-lg shadow-lg max-w-2xl w-full">
           {selectedInternship && (
             <>
-              <h2 className="text-lg font-semibold mb-4 text-gray-800">
+              <h2 className="text-2xl font-semibold mb-4 text-gray-800">
                 {selectedInternship.jobTitle}
               </h2>
-              <p className="mb-2">
-                <strong>Company:</strong> {selectedInternship.companyName}
-              </p>
-              <p className="mb-2">
-                <strong>Location:</strong> {selectedInternship.location}
-              </p>
-              <p className="mb-2">
-                <strong>Stipend/Salary:</strong> {selectedInternship.stipendOrSalary}
-              </p>
-              <p className="mb-4">
+              <div className="mb-2">
+                <p className="font-medium text-gray-700">
+                  <strong>Company:</strong> {selectedInternship.companyName}
+                </p>
+                <p className="font-medium text-gray-700">
+                  <strong>Location:</strong> {selectedInternship.location}
+                </p>
+                <p className="font-medium text-gray-700">
+                  <strong>Stipend/Salary:</strong> {selectedInternship.stipendOrSalary}
+                </p>
+              </div>
+              <p className="mb-4 text-gray-600">
                 <strong>Description:</strong> {selectedInternship.jobDescription}
               </p>
+
+              {/* Comment Section */}
+              <div className="mb-4">
+                <h3 className="text-lg font-semibold mb-2">Leave a Comment</h3>
+                <textarea
+                  className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring focus:ring-indigo-400"
+                  rows={4}
+                  placeholder="Write your comment here..."
+                  value={comment}
+                  onChange={(e) => setComment(e.target.value)}
+                />
+                <button
+                  className="mt-2 px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 transition duration-200"
+                  onClick={handleCommentSubmit}
+                >
+                  Send Comment
+                </button>
+              </div>
+
+              {/* Close Button */}
               <button
-                className="px-4 py-2 bg-red-500 text-white rounded-md hover:bg-red-600"
+                className="w-full px-4 py-2 bg-red-500 text-white rounded-md hover:bg-red-600 transition duration-200"
                 onClick={closeModal}
               >
                 Close
@@ -252,6 +283,7 @@ const PartnerManagement = () => {
           )}
         </div>
       </Modal>
+
 
       {/* Reject Confirmation Modal */}
       <Modal
