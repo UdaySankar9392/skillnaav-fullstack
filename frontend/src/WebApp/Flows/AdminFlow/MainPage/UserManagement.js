@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
+import { AiOutlineClose } from "react-icons/ai"; // Import icon
 
 const UserManagement = () => {
   const [users, setUsers] = useState([]);
@@ -35,14 +36,12 @@ const UserManagement = () => {
 
   const confirmActionHandler = async () => {
     const { type, userId } = confirmAction;
-    setConfirmLoading(true); // Start loading
+    setConfirmLoading(true);
 
     try {
       const action = type === "approve" ? "Approved" : "Rejected";
-      // Make sure to adjust the API endpoint if necessary
       const response = await axios.patch(`/api/users/${type}/${userId}`, { status: action });
 
-      // Check if the request was successful
       if (response.status === 200) {
         setUsers(users.map(user => user._id === userId ? { ...user, status: action } : user));
       }
@@ -50,7 +49,7 @@ const UserManagement = () => {
       console.error(`Error ${type} user:`, err.response ? err.response.data : err.message);
       setError(`Failed to ${type} user: ${err.response ? err.response.data.message : err.message}`);
     } finally {
-      setConfirmLoading(false); // End loading
+      setConfirmLoading(false);
       setConfirmAction(null);
     }
   };
@@ -94,15 +93,9 @@ const UserManagement = () => {
           <tbody className="bg-white divide-y divide-gray-200">
             {users.map((user, index) => (
               <tr key={user._id} className="hover:bg-gray-50 transition duration-200">
-                <td className="px-4 py-4 text-sm text-gray-700" onClick={() => handleUserClick(user)}>
-                  {index + 1}
-                </td>
-                <td className="px-6 py-4 text-sm font-medium text-gray-900" onClick={() => handleUserClick(user)}>
-                  {user.name}
-                </td>
-                <td className="px-6 py-4 text-sm text-gray-700" onClick={() => handleUserClick(user)}>
-                  {user.email}
-                </td>
+                <td className="px-4 py-4 text-sm text-gray-700">{index + 1}</td>
+                <td className="px-6 py-4 text-sm font-medium text-gray-900">{user.name}</td>
+                <td className="px-6 py-4 text-sm text-gray-700">{user.email}</td>
                 <td className="px-6 py-4">
                   <span
                     className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${user.status === "Approved" ? "bg-green-100 text-green-600"
@@ -117,16 +110,22 @@ const UserManagement = () => {
                   <button
                     className="px-3 py-1 bg-green-500 text-white text-xs font-bold rounded hover:bg-green-600"
                     onClick={() => handleApprove(user._id)}
-                    disabled={user.status === "Approved"} // Disable if already approved
+                    disabled={user.status === "Approved"}
                   >
                     Approve
                   </button>
                   <button
                     className="px-3 py-1 bg-red-500 text-white text-xs font-bold rounded hover:bg-red-600"
                     onClick={() => handleReject(user._id)}
-                    disabled={user.status === "Rejected"} // Disable if already rejected
+                    disabled={user.status === "Rejected"}
                   >
                     Reject
+                  </button>
+                  <button
+                    className="px-3 py-1 bg-blue-500 text-white text-xs font-bold rounded hover:bg-blue-600"
+                    onClick={() => handleUserClick(user)}
+                  >
+                    Details...
                   </button>
                 </td>
               </tr>
@@ -135,90 +134,40 @@ const UserManagement = () => {
         </table>
       </div>
 
-      {/* Modal for User Profile Details */}
       {isModalOpen && selectedUser && (
         <div className="fixed inset-0 flex items-center justify-center z-50 bg-black bg-opacity-50">
-          <div className="bg-white rounded-lg shadow-lg w-full max-w-lg max-h-screen overflow-y-auto">
-            <div className="bg-blue-500 p-4 rounded-t-lg">
-              <h3 className="text-xl font-bold text-white text-center">User Profile Details</h3>
+          <div className="bg-white rounded-lg shadow-lg w-full max-w-md max-h-screen overflow-y-auto">
+            <div className="flex justify-between items-center p-4 bg-blue-600 text-white rounded-t-lg">
+              <h3 className="text-lg font-semibold">User Profile Details</h3>
+              <button onClick={closeModal} className="text-xl">
+                <AiOutlineClose />
+              </button>
             </div>
-            <div className="bg-white p-6 space-y-4">
-              <div>
-                <label className="block text-sm font-semibold text-gray-700">University Name:</label>
-                <input
-                  type="text"
-                  value={selectedUser.universityName || 'N/A'}
-                  readOnly
-                  className="border border-gray-300 rounded w-full px-3 py-2 mt-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
-                />
+            <div className="bg-white p-6">
+              <div className="space-y-4">
+                <div className="flex items-center space-x-2">
+                  <span className="font-semibold text-gray-700">University Name:</span>
+                  <span className="text-gray-800">{selectedUser.universityName || 'N/A'}</span>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <span className="font-semibold text-gray-700">Date of Birth:</span>
+                  <span className="text-gray-800">{selectedUser.dob || 'N/A'}</span>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <span className="font-semibold text-gray-700">Educational Level:</span>
+                  <span className="text-gray-800">{selectedUser.educationLevel || 'N/A'}</span>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <span className="font-semibold text-gray-700">Field of Study:</span>
+                  <span className="text-gray-800">{selectedUser.fieldOfStudy || 'N/A'}</span>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <span className="font-semibold text-gray-700">Desired Field:</span>
+                  <span className="text-gray-800">{selectedUser.desiredField || 'N/A'}</span>
+                </div>
               </div>
-              <div>
-                <label className="block text-sm font-semibold text-gray-700">Date of Birth:</label>
-                <input
-                  type="text"
-                  value={selectedUser.dob || 'N/A'}
-                  readOnly
-                  className="border border-gray-300 rounded w-full px-3 py-2 mt-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-semibold text-gray-700">Educational Level:</label>
-                <input
-                  type="text"
-                  value={selectedUser.educationLevel || 'N/A'}
-                  readOnly
-                  className="border border-gray-300 rounded w-full px-3 py-2 mt-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-semibold text-gray-700">Field of Study:</label>
-                <input
-                  type="text"
-                  value={selectedUser.fieldOfStudy || 'N/A'}
-                  readOnly
-                  className="border border-gray-300 rounded w-full px-3 py-2 mt-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-semibold text-gray-700">Desired Field:</label>
-                <input
-                  type="text"
-                  value={selectedUser.desiredField || 'N/A'}
-                  readOnly
-                  className="border border-gray-300 rounded w-full px-3 py-2 mt-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
-                />
-              </div>
-              <button onClick={closeModal} className="mt-4 px-4 py-2 bg-gray-300 rounded hover:bg-gray-400">
+              <button onClick={closeModal} className="mt-6 w-full py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600">
                 Close
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Confirmation Modal */}
-      {confirmAction && (
-        <div className="fixed inset-0 flex items-center justify-center z-50 bg-black bg-opacity-50">
-          <div className="bg-white rounded-lg shadow-lg w-full max-w-sm p-6">
-            <h3 className="text-lg font-bold text-center mb-4">
-              {confirmAction.type === "approve" ? "Approve User" : "Reject User"}
-            </h3>
-            <p className="text-center">
-              Are you sure you want to {confirmAction.type} this user?
-            </p>
-            <div className="mt-4 flex justify-between">
-              <button
-                onClick={() => setConfirmAction(null)}
-                className="px-4 py-2 bg-gray-300 rounded hover:bg-gray-400"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={confirmActionHandler}
-                className={`px-4 py-2 rounded ${confirmLoading ? "bg-gray-400" : (confirmAction.type === "approve" ? "bg-green-500" : "bg-red-500")} text-white`}
-                disabled={confirmLoading} // Disable button if loading
-              >
-                {confirmLoading ? "Processing..." : (confirmAction.type === "approve" ? "Approve" : "Reject")}
               </button>
             </div>
           </div>

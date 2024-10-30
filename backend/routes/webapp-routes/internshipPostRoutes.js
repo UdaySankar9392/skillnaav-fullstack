@@ -1,6 +1,6 @@
 const express = require("express");
 const InternshipPosting = require("../../models/webapp-models/internshipPostModel.js");
-const sendEmail = require("../../utils/PartnerMail.js");
+const notifyUser = require("../../utils/notifyUser.js");
 const router = express.Router();
 
 // GET all internship postings
@@ -36,6 +36,7 @@ router.post("/", async (req, res) => {
       imgUrl: req.body.imgUrl,
       studentApplied: req.body.studentApplied || false,
       adminApproved: req.body.adminApproved || false,
+      adminReviewed: req.body.adminReviewed || false,
     });
 
     const createdInternship = await newInternship.save();
@@ -185,8 +186,8 @@ router.patch("/:id/approve", async (req, res) => {
         End Date/Duration: ${internship.endDateOrDuration}
       `;
       try {
-        console.log(`Sending email to: ${internship.contactInfo}`);
-        await sendEmail(internship.contactInfo, "Internship Approved", emailContent);
+        console.log(`Sending email to: ${internship.contactInfo.email}`);
+        await notifyUser(internship.contactInfo.email, "Internship Approved", emailContent);
       } catch (emailError) {
         console.error("Failed to send approval email:", emailError);
       }
@@ -218,7 +219,7 @@ router.patch("/:id/reject", async (req, res) => {
         Location: ${internship.location}
       `;
       try {
-        await sendEmail(internship.contactInfo, "Internship Rejected", emailContent);
+        await notifyUser(internship.contactInfo.email, "Internship Rejected", emailContent);
       } catch (emailError) {
         console.error("Failed to send rejection email:", emailError);
       }
@@ -245,4 +246,58 @@ router.get("/approved", async (req, res) => {
     });
   }
 });
+
+
+router.post("/:id/review", async (req, res) => {
+  const { reviewText } = req.body;
+
+  if (!reviewText) {
+    return res.status(400).json({ message: "All fields are required for a review" });
+  }
+
+  try {
+    const internship = await InternshipPosting.findById(req.params.id);
+    console.log("ID being used:", req.params.id);
+
+
+    if (internship) { 
+      if (!internship.reviews) {
+      internship.reviews = []; // Initialize if undefined
+    }
+      // Add the review to the internship
+      internship.reviews.push({ reviewText });
+      internship.isAdminReviewed = true; // Mark as reviewed
+      internship.adminReviewText = reviewText; // Store admin feedback
+      await internship.save();
+
+      // Prepare email content
+      const emailContent = `
+        A new review has been posted for your internship listing "${internship.jobTitle}"!
+
+        Admin Review: "${reviewText}"
+      `;
+
+      // Send email
+      try {
+        console.log(`Sending email to: ${internship.contactInfo.email}`);
+        await notifyUser(internship.contactInfo.email, "New Internship Review Received", emailContent);
+      } catch (emailError) {
+        console.error("Failed to send review email:", emailError);
+      }
+
+      res.status(201).json({
+        message: "Review added successfully, marked as reviewed, and email sent",
+        review: internship.reviews[internship.reviews.length - 1],
+        isAdminReviewed: internship.isAdminReviewed,
+        adminReviewText: internship.adminReviewText,
+      });
+    } else {
+      res.status(404).json({ message: "Internship not found" });
+    }
+  } catch (error) {
+    console.error("Error adding review:", error);
+    res.status(500).json({ message: "Server Error: Unable to add review", error: error.message });
+  }
+});
+
 module.exports = router;

@@ -5,8 +5,8 @@ const notifyUser = async (email, subject, message) => {
   const transporter = nodemailer.createTransport({
     service: "gmail",
     auth: {
-      user: "gundapanenilavanya33@gmail.com",
-      pass: "bbqi fadm koxj yhyz" // your email password or app password
+      user: "skillnaav@gmail.com",
+      pass: "zpgj miwi xucy bwrs" // your email password or app password
     }
   });
 
@@ -17,6 +17,7 @@ const notifyUser = async (email, subject, message) => {
         <h2>SkillNaav</h2>
       </header>
       <div style="padding: 20px; color: #333;">
+      
         <h3 style="color: #007bff;">Hello,</h3>
         <p style="font-size: 16px;">${message}</p>
         <p style="font-size: 16px;">You can visit us at <a href="https://www.skillnaav.com" style="color: #007bff;">https://www.skillnaav.com</a> for more information.</p>
@@ -29,7 +30,7 @@ const notifyUser = async (email, subject, message) => {
   `;
 
   const mailOptions = {
-    from: "gundapanenilavanya33@gmail.com",
+    from: "skillnaav@gmail.com",
     to: email,
     subject: subject,
     html: htmlContent // Send HTML content in the email
