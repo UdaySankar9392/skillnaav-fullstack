@@ -83,21 +83,20 @@ const PostAJob = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (!formData.imgUrl) {
+      alert("Please upload an image for the job post.");
+      return;
+    }
     try {
-      const response = await axios.post("/api/interns", {
-        ...formData,
-        imgUrl: formData.imgUrl,
-      });
+      const response = await axios.post("/api/interns", formData);
       console.log("Internship posted successfully:", response.data);
-
       saveJob(response.data);
-
       resetForm();
     } catch (error) {
       console.error("Error posting internship:", error.response?.data || error.message);
     }
   };
-
+  
   const handleFileUpload = async (event) => {
     const selectedFile = event.target.files[0];
     if (!selectedFile) {
