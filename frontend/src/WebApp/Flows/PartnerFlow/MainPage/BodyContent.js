@@ -1,11 +1,6 @@
 import React from "react";
 import { useTabContext } from "./UserHomePageContext/HomePageContext";
 import Message from "./Message";
-import AeronauticalJobs from "./AeronauticalJobs";
-import SearchBar from "./SearchBar";
-import Home from "./Home";
-import Filter from "./Filter";
-import SavedJobs from "./SavedJobs";
 import Applications from "./Applications";
 import Profile from "./Profile";
 import Support from "./Support";
@@ -30,17 +25,14 @@ const BodyContent = () => {
     case "applications":
       content = <Applications />;
       break;
-    case "saved-jobs":
-      content = <SavedJobs />;
-      break;
     case "profile":
       content = <Profile />;
       break;
     case "support":
-      content = <Support />; // Render the Support component
+      content = <Support />;
       break;
     case "logout":
-      content = <div>You have been logged out. Please log in again.</div>; // Logout message or component
+      content = <div>You have been logged out. Please log in again.</div>;
       break;
     default:
       content = <div>Select a tab</div>;

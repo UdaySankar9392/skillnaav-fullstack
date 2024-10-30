@@ -149,6 +149,13 @@ const YourJobPosts = () => {
             key={internship._id}
             className="bg-white p-4 rounded-lg shadow-md"
           >
+            {internship.imgUrl && (
+              <img
+                src={internship.imgUrl}
+                alt={internship.jobTitle}
+                className="mb-4 w-full h-40 object-cover rounded-lg"
+              />
+            )}
             <h3 className="text-xl font-semibold mb-2">
               {internship.jobTitle}
             </h3>
@@ -165,12 +172,12 @@ const YourJobPosts = () => {
               <strong>Status:</strong>{" "}
               <span
                 className={`inline-block px-2 py-1 rounded-full font-bold ${
-                  internship.isApproved
+                  internship.adminApproved
                     ? "bg-green-200 text-green-800"
                     : "bg-red-200 text-red-800"
                 }`}
               >
-                {internship.isApproved ? "Accepted" : "Not Approved"}
+                {internship.adminApproved ? "Accepted" : "Not Approved"}
               </span>
             </div>
             <div className="flex space-x-2 mt-4">
@@ -212,11 +219,18 @@ const YourJobPosts = () => {
         onRequestClose={closeModal}
         contentLabel="Internship Details"
         className="fixed font-poppins inset-0 flex items-center justify-center"
-        overlayClassName="fixed inset-0 bg-black bg-opacity-50"
+        overlayClassName=" fixed inset-0 bg-black bg-opacity-50"
       >
         <div className="bg-white p-6 rounded-lg shadow-lg max-w-2xl w-full">
           {selectedInternship && (
             <>
+              {selectedInternship.imageUrl && (
+                <img
+                  src={selectedInternship.imageUrl}
+                  alt={selectedInternship.jobTitle}
+                  className="mb-4 w-full h-40 object-cover rounded-lg"
+                />
+              )}
               <h2 className="text-2xl font-semibold mb-4">
                 {selectedInternship.jobTitle}
               </h2>
@@ -227,50 +241,32 @@ const YourJobPosts = () => {
                 <strong>Location:</strong> {selectedInternship.location}
               </p>
               <p className="mb-2">
-                <strong>Stipend/Salary:</strong>{" "}
-                {selectedInternship.stipendOrSalary}
+                <strong>Job Description:</strong>{" "}
+                {selectedInternship.jobDescription}
               </p>
-              <p className="mb-4">{selectedInternship.description}</p>
+              <p className="mb-2">
+                <strong>Qualifications:</strong>{" "}
+                {selectedInternship.qualifications}
+              </p>
+              <p className="mb-2">
+                <strong>Start Date:</strong> {selectedInternship.startDate}
+              </p>
+              <p className="mb-2">
+                <strong>End Date:</strong> {selectedInternship.endDateOrDuration}
+              </p>
+              <div className="flex justify-end mt-4">
+                <button
+                  onClick={closeModal}
+                  className="px-4 py-2 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400"
+                >
+                  Close
+                </button>
+              </div>
             </>
           )}
-          <button
-            onClick={closeModal}
-            className="px-4 py-2 bg-red-500 text-white rounded-md hover:bg-red-600"
-          >
-            Close
-          </button>
         </div>
       </Modal>
-      {/* Reject Confirmation Modal */}
-      <Modal
-        isOpen={isRejectModalOpen}
-        onRequestClose={closeRejectModal}
-        contentLabel="Reject Internship"
-        className="fixed font-poppins inset-0 flex items-center justify-center"
-        overlayClassName="fixed inset-0 bg-black bg-opacity-50"
-      >
-        <div className="bg-white p-6 rounded-lg shadow-lg">
-          <h2 className="text-2xl font-semibold mb-4">Confirm Reject</h2>
-          <p>
-            Are you sure you want to reject the internship for{" "}
-            {internshipToReject?.jobTitle}?
-          </p>
-          <div className="flex justify-end mt-4">
-            <button
-              onClick={confirmReject}
-              className="px-4 py-2 bg-red-500 text-white rounded-md hover:bg-red-600"
-            >
-              Confirm
-            </button>
-            <button
-              onClick={closeRejectModal}
-              className="px-4 py-2 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400 ml-2"
-            >
-              Cancel
-            </button>
-          </div>
-        </div>
-      </Modal>
+     
     </div>
   );
 };

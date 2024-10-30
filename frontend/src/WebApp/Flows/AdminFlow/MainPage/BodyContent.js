@@ -7,9 +7,9 @@ import {
   FaDollarSign,
 } from "react-icons/fa";
 import UserManagement from "./UserManagement";
-import PartnerManagement from "./InternshipPosts";
+import PartnerManagement from "./InternshipsPosted";
 import PartnerAccounts from "./PartnerAccounts";
-import InternshipPosts from "./InternshipPosts"; // New Component for Internship Posts
+import InternshipPosts from "./InternshipsPosted"; // New Component for Internship Posts
 
 const BodyContent = () => {
   const { selectedTab } = useTabContext();

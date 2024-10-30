@@ -1,11 +1,11 @@
 import React, { useState } from "react";
 import axios from "axios";
 import firebase from "firebase/compat/app";
-import "firebase/compat/storage"; // Import Firebase storage
+import "firebase/compat/storage";
 import { useTabContext } from "./UserHomePageContext/HomePageContext";
 
 const PostAJob = () => {
-  const { saveJob } = useTabContext(); // Get saveJob from context
+  const { saveJob } = useTabContext();
 
   const [formData, setFormData] = useState({
     jobTitle: "",
@@ -17,18 +17,18 @@ const PostAJob = () => {
     endDateOrDuration: "",
     stipendOrSalary: "",
     qualifications: "",
-    preferredExperience: "None",
-    applicationDeadline: "",
-    applicationProcess: "",
+    // preferredExperience: "None",
+    // applicationDeadline: "",
+    // applicationProcess: "",
     contactInfo: {
       name: "",
       email: "",
       phone: "",
     },
-    applicationLinkOrEmail: "",
+    // applicationLinkOrEmail: "",
     imgUrl: "",
-    studentApplied: false, // New field
-    adminApproved: false, // New field
+    studentApplied: false,
+    adminApproved: false,
   });
 
   const [uploading, setUploading] = useState(false);
@@ -65,18 +65,18 @@ const PostAJob = () => {
       endDateOrDuration: "",
       stipendOrSalary: "",
       qualifications: "",
-      preferredExperience: "None",
-      applicationDeadline: "",
-      applicationProcess: "",
+      // preferredExperience: "None",
+      // applicationDeadline: "",
+      // applicationProcess: "",
       contactInfo: {
         name: "",
         email: "",
         phone: "",
       },
-      applicationLinkOrEmail: "",
+      // applicationLinkOrEmail: "",
       imgUrl: "",
-      studentApplied: false, // Reset new field
-      adminApproved: false, // Reset new field
+      studentApplied: false,
+      adminApproved: false,
     });
     setPreviewUrl(null);
   };
@@ -90,15 +90,11 @@ const PostAJob = () => {
       });
       console.log("Internship posted successfully:", response.data);
 
-      // Save the job in context
       saveJob(response.data);
 
       resetForm();
     } catch (error) {
-      console.error(
-        "Error posting internship:",
-        error.response?.data || error.message
-      );
+      console.error("Error posting internship:", error.response?.data || error.message);
     }
   };
 
@@ -133,20 +129,14 @@ const PostAJob = () => {
         Post an Internship
       </h2>
       <form onSubmit={handleSubmit} className="space-y-6">
-        {/** Input Fields **/}
+        {/* Input Fields */}
         {Object.entries({
           jobTitle: "Job Title",
           companyName: "Company Name",
           location: "Location",
           jobType: "Job Type",
-          jobDescription: "Job Description",
-          startDate: "Start Date",
-          endDateOrDuration: "End Date or Duration",
           stipendOrSalary: "Stipend or Salary",
           qualifications: "Qualifications",
-          preferredExperience: "Preferred Experience",
-          applicationDeadline: "Application Deadline",
-          applicationLinkOrEmail: "Application Link or Email",
         }).map(([key, label]) => (
           <div key={key}>
             <label className="block text-gray-700 font-medium mb-2">
@@ -167,11 +157,7 @@ const PostAJob = () => {
               </select>
             ) : (
               <input
-                type={
-                  key === "startDate" || key === "applicationDeadline"
-                    ? "date"
-                    : "text"
-                }
+                type="text"
                 name={key}
                 value={formData[key]}
                 onChange={
@@ -186,6 +172,70 @@ const PostAJob = () => {
             )}
           </div>
         ))}
+
+        {/* Job Description with Scrollable Textarea */}
+        <div>
+          <label className="block text-gray-700 font-medium mb-2">Job Description</label>
+          <textarea
+            name="jobDescription"
+            value={formData.jobDescription}
+            onChange={handleChange}
+            className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring focus:ring-teal-500"
+            placeholder="Enter job description"
+            style={{
+              resize: "vertical", // Allows the user to expand vertically
+              maxHeight: "150px", // Limits the max height
+              overflowY: "auto", // Enables scroll
+              scrollbarWidth: "none", // Hides the scrollbar for Firefox
+            }}
+            required
+          />
+        </div>
+
+        {/* Preferred Experience Dropdown
+        <div>
+          <label className="block text-gray-700 font-medium mb-2">
+            Preferred Experience
+          </label>
+          <select
+            name="preferredExperience"
+            value={formData.preferredExperience}
+            onChange={handleChange}
+            className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring focus:ring-teal-500"
+          >
+            <option value="None">None</option>
+            <option value="1-2 years">1-2 years</option>
+            <option value="3-5 years">3-5 years</option>
+            <option value="5+ years">5+ years</option>
+          </select>
+        </div> */}
+
+        {/* Date Pickers */}
+        <div>
+          <label className="block text-gray-700 font-medium mb-2">Start Date</label>
+          <input
+            type="date"
+            name="startDate"
+            value={formData.startDate}
+            onChange={handleChange}
+            className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring focus:ring-teal-500"
+            required
+          />
+        </div>
+
+        <div>
+          <label className="block text-gray-700 font-medium mb-2">
+            End Date or Duration
+          </label>
+          <input
+            type="date"
+            name="endDateOrDuration"
+            value={formData.endDateOrDuration}
+            onChange={handleChange}
+            className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring focus:ring-teal-500"
+            required
+          />
+        </div>
 
         {/* Contact Info */}
         <div>
@@ -204,22 +254,6 @@ const PostAJob = () => {
               required={field === "name" || field === "email"}
             />
           ))}
-        </div>
-
-        {/* Application Process */}
-        <div>
-          <label className="block text-gray-700 font-medium mb-2">
-            Application Process
-          </label>
-          <textarea
-            name="applicationProcess"
-            value={formData.applicationProcess}
-            onChange={handleChange}
-            className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring focus:ring-teal-500"
-            placeholder="Describe the application process"
-            rows="3"
-            required
-          />
         </div>
 
         {/* Image Upload */}
@@ -241,9 +275,9 @@ const PostAJob = () => {
 
         <button
           type="submit"
-          className="w-full p-3 bg-teal-500 text-white font-semibold rounded-lg hover:bg-teal-600"
+          className="w-full p-3 bg-teal-500 text-white rounded-lg hover:bg-teal-600"
         >
-          Post Internship
+          Post Job
         </button>
       </form>
     </div>

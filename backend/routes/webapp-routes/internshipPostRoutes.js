@@ -1,5 +1,6 @@
 const express = require("express");
 const InternshipPosting = require("../../models/webapp-models/internshipPostModel.js");
+const sendEmail = require("../../utils/PartnerMail.js");
 const router = express.Router();
 
 // GET all internship postings
@@ -27,11 +28,11 @@ router.post("/", async (req, res) => {
       endDateOrDuration: req.body.endDateOrDuration,
       stipendOrSalary: req.body.stipendOrSalary,
       qualifications: req.body.qualifications,
-      preferredExperience: req.body.preferredExperience,
-      applicationDeadline: req.body.applicationDeadline,
-      applicationProcess: req.body.applicationProcess,
+      // preferredExperience: req.body.preferredExperience,
+      // applicationDeadline: req.body.applicationDeadline,
+      // applicationProcess: req.body.applicationProcess,
       contactInfo: req.body.contactInfo,
-      applicationLinkOrEmail: req.body.applicationLinkOrEmail,
+      // applicationLinkOrEmail: req.body.applicationLinkOrEmail,
       imgUrl: req.body.imgUrl,
       studentApplied: req.body.studentApplied || false,
       adminApproved: req.body.adminApproved || false,
@@ -74,18 +75,18 @@ router.put("/:id", async (req, res) => {
     endDateOrDuration,
     stipendOrSalary,
     qualifications,
-    preferredExperience,
-    workingHours,
-    applicationDeadline,
-    applicationProcess,
-    companyWebsite,
+    // preferredExperience,
+    // workingHours,
+    // applicationDeadline,
+    // applicationProcess,
+    // companyWebsite,
     contactInfo,
-    internshipBenefits,
-    department,
-    applicationLinkOrEmail,
-    workAuthorization,
-    skillsToBeDeveloped,
-    numberOfOpenings,
+    // internshipBenefits,
+    // department,
+    // applicationLinkOrEmail,
+    // workAuthorization,
+    // skillsToBeDeveloped,
+    // numberOfOpenings,
     imgUrl,
     studentApplied,
     adminApproved,
@@ -106,18 +107,18 @@ router.put("/:id", async (req, res) => {
         ...(endDateOrDuration && { endDateOrDuration }),
         ...(stipendOrSalary && { stipendOrSalary }),
         ...(qualifications && { qualifications }),
-        ...(preferredExperience && { preferredExperience }),
-        ...(workingHours && { workingHours }),
-        ...(applicationDeadline && { applicationDeadline }),
-        ...(applicationProcess && { applicationProcess }),
-        ...(companyWebsite && { companyWebsite }),
+        // ...(preferredExperience && { preferredExperience }),
+        // ...(workingHours && { workingHours }),
+        // ...(applicationDeadline && { applicationDeadline }),
+        // ...(applicationProcess && { applicationProcess }),
+        // ...(companyWebsite && { companyWebsite }),
         ...(contactInfo && { contactInfo }),
-        ...(internshipBenefits && { internshipBenefits }),
-        ...(department && { department }),
-        ...(applicationLinkOrEmail && { applicationLinkOrEmail }),
-        ...(workAuthorization && { workAuthorization }),
-        ...(skillsToBeDeveloped && { skillsToBeDeveloped }),
-        ...(numberOfOpenings && { numberOfOpenings }),
+        // ...(internshipBenefits && { internshipBenefits }),
+        // ...(department && { department }),
+        // ...(applicationLinkOrEmail && { applicationLinkOrEmail }),
+        // ...(workAuthorization && { workAuthorization }),
+        // ...(skillsToBeDeveloped && { skillsToBeDeveloped }),
+        // ...(numberOfOpenings && { numberOfOpenings }),
         ...(imgUrl && { imgUrl }),
         ...(studentApplied !== undefined && { studentApplied }),
         ...(adminApproved !== undefined && { adminApproved }),
@@ -165,7 +166,7 @@ router.delete("/:id", async (req, res) => {
   }
 });
 
-// POST approve an internship posting by ID
+/// Approve an internship posting by ID
 router.patch("/:id/approve", async (req, res) => {
   try {
     const internship = await InternshipPosting.findById(req.params.id);
@@ -173,18 +174,34 @@ router.patch("/:id/approve", async (req, res) => {
     if (internship) {
       internship.adminApproved = true; // Mark as approved
       await internship.save(); // Save changes
+
+      // Prepare and send email to the partner
+      const emailContent = `
+        Congratulations! Your internship posting "${internship.jobTitle}" has been approved!
+        Company: ${internship.companyName}
+        Location: ${internship.location}
+        Description: ${internship.jobDescription}
+        Start Date: ${internship.startDate}
+        End Date/Duration: ${internship.endDateOrDuration}
+      `;
+      try {
+        console.log(`Sending email to: ${internship.contactInfo}`);
+        await sendEmail(internship.contactInfo, "Internship Approved", emailContent);
+      } catch (emailError) {
+        console.error("Failed to send approval email:", emailError);
+      }
+      
+
       res.json({ message: "Internship approved successfully", internship });
     } else {
       res.status(404).json({ message: "Internship not found" });
     }
   } catch (error) {
-    res
-      .status(500)
-      .json({ message: "Server Error: Unable to approve internship" });
+    res.status(500).json({ message: "Server Error: Unable to approve internship", error: error.message });
   }
 });
 
-// POST reject an internship posting by ID
+// Reject an internship posting by ID
 router.patch("/:id/reject", async (req, res) => {
   try {
     const internship = await InternshipPosting.findById(req.params.id);
@@ -192,31 +209,40 @@ router.patch("/:id/reject", async (req, res) => {
     if (internship) {
       internship.adminApproved = false; // Mark as rejected
       await internship.save(); // Save changes
+
+      // Prepare and send rejection email to the partner
+      const emailContent = `
+        We regret to inform you that your internship posting "${internship.jobTitle}" has been rejected.
+        Reason: ${req.body.reason || "No specific reason provided."}
+        Company: ${internship.companyName}
+        Location: ${internship.location}
+      `;
+      try {
+        await sendEmail(internship.contactInfo, "Internship Rejected", emailContent);
+      } catch (emailError) {
+        console.error("Failed to send rejection email:", emailError);
+      }
+
       res.json({ message: "Internship rejected successfully", internship });
     } else {
       res.status(404).json({ message: "Internship not found" });
     }
   } catch (error) {
-    res
-      .status(500)
-      .json({ message: "Server Error: Unable to reject internship" });
+    res.status(500).json({ message: "Server Error: Unable to reject internship", error: error.message });
   }
 });
 
-// GET approved internships
+// Get all approved internships
 router.get("/approved", async (req, res) => {
   try {
-    const approvedInternships = await InternshipPosting.find({
-      adminApproved: true,
-    });
+    const approvedInternships = await InternshipPosting.find({ adminApproved: true });
     res.json(approvedInternships);
   } catch (error) {
-    console.error("Error fetching approved internships:", error); // Log the error
+    console.error("Error fetching approved internships:", error);
     res.status(500).json({
       message: "Error fetching approved internships",
       error: error.message,
     });
   }
 });
-
 module.exports = router;
