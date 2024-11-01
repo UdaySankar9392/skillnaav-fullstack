@@ -9,6 +9,7 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faEye, faEyeSlash } from "@fortawesome/free-solid-svg-icons";
 import { Client, Account } from "appwrite";
 import { FcGoogle } from "react-icons/fc";
+import { useGoogleLogin } from "@react-oauth/google";
 
 const client = new Client();
 client
@@ -27,15 +28,6 @@ const UserLogin = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-
-  const handleGoogleSignIn = async () => {
-    try {
-      await account.createOAuth2Session("google");
-      navigate("/user-main-page"); // Redirect on successful login
-    } catch (err) {
-      setError("Failed to sign in with Google. Please try again.");
-    }
-  };
 
   const handleSubmit = async (values, { setSubmitting }) => {
     setError("");
@@ -63,6 +55,33 @@ const UserLogin = () => {
     }
   };
 
+  const login = useGoogleLogin({
+    onSuccess: async (tokenResponse) => {
+      try {
+        // Make a request to get user information from Google
+        const response = await axios.get(
+          "https://www.googleapis.com/oauth2/v3/userinfo",
+          {
+            headers: {
+              Authorization: `Bearer ${tokenResponse.access_token}`,
+            },
+          }
+        );
+
+        // Log or use the user information
+        console.log(response.data);
+
+        // Navigate to 'user-main-page' after successful authentication
+        navigate("/user-main-page");
+      } catch (error) {
+        console.error("Error fetching user info:", error);
+      }
+    },
+    onError: (error) => {
+      console.error("Login failed:", error);
+    },
+  });
+
   return (
     <div className="flex flex-col lg:flex-row min-h-screen font-poppins">
       {/* Left Section (Image) */}
@@ -83,14 +102,12 @@ const UserLogin = () => {
           <h2 className="text-lg font-medium mb-6 text-center text-gray-600">
             Please sign in to your account
           </h2>
-
           {/* Error Message */}
           {error && (
             <div className="bg-red-200 text-red-600 p-3 mb-4 text-center rounded-lg">
               {error}
             </div>
           )}
-
           {/* Loading */}
           {loading ? (
             <Loading />
@@ -155,23 +172,25 @@ const UserLogin = () => {
               )}
             </Formik>
           )}
-
           <div className="flex items-center my-6">
             <hr className="w-full border-gray-300" />
             <span className="px-3 text-gray-500">OR</span>
             <hr className="w-full border-gray-300" />
           </div>
-
           {/* Google Sign-In Button */}
           <button
-            onClick={handleGoogleSignIn}
-            className="w-full bg-red-500 text-white p-3 rounded-lg hover:bg-red-600 mb-4 flex items-center justify-center space-x-2"
+            style={{
+              background: "red",
+              color: "white",
+              borderRadius: "10px",
+              padding: "10px",
+            }}
+            onClick={() => login()}
           >
-            <FcGoogle className="h-5 w-5" />
-            <span>Sign in with Google</span>
+            Sign in with Google 🚀
           </button>
 
-          <p className="text-center text-gray-500">
+          <p className="text-center text-gray-500 mt-8">
             Don’t have an account?{" "}
             <Link
               to="/user-create-account"

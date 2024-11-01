@@ -7,7 +7,7 @@ import firebase from "firebase/compat/app";
 import "firebase/compat/storage"; // Ensure Firebase Storage is imported
 import store from "./redux/store";
 import { Provider } from "react-redux";
-
+import { GoogleOAuthProvider } from "@react-oauth/google";
 // Your web app's Firebase configuration
 const firebaseConfig = {
   apiKey: "AIzaSyBC8-dTj7LeZdDEJ55skgrSK-KqaJu8VIE",
@@ -24,9 +24,11 @@ firebase.initializeApp(firebaseConfig);
 
 const root = ReactDOM.createRoot(document.getElementById("root"));
 root.render(
-  <Provider store={store}>
-    <App />
-  </Provider>
+  <GoogleOAuthProvider clientId="797086316899-7e8m1sq9unes39qos8r69ng6ipleeejb.apps.googleusercontent.com">
+    <Provider store={store}>
+      <App />
+    </Provider>
+  </GoogleOAuthProvider>
 );
 
 reportWebVitals();
