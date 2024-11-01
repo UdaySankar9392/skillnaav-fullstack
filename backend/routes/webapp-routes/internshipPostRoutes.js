@@ -178,20 +178,37 @@ router.patch("/:id/approve", async (req, res) => {
 
       // Prepare and send email to the partner
       const emailContent = `
-        Congratulations! Your internship posting "${internship.jobTitle}" has been approved!
-        Company: ${internship.companyName}
-        Location: ${internship.location}
-        Description: ${internship.jobDescription}
-        Start Date: ${internship.startDate}
-        End Date/Duration: ${internship.endDateOrDuration}
-      `;
+<div style="font-family: Arial, sans-serif; color: #333; line-height: 1.6;">
+  <h2 style="color: #4CAF50;">Congratulations!</h2>
+  <p style="font-size: 16px;">
+    Your internship posting <strong>"${internship.jobTitle}"</strong> has been approved!
+  </p>
+  <h3 style="color: #4CAF50;">Internship Details:</h3>
+  <ul style="list-style-type: none; padding: 0;">
+    <li><strong>Company:</strong> ${internship.companyName}</li>
+    <li><strong>Location:</strong> ${internship.location}</li>
+    <li><strong>Description:</strong> ${internship.jobDescription}</li>
+    <li><strong>Start Date:</strong> ${internship.startDate}</li>
+    <li><strong>End Date/Duration:</strong> ${internship.endDateOrDuration}</li>
+  </ul>
+  <p style="font-size: 16px;">
+    We wish you the best of luck with your internship!
+  </p>
+  <footer style="margin-top: 20px; font-size: 14px; color: #777;">
+    <p>Best regards,</p>
+    <p><strong>Skillnaav Team</strong></p>
+    <p><a href="http://skillnaav.com" style="color: #4CAF50; text-decoration: none;">Visit our website</a></p>
+  </footer>
+</div>
+`;
+
       try {
         console.log(`Sending email to: ${internship.contactInfo.email}`);
         await notifyUser(internship.contactInfo.email, "Internship Approved", emailContent);
       } catch (emailError) {
         console.error("Failed to send approval email:", emailError);
       }
-      
+
 
       res.json({ message: "Internship approved successfully", internship });
     } else {
@@ -211,13 +228,31 @@ router.patch("/:id/reject", async (req, res) => {
       internship.adminApproved = false; // Mark as rejected
       await internship.save(); // Save changes
 
-      // Prepare and send rejection email to the partner
+      // Prepare rejection email content
       const emailContent = `
-        We regret to inform you that your internship posting "${internship.jobTitle}" has been rejected.
-        Reason: ${req.body.reason || "No specific reason provided."}
-        Company: ${internship.companyName}
-        Location: ${internship.location}
+                <div style="font-family: Arial, sans-serif; color: #333; line-height: 1.6;">
+                  <h2 style="color: #e74c3c;">Rejection Notification</h2>
+                  <p style="font-size: 16px;">
+                   We regret to inform you that your internship posting <strong>"${internship.jobTitle}"</strong> has been rejected.
+                  </p>
+                  <p style="font-size: 16px;">
+                   <strong>Reason:</strong> ${req.body.reason || "No specific reason provided."}
+                  </p>
+                  <p style="font-size: 16px;">
+                   <strong>Company:</strong> ${internship.companyName}<br>
+                   <strong>Location:</strong> ${internship.location}
+                  </p>
+                  <p style="font-size: 16px;">
+                   If you have any questions or would like further clarification, please do not hesitate to reach out.
+                  </p>
+                  <footer style="margin-top: 20px; font-size: 14px; color: #777;">
+                   <p>Best regards,</p>
+                    <p><strong>Skillnaav Team</strong></p>
+                    <p><a href="http://skillnaav.com" style="color: #4CAF50; text-decoration: none;">Visit our website</a></p>
+                  </footer>
+                </div>
       `;
+
       try {
         await notifyUser(internship.contactInfo.email, "Internship Rejected", emailContent);
       } catch (emailError) {
@@ -260,10 +295,10 @@ router.post("/:id/review", async (req, res) => {
     console.log("ID being used:", req.params.id);
 
 
-    if (internship) { 
+    if (internship) {
       if (!internship.reviews) {
-      internship.reviews = []; // Initialize if undefined
-    }
+        internship.reviews = []; // Initialize if undefined
+      }
       // Add the review to the internship
       internship.reviews.push({ reviewText });
       internship.isAdminReviewed = true; // Mark as reviewed
@@ -272,10 +307,26 @@ router.post("/:id/review", async (req, res) => {
 
       // Prepare email content
       const emailContent = `
-        A new review has been posted for your internship listing "${internship.jobTitle}"!
+<div style="font-family: Arial, sans-serif; color: #333; line-height: 1.6;">
+  <h2 style="color: #4CAF50;">New Review Notification</h2>
+  <p style="font-size: 16px;">
+    A new review has been posted for your internship listing <strong>"${internship.jobTitle}"</strong>!
+  </p>
+  <h3 style="color: #4CAF50;">Admin Review:</h3>
+  <blockquote style="font-size: 16px; border-left: 4px solid #4CAF50; padding-left: 15px; color: #555;">
+    "${reviewText}"
+  </blockquote>
+  <p style="font-size: 16px;">
+    Thank you for your engagement with our platform!
+  </p>
+  <footer style="margin-top: 20px; font-size: 14px; color: #777;">
+    <p>Best regards,</p>
+    <p><strong>Skillnaav Team</strong></p>
+    <p><a href="http://skillnaav.com" style="color: #4CAF50; text-decoration: none;">Visit our website</a></p>
+  </footer>
+</div>
+`;
 
-        Admin Review: "${reviewText}"
-      `;
 
       // Send email
       try {
