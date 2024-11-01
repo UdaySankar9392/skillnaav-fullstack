@@ -355,11 +355,11 @@ const AdminLogin = () => {
           )}
 
           {/* Divider */}
-          <div className="flex items-center my-6">
+          {/* <div className="flex items-center my-6">
             <hr className="w-full border-gray-300" />
             <span className="px-3 text-gray-500">OR</span>
             <hr className="w-full border-gray-300" />
-          </div>
+          </div> */}
         </div>
       </div>
     </div>
