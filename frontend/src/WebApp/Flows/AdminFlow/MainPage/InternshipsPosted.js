@@ -11,6 +11,7 @@ const PartnerManagement = () => {
   const [isRejectModalOpen, setIsRejectModalOpen] = useState(false);
   const [internshipToReject, setInternshipToReject] = useState(null);
   const [comment, setComment] = useState("");
+  const [showFullDescription, setShowFullDescription] = useState(false); 
 
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
@@ -270,33 +271,55 @@ const PartnerManagement = () => {
 >
   <h2 className="text-lg font-semibold mb-4">Review Internship</h2>
   {selectedInternship && (
-   <div className="bg-white shadow-md rounded-lg p-6 max-w-md mx-auto">
-   <h3 className="font-medium text-lg text-gray-800 mb-2">{selectedInternship.jobTitle}</h3>
-   <p className="text-sm text-gray-500 mb-1">Start Date: <span className="text-gray-700 font-semibold">{selectedInternship.startDate}</span></p>
-   <p className="text-sm text-gray-500 mb-1">End Date: <span className="text-gray-700 font-semibold">{selectedInternship.endDateOrDuration}</span></p>
-   <p className="text-gray-600 text-sm leading-relaxed mb-4">Description: {selectedInternship.jobDescription}</p>
- 
-   <textarea
-     placeholder="Leave a comment..."
-     value={comment}
-     onChange={(e) => setComment(e.target.value)}
-     className="w-full border border-gray-300 p-3 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none mb-4"
-     rows="4"
-   />
-   
-   <button
-     onClick={handleCommentSubmit}
-     className="w-full bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition duration-200 ease-in-out focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:outline-none shadow-lg"
-   >
-     Submit Comment
-   </button>
- </div>
- 
+    <div className="bg-white shadow-md rounded-lg p-4 max-w-md mx-auto">
+      <h3 className="font-medium text-lg text-gray-800 mb-2">{selectedInternship.jobTitle}</h3>
+      <p className="text-sm text-gray-500 mb-1">
+        Start Date: <span className="text-gray-700 font-semibold">{selectedInternship.startDate}</span>
+      </p>
+      <p className="text-sm text-gray-500 mb-1">
+        End Date: <span className="text-gray-700 font-semibold">{selectedInternship.endDateOrDuration}</span>
+      </p>
+
+      {/* Description with Read More */}
+      <div className="relative">
+        <p className={`text-gray-600 text-sm leading-relaxed ${showFullDescription ? 'overflow-auto' : 'line-clamp-3'}`} style={{ maxHeight: showFullDescription ? 'none' : '4.5em' }}>
+          {selectedInternship.jobDescription}
+        </p>
+        {!showFullDescription && (
+          <button
+            onClick={() => setShowFullDescription(true)}
+            className="text-blue-500 text-xs mt-2"
+          >
+            Read More
+          </button>
+        )}
+      </div>
+
+      {/* Comment Section */}
+      <textarea
+        placeholder="Leave a comment..."
+        value={comment}
+        onChange={(e) => setComment(e.target.value)}
+        className="w-full border border-gray-300 p-3 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none mb-4"
+        rows="4"
+      />
+
+      {/* Submit Button */}
+      <button
+        onClick={handleCommentSubmit}
+        className="w-full bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition duration-200 ease-in-out focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:outline-none shadow-lg"
+      >
+        Submit Comment
+      </button>
+    </div>
   )}
+
+  {/* Close Button */}
   <button onClick={closeModal} className="mt-4 text-red-500">
     Close
   </button>
 </Modal>
+
 
 {/* Reject Modal */}
 <Modal
