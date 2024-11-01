@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
+import jsPDF from "jspdf";
 
 const PartnerManagement = () => {
   const [partners, setPartners] = useState([]);
@@ -74,6 +75,16 @@ const PartnerManagement = () => {
     setConfirmAction({ partnerId, type });
   };
 
+  const downloadPDF = () => {
+    const doc = new jsPDF();
+    doc.text(`Partner Details`, 10, 10);
+    doc.text(`University Name: ${selectedPartner.universityName || 'N/A'}`, 10, 20);
+    doc.text(`Institution ID: ${selectedPartner.institutionId || 'N/A'}`, 10, 30);
+    doc.text(`E-mail: ${selectedPartner.email || 'N/A'}`, 10, 40);
+    doc.text(`Status: ${selectedPartner.status || 'N/A'}`, 10, 50);
+    doc.save(`${selectedPartner.universityName}_Details.pdf`);
+  };
+
   if (loading) {
     return (
       <div className="flex justify-center items-center h-screen">
@@ -121,7 +132,7 @@ const PartnerManagement = () => {
                     className="px-3 py-1 bg-blue-500 text-white text-xs font-bold rounded hover:bg-blue-600 transition duration-200"
                     onClick={() => openModal(partner)}
                   >
-                     Details...
+                    Details...
                   </button>
                   <button
                     className="px-3 py-1 bg-green-500 text-white text-xs font-bold rounded hover:bg-green-600 transition duration-200"
@@ -170,6 +181,12 @@ const PartnerManagement = () => {
                   className="border border-gray-300 rounded w-full px-3 py-2 mt-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
                 />
               </div>
+              <button
+                onClick={downloadPDF}
+                className="px-3 py-1 bg-green-500 text-white text-xs font-bold rounded hover:bg-green-600 transition duration-200 mt-4"
+              >
+                Download as PDF
+              </button>
             </div>
 
             <div className="flex justify-end p-4 bg-gray-100 rounded-b-lg space-x-2">
@@ -186,16 +203,25 @@ const PartnerManagement = () => {
 
       {confirmAction && (
         <div className="fixed inset-0 flex items-center justify-center z-50 bg-black bg-opacity-50">
-          <div className="bg-white rounded-lg shadow-lg w-full max-w-sm p-6">
-            <h3 className="text-lg font-semibold mb-4">
-              {`Are you sure you want to ${confirmAction.type} this partner?`}
-            </h3>
-            <div className="flex justify-end space-x-2">
-              <button onClick={() => setConfirmAction(null)} className="px-4 py-2 bg-gray-300 rounded hover:bg-gray-400">
-                Cancel
+          <div className="bg-white p-4 rounded-lg shadow-lg max-w-xs text-center">
+            <h3 className="text-lg font-semibold">Are you sure?</h3>
+            <p className="text-sm text-gray-600 my-3">
+              {confirmAction.type === "approve"
+                ? "Do you want to approve this partner?"
+                : "Do you want to reject this partner?"}
+            </p>
+            <div className="flex justify-center space-x-4">
+              <button
+                className="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600 transition duration-200"
+                onClick={confirmActionHandler}
+              >
+                Yes
               </button>
-              <button onClick={confirmActionHandler} className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600">
-                Confirm
+              <button
+                className="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600 transition duration-200"
+                onClick={() => setConfirmAction(null)}
+              >
+                No
               </button>
             </div>
           </div>

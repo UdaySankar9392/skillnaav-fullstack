@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
-import { AiOutlineClose } from "react-icons/ai"; // Import icon
+import { AiOutlineClose } from "react-icons/ai";
+import { AiOutlineDownload } from "react-icons/ai"; // Import download icon
+import jsPDF from "jspdf";
 
 const UserManagement = () => {
   const [users, setUsers] = useState([]);
@@ -8,8 +10,8 @@ const UserManagement = () => {
   const [error, setError] = useState(null);
   const [selectedUser, setSelectedUser] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [confirmAction, setConfirmAction] = useState(null); // For confirmation modal
-  const [confirmLoading, setConfirmLoading] = useState(false); // Loading state for confirmation modal
+  const [confirmAction, setConfirmAction] = useState(null);
+  const [confirmLoading, setConfirmLoading] = useState(false);
 
   useEffect(() => {
     const fetchUsers = async () => {
@@ -62,6 +64,33 @@ const UserManagement = () => {
   const closeModal = () => {
     setIsModalOpen(false);
     setSelectedUser(null);
+  };
+
+  const downloadPDF = () => {
+    if (!selectedUser) return;
+
+    const doc = new jsPDF();
+    doc.setFontSize(12);
+    doc.text("User Profile Details", 10, 10);
+
+    // Add Name and Email details
+    doc.text(`Name: ${selectedUser.name || "N/A"}`, 10, 20);
+    doc.text(`Email: ${selectedUser.email || "N/A"}`, 10, 30);
+
+    const details = [
+      { label: "University Name", value: selectedUser.universityName || "N/A" },
+      { label: "Date of Birth", value: selectedUser.dob || "N/A" },
+      { label: "Educational Level", value: selectedUser.educationLevel || "N/A" },
+      { label: "Field of Study", value: selectedUser.fieldOfStudy || "N/A" },
+      { label: "Desired Field", value: selectedUser.desiredField || "N/A" },
+    ];
+
+    // Add other details starting from a different y-coordinate
+    details.forEach((detail, index) => {
+      doc.text(`${detail.label}: ${detail.value}`, 10, 40 + index * 10);
+    });
+
+    doc.save("UserProfileDetails.pdf");
   };
 
   if (loading) {
@@ -166,8 +195,38 @@ const UserManagement = () => {
                   <span className="text-gray-800">{selectedUser.desiredField || 'N/A'}</span>
                 </div>
               </div>
-              <button onClick={closeModal} className="mt-6 w-full py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600">
-                Close
+            </div>
+            <div className="flex justify-end p-4 bg-gray-100 rounded-b-lg">
+              <button
+                onClick={downloadPDF}
+                className="px-3 py-1 bg-blue-500 text-white text-xs font-bold rounded hover:bg-blue-600 flex items-center"
+              >
+                <AiOutlineDownload className="mr-2" />
+                Download PDF
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {confirmAction && (
+        <div className="fixed inset-0 flex items-center justify-center z-50 bg-black bg-opacity-50">
+          <div className="bg-white rounded-lg shadow-lg p-6 max-w-sm">
+            <h3 className="text-lg font-semibold mb-4">Confirm Action</h3>
+            <p>Are you sure you want to {confirmAction.type} this user?</p>
+            <div className="flex justify-end mt-6 space-x-3">
+              <button
+                onClick={() => setConfirmAction(null)}
+                className="px-3 py-1 bg-gray-500 text-white text-xs font-bold rounded hover:bg-gray-600"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={confirmActionHandler}
+                disabled={confirmLoading}
+                className="px-3 py-1 bg-blue-500 text-white text-xs font-bold rounded hover:bg-blue-600"
+              >
+                {confirmLoading ? "Processing..." : "Confirm"}
               </button>
             </div>
           </div>
