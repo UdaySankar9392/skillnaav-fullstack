@@ -178,18 +178,14 @@ const UserLogin = () => {
             <hr className="w-full border-gray-300" />
           </div>
           {/* Google Sign-In Button */}
-          <button
-            style={{
-              background: "red",
-              color: "white",
-              borderRadius: "10px",
-              padding: "10px",
-            }}
-            onClick={() => login()}
-          >
-            Sign in with Google 🚀
-          </button>
 
+          <button
+            onClick={() => login()}
+            className="w-full bg-red-500 text-white p-3 rounded-lg hover:bg-red-600 mb-4 flex items-center justify-center space-x-2"
+          >
+            <FcGoogle className="h-5 w-5" /> {/* Google Icon */}
+            <span>Sign in with Google</span>
+          </button>
           <p className="text-center text-gray-500 mt-8">
             Don’t have an account?{" "}
             <Link

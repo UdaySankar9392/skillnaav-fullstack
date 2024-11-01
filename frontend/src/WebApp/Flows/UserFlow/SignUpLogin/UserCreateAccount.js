@@ -1,14 +1,14 @@
 import React, { useState } from "react";
 import { Formik, Form, Field, ErrorMessage } from "formik";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { account, googleOAuth } from "../../../../config";
 import * as Yup from "yup";
 import { EyeIcon, EyeSlashIcon } from "@heroicons/react/24/solid";
-import { Link } from "react-router-dom";
 import createAccountImage from "../../../../assets-webapp/login-image.png"; // Adjust the path if needed
 import GoogleIcon from "../../../../assets-webapp/Google-icon.png";
 import { FcGoogle } from "react-icons/fc";
-
+import { useGoogleLogin } from "@react-oauth/google";
+import axios from "axios";
 // Validation schema for Formik
 const validationSchema = Yup.object({
   name: Yup.string().required("Required"),
@@ -18,7 +18,10 @@ const validationSchema = Yup.object({
     .matches(/[A-Z]/, "Password must contain at least one uppercase letter")
     .matches(/[a-z]/, "Password must contain at least one lowercase letter")
     .matches(/[0-9]/, "Password must contain at least one number")
-    .matches(/[!@#$%^&*-_=+]/, "Password must contain at least one special character")
+    .matches(
+      /[!@#$%^&*-_=+]/,
+      "Password must contain at least one special character"
+    )
     .required("Required"),
   confirmPassword: Yup.string()
     .oneOf([Yup.ref("password"), null], "Passwords must match")
@@ -42,13 +45,32 @@ const UserCreateAccount = () => {
     setSubmitting(false);
   };
 
-  const handleGoogleSignIn = () => {
-    account.createOAuth2Session(
-      "google",
-      "http://localhost:3000/user-main-page",
-      "http://localhost:3000"
-    );
-  };
+  const login = useGoogleLogin({
+    onSuccess: async (tokenResponse) => {
+      try {
+        // Make a request to get user information from Google
+        const response = await axios.get(
+          "https://www.googleapis.com/oauth2/v3/userinfo",
+          {
+            headers: {
+              Authorization: `Bearer ${tokenResponse.access_token}`,
+            },
+          }
+        );
+
+        // Log or use the user information
+        console.log(response.data);
+
+        // Navigate to 'user-main-page' after successful authentication
+        navigate("/user-main-page");
+      } catch (error) {
+        console.error("Error fetching user info:", error);
+      }
+    },
+    onError: (error) => {
+      console.error("Login failed:", error);
+    },
+  });
 
   return (
     <div className="flex flex-col lg:flex-row min-h-screen font-poppins">
@@ -175,15 +197,19 @@ const UserCreateAccount = () => {
               </Form>
             )}
           </Formik>
-
+          <div className="flex items-center my-6">
+            <hr className="w-full border-gray-300" />
+            <span className="px-3 text-gray-500">OR</span>
+            <hr className="w-full border-gray-300" />
+          </div>
           <button
-            onClick={handleGoogleSignIn}
+            onClick={() => login()}
             className="w-full bg-red-500 text-white p-3 rounded-lg hover:bg-red-600 mb-4 flex items-center justify-center space-x-2"
           >
             <FcGoogle className="h-5 w-5" /> {/* Google Icon */}
-            <span>Sign up with Google</span>
+            <span>Sign in with Google</span>
           </button>
-          <p className="text-center text-gray-500 font-poppins font-medium text-base leading-6">
+          <p className="text-center text-gray-500 font-poppins font-medium text-base mt-8 leading-6">
             Already have an account?{" "}
             <Link to="/user/login" className="text-blue-500 hover:underline">
               Login
