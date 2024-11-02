@@ -9,6 +9,8 @@ const PartnerManagement = () => {
   const [selectedPartner, setSelectedPartner] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [confirmAction, setConfirmAction] = useState(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage] = useState(10);
 
   useEffect(() => {
     const fetchPartners = async () => {
@@ -85,6 +87,12 @@ const PartnerManagement = () => {
     doc.save(`${selectedPartner.universityName}_Details.pdf`);
   };
 
+  // Pagination logic
+  const indexOfLastPartner = currentPage * itemsPerPage;
+  const indexOfFirstPartner = indexOfLastPartner - itemsPerPage;
+  const currentPartners = partners.slice(indexOfFirstPartner, indexOfLastPartner);
+  const totalPages = Math.ceil(partners.length / itemsPerPage);
+
   if (loading) {
     return (
       <div className="flex justify-center items-center h-screen">
@@ -112,9 +120,9 @@ const PartnerManagement = () => {
             </tr>
           </thead>
           <tbody className="bg-white divide-y divide-gray-200">
-            {partners.map((partner, index) => (
+            {currentPartners.map((partner, index) => (
               <tr key={partner._id} className="hover:bg-gray-50 transition duration-200">
-                <td className="px-4 py-4 text-sm text-gray-700">{index + 1}</td>
+                <td className="px-4 py-4 text-sm text-gray-700">{indexOfFirstPartner + index + 1}</td>
                 <td className="px-6 py-4 text-sm font-medium text-gray-900">{partner.universityName}</td>
                 <td className="px-6 py-4 text-sm text-gray-700">{partner.email}</td>
                 <td className="px-6 py-4">
@@ -155,6 +163,27 @@ const PartnerManagement = () => {
         </table>
       </div>
 
+      {/* Pagination controls */}
+      <div className="flex justify-between items-center mt-4">
+        <button
+          className="px-4 py-2 bg-gray-300 text-gray-700 rounded hover:bg-gray-400"
+          onClick={() => setCurrentPage(currentPage > 1 ? currentPage - 1 : 1)}
+          disabled={currentPage === 1}
+        >
+          Previous
+        </button>
+        <span>
+          Page {currentPage} of {totalPages}
+        </span>
+        <button
+          className="px-4 py-2 bg-gray-300 text-gray-700 rounded hover:bg-gray-400"
+          onClick={() => setCurrentPage(currentPage < totalPages ? currentPage + 1 : totalPages)}
+          disabled={currentPage === totalPages}
+        >
+          Next
+        </button>
+      </div>
+
       {isModalOpen && selectedPartner && (
         <div className="fixed inset-0 flex items-center justify-center z-50 bg-black bg-opacity-50">
           <div className="bg-white rounded-lg shadow-lg w-full max-w-lg max-h-screen overflow-y-auto">
@@ -181,19 +210,30 @@ const PartnerManagement = () => {
                   className="border border-gray-300 rounded w-full px-3 py-2 mt-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
                 />
               </div>
-              <button
-                onClick={downloadPDF}
-                className="px-3 py-1 bg-green-500 text-white text-xs font-bold rounded hover:bg-green-600 transition duration-200 mt-4"
-              >
-                Download as PDF
-              </button>
+              <div>
+                <label className="block text-sm font-semibold text-gray-700">E-mail:</label>
+                <input
+                  type="email"
+                  value={selectedPartner.email || 'N/A'}
+                  readOnly
+                  className="border border-gray-300 rounded w-full px-3 py-2 mt-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-semibold text-gray-700">Status:</label>
+                <input
+                  type="text"
+                  value={selectedPartner.status || 'N/A'}
+                  readOnly
+                  className="border border-gray-300 rounded w-full px-3 py-2 mt-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
+                />
+              </div>
             </div>
-
-            <div className="flex justify-end p-4 bg-gray-100 rounded-b-lg space-x-2">
-              <button
-                className="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600 transition duration-200"
-                onClick={closeModal}
-              >
+            <div className="p-4 flex justify-between">
+              <button className="bg-blue-500 text-white px-4 py-2 rounded" onClick={downloadPDF}>
+                Download PDF
+              </button>
+              <button className="bg-gray-300 text-gray-700 px-4 py-2 rounded" onClick={closeModal}>
                 Close
               </button>
             </div>
@@ -203,22 +243,22 @@ const PartnerManagement = () => {
 
       {confirmAction && (
         <div className="fixed inset-0 flex items-center justify-center z-50 bg-black bg-opacity-50">
-          <div className="bg-white p-4 rounded-lg shadow-lg max-w-xs text-center">
-            <h3 className="text-lg font-semibold">Are you sure?</h3>
-            <p className="text-sm text-gray-600 my-3">
-              {confirmAction.type === "approve"
-                ? "Do you want to approve this partner?"
-                : "Do you want to reject this partner?"}
-            </p>
-            <div className="flex justify-center space-x-4">
+          <div className="bg-white rounded-lg shadow-lg w-full max-w-sm">
+            <div className="bg-red-500 p-4 rounded-t-lg">
+              <h3 className="text-xl font-bold text-white text-center">Confirm Action</h3>
+            </div>
+            <div className="p-6 text-center">
+              <p className="mb-4">
+                Are you sure you want to {confirmAction.type} this partner?
+              </p>
               <button
-                className="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600 transition duration-200"
+                className="bg-green-500 text-white px-4 py-2 rounded mr-2"
                 onClick={confirmActionHandler}
               >
                 Yes
               </button>
               <button
-                className="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600 transition duration-200"
+                className="bg-gray-300 text-gray-700 px-4 py-2 rounded"
                 onClick={() => setConfirmAction(null)}
               >
                 No

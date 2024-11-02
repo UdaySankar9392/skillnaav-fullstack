@@ -8,6 +8,10 @@ const ProfileForm = () => {
     email: "",
     password: "",
     confirmPassword: "",
+    universityName: "",
+    institutionId: "",
+    adminApproved: false,
+    active: false,
   });
   const [errorMessage, setErrorMessage] = useState(null);
   const [successMessage, setSuccessMessage] = useState("");
@@ -22,15 +26,19 @@ const ProfileForm = () => {
         email: userInfo.email || "",
         password: "",
         confirmPassword: "",
+        universityName: userInfo.universityName || "",
+        institutionId: userInfo.institutionId || "",
+        adminApproved: userInfo.adminApproved || false,
+        active: userInfo.active || false,
       });
     }
   }, []);
 
   const handleChange = (e) => {
-    const { name, value } = e.target;
+    const { name, value, type, checked } = e.target;
     setUser((prevUser) => ({
       ...prevUser,
-      [name]: value,
+      [name]: type === "checkbox" ? checked : value,
     }));
   };
 
@@ -65,12 +73,12 @@ const ProfileForm = () => {
         },
       };
 
-      const { data } = await axios.post("/api/users/profile", user, config);
+      const { data } = await axios.post("/api/partners/profile", user, config);
 
       if (data) {
         localStorage.setItem(
           "userInfo",
-          JSON.stringify({ name: data.name, email: data.email, token })
+          JSON.stringify({ ...user, token }) // Save additional fields here
         );
 
         setSuccessMessage("Profile updated successfully!");
@@ -86,6 +94,15 @@ const ProfileForm = () => {
       );
     }
   };
+
+  const inputFields = [
+    { label: "Full name", name: "name", type: "text", placeholder: "Enter your full name" },
+    { label: "Email Address", name: "email", type: "email", placeholder: "Enter your email address" },
+    { label: "University Name", name: "universityName", type: "text", placeholder: "Enter your university name" },
+    { label: "Institution ID", name: "institutionId", type: "text", placeholder: "Enter your institution ID" },
+    { label: "Password", name: "password", type: "password", placeholder: "Enter new password" },
+    { label: "Confirm Password", name: "confirmPassword", type: "password", placeholder: "Confirm new password" },
+  ];
 
   return (
     <div className="min-h-screen mt-12 bg-white-50 flex items-center justify-center font-poppins">
@@ -119,81 +136,24 @@ const ProfileForm = () => {
         </div>
 
         <form className="w-full">
-          <h2 className="text-2xl font-semibold mb-1 text-gray-800">
-            Your profile
-          </h2>
-          <p className="text-gray-500 mb-6">
-            Update your photo and personal details here.
-          </p>
+          <h2 className="text-2xl font-semibold mb-1 text-gray-800">Your profile</h2>
+          <p className="text-gray-500 mb-6">Update your photo and personal details here.</p>
 
           <div className="flex flex-wrap gap-6 mb-6">
-            <div className="flex flex-col flex-grow">
-              <label htmlFor="name" className="text-gray-700 font-medium mb-2">
-                Full name
-              </label>
-              <input
-                type="text"
-                id="name"
-                name="name"
-                value={user.name}
-                onChange={handleChange}
-                className="px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 w-full"
-                placeholder="Enter your full name"
-              />
-            </div>
-
-            <div className="flex flex-col flex-grow">
-              <label htmlFor="email" className="text-gray-700 font-medium mb-2">
-                Email Address
-              </label>
-              <input
-                type="email"
-                id="email"
-                name="email"
-                value={user.email}
-                onChange={handleChange}
-                className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500"
-                placeholder="Enter your email address"
-              />
-            </div>
-          </div>
-
-          <div className="flex flex-wrap gap-6 mb-6">
-            <div className="flex flex-col flex-grow">
-              <label
-                htmlFor="password"
-                className="text-gray-700 font-medium mb-2"
-              >
-                Password
-              </label>
-              <input
-                type="password"
-                id="password"
-                name="password"
-                value={user.password}
-                onChange={handleChange}
-                className="px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 w-full"
-                placeholder="Enter new password"
-              />
-            </div>
-
-            <div className="flex flex-col flex-grow">
-              <label
-                htmlFor="confirmPassword"
-                className="text-gray-700 font-medium mb-2"
-              >
-                Confirm Password
-              </label>
-              <input
-                type="password"
-                id="confirmPassword"
-                name="confirmPassword"
-                value={user.confirmPassword}
-                onChange={handleChange}
-                className="px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 w-full"
-                placeholder="Confirm new password"
-              />
-            </div>
+            {inputFields.map((field, index) => (
+              <div key={index} className="flex flex-col flex-grow">
+                <label htmlFor={field.name} className="text-gray-700 font-medium mb-2">{field.label}</label>
+                <input
+                  type={field.type}
+                  id={field.name}
+                  name={field.name}
+                  value={user[field.name]}
+                  onChange={handleChange}
+                  className="px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 w-full"
+                  placeholder={field.placeholder}
+                />
+              </div>
+            ))}
           </div>
 
           {errorMessage && (
