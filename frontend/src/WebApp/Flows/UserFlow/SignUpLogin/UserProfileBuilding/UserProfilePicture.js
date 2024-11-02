@@ -24,8 +24,8 @@ const UserProfilePicture = () => {
       ...formData,
     };
 
-    // Validate all required fields
-    if (!completeProfileData.name || !completeProfileData.email || !completeProfileData.universityName || !completeProfileData.dob || !completeProfileData.educationLevel || !completeProfileData.fieldOfStudy || !completeProfileData.desiredField || !completeProfileData.linkedin || !completeProfileData.portfolio) {
+    // Validate all required fields except portfolio
+    if (!completeProfileData.name || !completeProfileData.email || !completeProfileData.universityName || !completeProfileData.dob || !completeProfileData.educationLevel || !completeProfileData.fieldOfStudy || !completeProfileData.desiredField || !completeProfileData.linkedin) {
       alert("Please fill all required fields.");
       return;
     }
@@ -44,7 +44,7 @@ const UserProfilePicture = () => {
   };
 
   const isFormValid = () => {
-    return Object.values(formData).every(field => field !== null && field !== "");
+    return formData.desiredField && formData.linkedin;
   };
 
   return (
@@ -93,24 +93,30 @@ const UserProfilePicture = () => {
               />
             </div>
 
-            {/* Portfolio Website Input */}
+            {/* Portfolio Website Input (Optional) */}
             <div>
-              <label htmlFor="portfolio" className="block text-sm font-medium text-gray-700">Portfolio Website</label>
+              <label htmlFor="portfolio" className="block text-sm font-medium text-gray-700">Portfolio Website (Optional)</label>
               <input
                 id="portfolio"
                 type="text"
                 name="portfolio"
                 value={formData.portfolio}
                 onChange={handleChange}
-                required
                 className="mt-2 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-purple-500 focus:border-purple-500"
                 placeholder="Enter your Portfolio URL"
               />
             </div>
           </div>
 
-          {/* Submit Button */}
-          <div className="flex space-x-4">
+          {/* Button Section with Back and Submit Buttons */}
+          <div className="flex justify-between space-x-4">
+            <button
+              type="button"
+              onClick={() => navigate(-1)}
+              className="w-full py-2 px-4 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500"
+            >
+              Back
+            </button>
             <button
               type="button"
               onClick={handleSubmit}

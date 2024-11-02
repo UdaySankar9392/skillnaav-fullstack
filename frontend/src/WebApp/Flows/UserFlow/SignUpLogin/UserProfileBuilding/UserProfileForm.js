@@ -3,6 +3,20 @@ import { useNavigate, useLocation } from "react-router-dom";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 
+const universitySuggestions = [
+  "Harvard University",
+  "Stanford University",
+  "Massachusetts Institute of Technology",
+  "University of Oxford",
+  "University of Cambridge",
+  "California Institute of Technology",
+  "Princeton University",
+  "Yale University",
+  "University of Chicago",
+  "Imperial College London",
+  // Add more universities as needed
+];
+
 const UserProfileForm = () => {
   const location = useLocation();
   const userData = location.state?.userData || {}; // Access user data
@@ -12,20 +26,17 @@ const UserProfileForm = () => {
     dob: null, // dob will be a Date object
     educationLevel: "",
     fieldOfStudy: "",
-    ...userData // Initialize formData with userData if available
+    ...userData, // Initialize formData with userData if available
   });
 
+  const [filteredSuggestions, setFilteredSuggestions] = useState([]);
   const [isFormValid, setIsFormValid] = useState(false);
   const navigate = useNavigate();
 
   // Validate form on every change
   useEffect(() => {
     const { universityName, dob, educationLevel, fieldOfStudy } = formData;
-    if (universityName && dob && educationLevel && fieldOfStudy) {
-      setIsFormValid(true);
-    } else {
-      setIsFormValid(false);
-    }
+    setIsFormValid(universityName && dob && educationLevel && fieldOfStudy);
   }, [formData]);
 
   const handleChange = (e) => {
@@ -34,6 +45,13 @@ const UserProfileForm = () => {
       ...prevData,
       [name]: value,
     }));
+
+    if (name === "universityName") {
+      const suggestions = universitySuggestions.filter((university) =>
+        university.toLowerCase().includes(value.toLowerCase())
+      );
+      setFilteredSuggestions(suggestions);
+    }
   };
 
   const handleDateChange = (date) => {
@@ -50,6 +68,14 @@ const UserProfileForm = () => {
     }
   };
 
+  const handleSuggestionClick = (suggestion) => {
+    setFormData((prevData) => ({
+      ...prevData,
+      universityName: suggestion,
+    }));
+    setFilteredSuggestions([]);
+  };
+
   return (
     <div className="flex justify-center items-center min-h-screen bg-gray-100 font-poppins">
       <div className="w-full max-w-xl p-8 space-y-6 bg-white shadow-md rounded-lg">
@@ -57,7 +83,7 @@ const UserProfileForm = () => {
           <div className="w-full h-12 p-3 bg-[#F9F0FF] border-b border-[#E6C4FB]">
             <h2 className="text-16px font-bold text-gray-700">BASIC INFORMATION</h2>
           </div>
-          <div>
+          <div className="relative">
             <label htmlFor="universityName" className="block text-sm font-medium text-gray-700">
               University Name
             </label>
@@ -67,10 +93,23 @@ const UserProfileForm = () => {
               name="universityName"
               value={formData.universityName}
               onChange={handleChange}
-              className={`mt-1 block w-full px-3 py-2 border ${formData.universityName ? "border-gray-300" : "border-gray-200"
-                } rounded-md shadow-sm focus:outline-none focus:ring-purple-500 focus:border-purple-500`}
+              className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-purple-500 focus:border-purple-500"
               placeholder="Enter your University Name"
+              autoComplete="off"
             />
+            {filteredSuggestions.length > 0 && (
+              <ul className="absolute z-10 w-full bg-white border border-gray-300 rounded-md shadow-lg mt-1 max-h-40 overflow-y-auto">
+                {filteredSuggestions.map((suggestion, index) => (
+                  <li
+                    key={index}
+                    onClick={() => handleSuggestionClick(suggestion)}
+                    className="cursor-pointer px-4 py-2 hover:bg-purple-100"
+                  >
+                    {suggestion}
+                  </li>
+                ))}
+              </ul>
+            )}
           </div>
           <div>
             <label htmlFor="dob" className="block text-sm font-medium text-gray-700">
@@ -79,16 +118,15 @@ const UserProfileForm = () => {
             <DatePicker
               selected={formData.dob}
               onChange={handleDateChange}
-              dateFormat="dd/MM/yyyy" // Set format to dd/MM/yyyy
-              maxDate={new Date()} // Restrict to past dates
+              dateFormat="dd/MM/yyyy"
+              maxDate={new Date()}
               showYearDropdown
               showMonthDropdown
               dropdownMode="select"
-              placeholderText="DD/MM/YYYY" // Updated placeholder
+              placeholderText="DD/MM/YYYY"
               className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-purple-500 focus:border-purple-500"
             />
           </div>
-
         </div>
 
         <div className="space-y-4">
@@ -96,9 +134,7 @@ const UserProfileForm = () => {
             <h2 className="text-16px font-bold text-gray-700">EDUCATIONAL INFORMATION</h2>
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700">
-              Current level of education
-            </label>
+            <label className="block text-sm font-medium text-gray-700">Current level of education</label>
             <div className="mt-2 space-y-2">
               <div className="flex items-center">
                 <input
@@ -110,9 +146,7 @@ const UserProfileForm = () => {
                   onChange={handleChange}
                   className="h-4 w-4 text-purple-600 border-gray-300 focus:ring-purple-500"
                 />
-                <label htmlFor="highschool" className="ml-3 block text-sm text-gray-700">
-                  Highschool
-                </label>
+                <label htmlFor="highschool" className="ml-3 mt-4 block text-sm text-gray-700">Highschool</label>
               </div>
               <div className="flex items-center">
                 <input
@@ -124,9 +158,7 @@ const UserProfileForm = () => {
                   onChange={handleChange}
                   className="h-4 w-4 text-purple-600 border-gray-300 focus:ring-purple-500"
                 />
-                <label htmlFor="undergraduate" className="ml-3 block text-sm text-gray-700">
-                  Undergraduate
-                </label>
+                <label htmlFor="undergraduate" className="ml-3 mt-4 block text-sm text-gray-700">Undergraduate</label>
               </div>
               <div className="flex items-center">
                 <input
@@ -138,9 +170,7 @@ const UserProfileForm = () => {
                   onChange={handleChange}
                   className="h-4 w-4 text-purple-600 border-gray-300 focus:ring-purple-500"
                 />
-                <label htmlFor="graduate" className="ml-3 block text-sm text-gray-700">
-                  Graduate
-                </label>
+                <label htmlFor="graduate" className="ml-3 mt-4 block text-sm text-gray-700">Graduate</label>
               </div>
             </div>
           </div>
@@ -153,8 +183,7 @@ const UserProfileForm = () => {
               name="fieldOfStudy"
               value={formData.fieldOfStudy}
               onChange={handleChange}
-              className={`mt-2 block w-full px-3 py-2 border ${formData.fieldOfStudy ? "border-gray-300" : "border-gray-200"
-                } bg-white rounded-md shadow-sm focus:outline-none focus:ring-purple-500 focus:border-purple-500`}
+              className="mt-2 block w-full px-3 py-2 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-purple-500 focus:border-purple-500"
             >
               <option value="">Select Your Field</option>
               <option value="space">Space Internships</option>
@@ -171,8 +200,7 @@ const UserProfileForm = () => {
             type="button"
             onClick={handleSubmit}
             disabled={!isFormValid}
-            className={`w-full py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white ${isFormValid ? "bg-purple-600 hover:bg-purple-700" : "bg-purple-300 cursor-not-allowed"
-              } focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500`}
+            className={`w-full py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white ${isFormValid ? "bg-purple-600 hover:bg-purple-700" : "bg-purple-300 cursor-not-allowed"} focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500`}
           >
             Continue
           </button>
