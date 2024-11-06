@@ -5,7 +5,7 @@ import { useNavigate } from "react-router-dom";
 import { EyeIcon, EyeSlashIcon } from "@heroicons/react/24/solid";
 import { Link } from "react-router-dom";
 import partner2Image from "../../../../assets-webapp/partner2_img.jpg";
-
+import axios from 'axios';
 // Validation schema for Formik
 const validationSchema = Yup.object({
   name: Yup.string().required("Required"),
@@ -31,19 +31,28 @@ const PartnerCreateAccount = () => {
   // Function to handle form submission
   const handleSubmit = async (values, { setSubmitting }) => {
     try {
+      // Check if the email is already registered
+      const response = await axios.post('/api/partners/check-email', { email: values.email.trim() });
+  
+      if (response.data.exists) {
+        // If the email exists, set an error message
+        setErrorMessage("Partner already registered.");
+        setSubmitting(false);
+        return; // Stop further execution
+      }
+  
+      // Proceed with registration if email is not registered
       console.log("User Data Submitted:", values); // Log user data to console
-
-      // Simulate successful registration (you'll replace this with your actual API call)
-      // Here is where you would normally call your API, e.g.:
-      // const response = await axios.post("your-api-url/register", values);
-
+  
+      
+  
       // Store the form data in localStorage
       localStorage.setItem("userInfo", JSON.stringify(values));
-
+  
       // Navigate to the profile picture page
       navigate("/partner-profile-picture", { state: { userData: values } });
     } catch (error) {
-      setErrorMessage("Error registering user. Please try again.");
+      setErrorMessage("Partner already registered");
     }
     setSubmitting(false);
   };
