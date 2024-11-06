@@ -6,6 +6,23 @@ const notifyUser = require("../utils/notifyUser"); // Import the notifyUser func
 // Helper function to check required fields
 const areFieldsFilled = (fields) => fields.every((field) => field);
 
+// Check if email exists
+const checkEmailExists = asyncHandler(async (req, res) => {
+  const { email } = req.body;
+
+  // Check if the email is provided
+  if (!email) {
+    res.status(400);
+    throw new Error("Email is required.");
+  }
+
+  // Check if a partner with this email already exists
+  const partnerExists = await Partnerwebapp.findOne({ email });
+
+  // Respond with whether the email exists
+  res.json({ exists: !!partnerExists });
+});
+
 // Register a new partner
 const registerPartner = asyncHandler(async (req, res) => {
   console.log("Request Body:", req.body); // Log the request body
@@ -40,12 +57,7 @@ const registerPartner = asyncHandler(async (req, res) => {
     throw new Error("Passwords do not match.");
   }
 
-  // Check if the partner already exists
-  const partnerExists = await Partnerwebapp.findOne({ email });
-  if (partnerExists) {
-    res.status(400);
-    throw new Error("Partner already exists");
-  }
+  
 
   // Create new partner
   const partner = await Partnerwebapp.create({
@@ -208,4 +220,5 @@ module.exports = {
   getAllPartners,
   approvePartner,
   rejectPartner,
+  checkEmailExists,
 };

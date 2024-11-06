@@ -108,6 +108,7 @@ const authUser = asyncHandler(async (req, res) => {
         desiredField: user.desiredField,
         linkedin: user.linkedin,
         portfolio: user.portfolio,
+        adminApproved:user.adminApproved,
         token: generateToken(user._id), // Generate token here
       });
     } else {
