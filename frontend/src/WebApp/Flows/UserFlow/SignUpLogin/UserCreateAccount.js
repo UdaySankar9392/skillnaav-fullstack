@@ -8,6 +8,7 @@ import { Link } from "react-router-dom";
 import createAccountImage from "../../../../assets-webapp/login-image.png"; // Adjust the path if needed
 import GoogleIcon from "../../../../assets-webapp/Google-icon.png";
 import { FcGoogle } from "react-icons/fc";
+import axios from "axios";
 
 // Validation schema for Formik
 const validationSchema = Yup.object({
@@ -31,16 +32,21 @@ const UserCreateAccount = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
-  const handleSubmit = (values, { setSubmitting }) => {
-    try {
-      console.log("User Data Submitted:", values);
-      navigate("/user-profile-form", { state: { userData: values } });
-      localStorage.setItem("userInfo", JSON.stringify(values));
-    } catch (error) {
-      setErrorMessage("Error registering user. Please try again.");
+  const handleSubmit= async(values,{setSubmitting}) => {
+    try{
+        // Check if the email already exists before proceeding.
+        const response= await axios.get(`/api/users/check-email?email=${values.email}`);
+        if(response.data.exists){
+            setErrorMessage("Email already registered.");
+            setSubmitting(false);
+            return; 
+        }
+        navigate("/user-profile-form", { state:{userData : values}});
+    }catch(error){
+        setErrorMessage("email already existing.");
     }
     setSubmitting(false);
-  };
+};
 
   const handleGoogleSignIn = () => {
     account.createOAuth2Session(

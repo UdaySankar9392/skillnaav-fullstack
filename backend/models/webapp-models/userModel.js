@@ -43,7 +43,7 @@ const userwebappSchema = new mongoose.Schema(
     },
     portfolio: {
       type: String,
-      required: true,
+      required: false,
     },
     adminApproved: {
       type: Boolean,

@@ -6,6 +6,14 @@ const notifyUser = require("../utils/notifyUser"); // Import the notifyUser func
 // Helper function to check required fields
 const areFieldsFilled = (fields) => fields.every((field) => field);
 
+// Check if user exists by email
+const checkIfUserExists = asyncHandler(async (req, res) => {
+  const { email } = req.query; // Get email from query parameters
+  const userExists = await Userwebapp.findOne({ email });
+  
+  res.json({ exists: !!userExists }); // Respond with true or false
+});
+
 // Register a new user
 const registerUser = asyncHandler(async (req, res) => {
   console.log('Request Body:', req.body); // Log the request body
@@ -21,11 +29,11 @@ const registerUser = asyncHandler(async (req, res) => {
     fieldOfStudy,
     desiredField,
     linkedin,
-    portfolio,
+    portfolio, // Portfolio is no longer a required field
   } = req.body;
 
-  // Check for required fields
-  if (!areFieldsFilled([name, email, password, confirmPassword, universityName, dob, educationLevel, fieldOfStudy, desiredField, linkedin, portfolio])) {
+  // Check for required fields (excluding portfolio)
+  if (!areFieldsFilled([name, email, password, confirmPassword, universityName, dob, educationLevel, fieldOfStudy, desiredField, linkedin])) {
     res.status(400);
     throw new Error("Please fill all required fields.");
   }
@@ -54,7 +62,7 @@ const registerUser = asyncHandler(async (req, res) => {
     fieldOfStudy,
     desiredField,
     linkedin,
-    portfolio,
+    portfolio, // Portfolio is now optional
     adminApproved: false, // Default to false
   });
 
@@ -69,7 +77,7 @@ const registerUser = asyncHandler(async (req, res) => {
       fieldOfStudy: user.fieldOfStudy,
       desiredField: user.desiredField,
       linkedin: user.linkedin,
-      portfolio: user.portfolio,
+      portfolio: user.portfolio, // Portfolio is included if provided
       token: generateToken(user._id), // Generate token
       adminApproved: user.adminApproved, // Include admin approval status
     });
@@ -78,6 +86,7 @@ const registerUser = asyncHandler(async (req, res) => {
     throw new Error("Error occurred while registering user.");
   }
 });
+
 
 // Authenticate user (login)
 const authUser = asyncHandler(async (req, res) => {
@@ -130,8 +139,11 @@ const updateUserProfile = asyncHandler(async (req, res) => {
   user.fieldOfStudy = req.body.fieldOfStudy || user.fieldOfStudy;
   user.desiredField = req.body.desiredField || user.desiredField;
   user.linkedin = req.body.linkedin || user.linkedin;
+
+  // Only update portfolio if provided
   user.portfolio = req.body.portfolio || user.portfolio;
 
+  // Update password if provided
   if (req.body.password) {
     user.password = req.body.password;
   }
@@ -148,10 +160,11 @@ const updateUserProfile = asyncHandler(async (req, res) => {
     fieldOfStudy: updatedUser.fieldOfStudy,
     desiredField: updatedUser.desiredField,
     linkedin: updatedUser.linkedin,
-    portfolio: updatedUser.portfolio,
+    portfolio: updatedUser.portfolio, // Portfolio included if provided
     token: generateToken(updatedUser._id), // Regenerate token
   });
 });
+
 
 // Get all users with additional fields
 const getAllUsers = asyncHandler(async (req, res) => {
@@ -214,7 +227,7 @@ const rejectUser = asyncHandler(async (req, res) => {
   res.status(200).json({ message: "User rejected successfully." });
 });
 
-module.exports = { registerUser, authUser, updateUserProfile, getAllUsers, approveUser, rejectUser };
+module.exports = { registerUser, authUser, updateUserProfile, getAllUsers, approveUser, rejectUser, checkIfUserExists };
 
 
 

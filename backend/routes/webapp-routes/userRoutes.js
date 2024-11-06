@@ -7,6 +7,7 @@ const {
   getAllUsers,
   approveUser,
   rejectUser,
+  checkIfUserExists,
 } = require("../../controllers/userController");
 const { protect } = require("../../middlewares/authMiddleware");
 
@@ -16,5 +17,6 @@ router.post("/profile", protect, updateUserProfile); // Protected route to updat
 router.get("/users", getAllUsers); // Get all users route
 router.patch("/approve/:userId", approveUser); // Approve user by ID, add protect middleware if needed
 router.patch("/reject/:userId", rejectUser);
+router.get('/check-email', checkIfUserExists); 
 
 module.exports = router;
