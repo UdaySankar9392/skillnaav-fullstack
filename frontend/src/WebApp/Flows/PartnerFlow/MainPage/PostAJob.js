@@ -10,26 +10,25 @@ const PostAJob = () => {
   const [formData, setFormData] = useState({
     jobTitle: "",
     companyName: "",
-    location: "",
+    city: "",
+    country: "",
     jobType: "Internship",
     jobDescription: "",
     startDate: "",
     endDateOrDuration: "",
+    duration: "",
     stipendOrSalary: "",
     qualifications: "",
-    // preferredExperience: "None",
-    // applicationDeadline: "",
-    // applicationProcess: "",
     contactInfo: {
       name: "",
       email: "",
       phone: "",
     },
-    // applicationLinkOrEmail: "",
     imgUrl: "",
     studentApplied: false,
     adminApproved: false,
   });
+
 
   const [uploading, setUploading] = useState(false);
   const [previewUrl, setPreviewUrl] = useState(null);
@@ -65,6 +64,7 @@ const PostAJob = () => {
       endDateOrDuration: "",
       stipendOrSalary: "",
       qualifications: "",
+      duration: "",
       // preferredExperience: "None",
       // applicationDeadline: "",
       // applicationProcess: "",
@@ -83,12 +83,15 @@ const PostAJob = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!formData.imgUrl) {
-      alert("Please upload an image for the job post.");
-      return;
-    }
+
+    const completeFormData = {
+      ...formData,
+      location: `${formData.city}, ${formData.country}`, // Combine city and country
+    };
+
+    // Proceed with the post request using completeFormData
     try {
-      const response = await axios.post("/api/interns", formData);
+      const response = await axios.post("/api/interns", completeFormData);
       console.log("Internship posted successfully:", response.data);
       saveJob(response.data);
       resetForm();
@@ -96,7 +99,7 @@ const PostAJob = () => {
       console.error("Error posting internship:", error.response?.data || error.message);
     }
   };
-  
+
   const handleFileUpload = async (event) => {
     const selectedFile = event.target.files[0];
     if (!selectedFile) {
@@ -132,9 +135,9 @@ const PostAJob = () => {
         {Object.entries({
           jobTitle: "Job Title",
           companyName: "Company Name",
-          location: "Location",
+          // location: "Location",
           jobType: "Job Type",
-          stipendOrSalary: "Stipend or Salary",
+          // stipendOrSalary: "Stipend or Salary",
           qualifications: "Qualifications",
         }).map(([key, label]) => (
           <div key={key}>
@@ -159,18 +162,46 @@ const PostAJob = () => {
                 type="text"
                 name={key}
                 value={formData[key]}
-                onChange={
-                  key === "qualifications"
-                    ? handleQualificationsChange
-                    : handleChange
-                }
+                onChange={(e) => {
+                  // Allow spaces and update the state
+                  const updatedValue = e.target.value;
+                  setFormData((prev) => ({ ...prev, [key]: updatedValue }));
+                }}
                 className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring focus:ring-teal-500"
                 placeholder={`Enter ${label.toLowerCase()}`}
                 required
               />
+
             )}
           </div>
         ))}
+        <div>
+          <label className="block text-gray-700 font-medium mb-2">City</label>
+          <input
+            type="text"
+            name="city"
+            value={formData.city}
+            onChange={handleChange}
+            className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring focus:ring-teal-500"
+            placeholder="Enter city"
+            required
+          />
+        </div>
+
+        <div>
+          <label className="block text-gray-700 font-medium mb-2">Country</label>
+          <input
+            type="text"
+            name="country"
+            value={formData.country}
+            onChange={handleChange}
+            className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring focus:ring-teal-500"
+            placeholder="Enter country"
+            required
+          />
+        </div>
+
+
 
         {/* Job Description with Scrollable Textarea */}
         <div>
@@ -233,6 +264,18 @@ const PostAJob = () => {
             onChange={handleChange}
             className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring focus:ring-teal-500"
             required
+          />
+        </div>
+
+        <div>
+          <label className="block text-gray-700 font-medium mb-2">Duration</label>
+          <input
+            type="text"
+            name="duration"
+            value={formData.duration}
+            onChange={handleChange}
+            className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring focus:ring-teal-500"
+            placeholder="Enter duration (e.g., 6 months)"
           />
         </div>
 
