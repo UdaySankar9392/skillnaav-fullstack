@@ -9,7 +9,8 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faEye, faEyeSlash } from "@fortawesome/free-solid-svg-icons";
 import { Client, Account } from "appwrite";
 import { FcGoogle } from "react-icons/fc";
-
+import { useGoogleLogin } from "@react-oauth/google";
+import { googleAuth } from "../../../../api";
 const client = new Client();
 client
   .setEndpoint("https://cloud.appwrite.io/v1") // Replace with your Appwrite endpoint
@@ -71,11 +72,46 @@ const UserLogin = () => {
       togglePassword: true,
     },
   ];
+  const responseGoogle = async (authResult) => {
+    try {
+      console.log("Auth Result:", authResult);
+
+      // Ensure authResult contains a code
+      if (authResult["code"]) {
+        // Pass the code to your backend to exchange it for an access token
+        const result = await googleAuth(authResult["code"]);
+        console.log("Google Auth Result:", result);
+
+        // Check if the user data is available in the response
+        if (result && result.user) {
+          const { email, name, image } = result.user; // Access user data directly
+          const token = result.token; // Access token as well
+          const obj = { email, name, image, token };
+          localStorage.setItem("user-info", JSON.stringify(obj));
+          console.log("User Info:", { email, name, image });
+
+          // Redirect after successful login
+          navigate("/user-main-page");
+        } else {
+          console.error("User data is not available in the response.");
+        }
+      }
+    } catch (err) {
+      console.error("Error while requesting google code:", err);
+    }
+  };
+
+  const googleLogin = useGoogleLogin({
+    onSuccess: responseGoogle,
+    onError: responseGoogle,
+    flow: "auth-code",
+  });
 
   // Social login options
   const socialLogins = [
     {
-      onClick: handleGoogleSignIn,
+      // onClick: handleGoogleSignIn,
+      onClick: googleLogin,
       label: "Sign in with Google",
       icon: <FcGoogle className="h-5 w-5" />,
       bgColor: "bg-red-500",
