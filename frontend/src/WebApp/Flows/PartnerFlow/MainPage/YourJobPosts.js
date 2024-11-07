@@ -166,7 +166,7 @@ const YourJobPosts = () => {
               <strong>Location:</strong> {internship.location}
             </p>
             <p className="mb-1">
-              <strong>Stipend/Salary:</strong> {internship.stipendOrSalary}
+              <strong>Stipend/Salary:</strong> {internship.salaryDetails}
             </p>
             <p className="mb-1">
               <strong>Duration:</strong> {internship.duration}

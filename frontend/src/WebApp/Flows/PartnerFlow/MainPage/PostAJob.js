@@ -16,8 +16,10 @@ const PostAJob = () => {
     jobDescription: "",
     startDate: "",
     endDateOrDuration: "",
-    duration: "",
+    duration: "", // Duration (if needed)
     stipendOrSalary: "",
+    currency: "", // Default value
+    time: "", // Default value
     qualifications: "",
     contactInfo: {
       name: "",
@@ -28,7 +30,6 @@ const PostAJob = () => {
     studentApplied: false,
     adminApproved: false,
   });
-
 
   const [uploading, setUploading] = useState(false);
   const [previewUrl, setPreviewUrl] = useState(null);
@@ -62,18 +63,15 @@ const PostAJob = () => {
       jobDescription: "",
       startDate: "",
       endDateOrDuration: "",
-      stipendOrSalary: "",
+      salaryDetails: "",
       qualifications: "",
-      duration: "",
-      // preferredExperience: "None",
-      // applicationDeadline: "",
-      // applicationProcess: "",
+      
+      time: "",
       contactInfo: {
         name: "",
         email: "",
         phone: "",
       },
-      // applicationLinkOrEmail: "",
       imgUrl: "",
       studentApplied: false,
       adminApproved: false,
@@ -87,6 +85,8 @@ const PostAJob = () => {
     const completeFormData = {
       ...formData,
       location: `${formData.city}, ${formData.country}`, // Combine city and country
+      salaryDetails: `${formData.stipendOrSalary} ${formData.currency} (${formData.time})`, // Combine stipend, currency, and time
+      jobDuration: formData.duration || "N/A", // Use "N/A" if duration is not provided
     };
 
     // Proceed with the post request using completeFormData
@@ -135,9 +135,6 @@ const PostAJob = () => {
         {Object.entries({
           jobTitle: "Job Title",
           companyName: "Company Name",
-          // location: "Location",
-          jobType: "Job Type",
-          // stipendOrSalary: "Stipend or Salary",
           qualifications: "Qualifications",
         }).map(([key, label]) => (
           <div key={key}>
@@ -162,19 +159,102 @@ const PostAJob = () => {
                 type="text"
                 name={key}
                 value={formData[key]}
-                onChange={(e) => {
-                  // Allow spaces and update the state
-                  const updatedValue = e.target.value;
-                  setFormData((prev) => ({ ...prev, [key]: updatedValue }));
-                }}
+                onChange={handleChange}
                 className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring focus:ring-teal-500"
                 placeholder={`Enter ${label.toLowerCase()}`}
                 required
               />
-
             )}
           </div>
         ))}
+        
+        {/* Salary (Stipend), Currency, and Time Dropdowns */}
+        <div>
+          <label className="block text-gray-700 font-medium mb-2">Stipend/Salary</label>
+          <input
+            type="text"
+            name="stipendOrSalary"
+            value={formData.stipendOrSalary}
+            onChange={handleChange}
+            className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring focus:ring-teal-500"
+            placeholder="Enter stipend or salary"
+            required
+          />
+        </div>
+
+        <div>
+          <label className="block text-gray-700 font-medium mb-2">Currency</label>
+          <select
+            name="currency"
+            value={formData.currency}
+            onChange={handleChange}
+            className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring focus:ring-teal-500"
+            required
+          >
+            <option value="USD">USD</option>
+            <option value="EUR">EUR</option>
+            <option value="INR">INR</option>
+            <option value="GBP">GBP</option>
+            {/* Add more options as needed */}
+          </select>
+        </div>
+
+        <div>
+          <label className="block text-gray-700 font-medium mb-2">Time (Hourly/Monthly)</label>
+          <select
+            name="time"
+            value={formData.time}
+            onChange={handleChange}
+            className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring focus:ring-teal-500"
+            required
+          >
+            <option value="Hourly">Per Hour</option>
+            <option value="day">per Day</option>
+            <option value="Monthly">per Month</option>
+            <option value="week">per Week</option>
+          </select>
+        </div>
+
+        {/* Start Date and End Date */}
+        <div>
+          <label className="block text-gray-700 font-medium mb-2">Start Date</label>
+          <input
+            type="date"
+            name="startDate"
+            value={formData.startDate}
+            onChange={handleChange}
+            className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring focus:ring-teal-500"
+            required
+          />
+        </div>
+
+        <div>
+          <label className="block text-gray-700 font-medium mb-2">End Date</label>
+          <input
+            type="date"
+            name="endDateOrDuration"
+            value={formData.endDateOrDuration}
+            onChange={handleChange}
+            className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring focus:ring-teal-500"
+            required
+          />
+        </div>
+
+        {/* Duration */}
+        <div>
+          <label className="block text-gray-700 font-medium mb-2">Duration</label>
+          <input
+            type="text"
+            name="duration"
+            value={formData.duration}
+            onChange={handleChange}
+            className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring focus:ring-teal-500"
+            placeholder="Enter duration (e.g., 6 months)"
+            required
+          />
+        </div>
+
+        {/* City and Country */}
         <div>
           <label className="block text-gray-700 font-medium mb-2">City</label>
           <input
@@ -187,7 +267,6 @@ const PostAJob = () => {
             required
           />
         </div>
-
         <div>
           <label className="block text-gray-700 font-medium mb-2">Country</label>
           <input
@@ -201,10 +280,8 @@ const PostAJob = () => {
           />
         </div>
 
-
-
-        {/* Job Description with Scrollable Textarea */}
-        <div>
+                {/* Job Description with Scrollable Textarea */}
+                <div>
           <label className="block text-gray-700 font-medium mb-2">Job Description</label>
           <textarea
             name="jobDescription"
@@ -222,105 +299,59 @@ const PostAJob = () => {
           />
         </div>
 
-        {/* Preferred Experience Dropdown
-        <div>
-          <label className="block text-gray-700 font-medium mb-2">
-            Preferred Experience
-          </label>
-          <select
-            name="preferredExperience"
-            value={formData.preferredExperience}
-            onChange={handleChange}
-            className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring focus:ring-teal-500"
-          >
-            <option value="None">None</option>
-            <option value="1-2 years">1-2 years</option>
-            <option value="3-5 years">3-5 years</option>
-            <option value="5+ years">5+ years</option>
-          </select>
-        </div> */}
-
-        {/* Date Pickers */}
-        <div>
-          <label className="block text-gray-700 font-medium mb-2">Start Date</label>
-          <input
-            type="date"
-            name="startDate"
-            value={formData.startDate}
-            onChange={handleChange}
-            className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring focus:ring-teal-500"
-            required
-          />
-        </div>
-
-        <div>
-          <label className="block text-gray-700 font-medium mb-2">
-            End Date or Duration
-          </label>
-          <input
-            type="date"
-            name="endDateOrDuration"
-            value={formData.endDateOrDuration}
-            onChange={handleChange}
-            className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring focus:ring-teal-500"
-            required
-          />
-        </div>
-
-        <div>
-          <label className="block text-gray-700 font-medium mb-2">Duration</label>
-          <input
-            type="text"
-            name="duration"
-            value={formData.duration}
-            onChange={handleChange}
-            className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring focus:ring-teal-500"
-            placeholder="Enter duration (e.g., 6 months)"
-          />
-        </div>
-
         {/* Contact Info */}
         <div>
-          <label className="block text-gray-700 font-medium mb-2">
-            Contact Information
-          </label>
-          {Object.entries(formData.contactInfo).map(([field, value]) => (
-            <input
-              key={field}
-              type={field === "email" ? "email" : "text"}
-              name={`contactInfo.${field}`}
-              value={value}
-              onChange={handleChange}
-              className="w-full mt-2 p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring focus:ring-teal-500"
-              placeholder={`Enter contact ${field}`}
-              required={field === "name" || field === "email"}
-            />
-          ))}
+          <label className="block text-gray-700 font-medium mb-2">Contact Info</label>
+          <input
+            type="text"
+            name="contactInfo.name"
+            value={formData.contactInfo.name}
+            onChange={handleChange}
+            className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring focus:ring-teal-500"
+            placeholder="Enter name"
+            required
+          />
+          <input
+            type="email"
+            name="contactInfo.email"
+            value={formData.contactInfo.email}
+            onChange={handleChange}
+            className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring focus:ring-teal-500"
+            placeholder="Enter email"
+            required
+          />
+          <input
+            type="tel"
+            name="contactInfo.phone"
+            value={formData.contactInfo.phone}
+            onChange={handleChange}
+            className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring focus:ring-teal-500"
+            placeholder="Enter phone number"
+            required
+          />
         </div>
 
         {/* Image Upload */}
         <div>
-          <label className="block text-gray-700 font-medium mb-2">
-            Image Upload
-          </label>
+          <label className="block text-gray-700 font-medium mb-2">Upload Logo/Image</label>
           <input
             type="file"
-            accept="image/*"
             onChange={handleFileUpload}
             className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring focus:ring-teal-500"
+            required
           />
-          {uploading && <p className="text-gray-500">Uploading...</p>}
-          {previewUrl && (
-            <img src={previewUrl} alt="Preview" className="mt-2 rounded" />
-          )}
         </div>
 
-        <button
-          type="submit"
-          className="w-full p-3 bg-teal-500 text-white rounded-lg hover:bg-teal-600"
-        >
-          Post Job
-        </button>
+        {/* Submit Button */}
+        <div className="flex justify-between">
+          <button
+            type="submit"
+            className="bg-teal-600 text-white p-3 rounded-lg font-medium"
+          >
+            Post Job
+          </button>
+          {uploading && <p>Uploading...</p>}
+        </div>
       </form>
     </div>
   );
