@@ -42,9 +42,7 @@ const UserLogin = () => {
     setLoading(true);
     try {
       const config = {
-        headers: {
-          "Content-type": "application/json",
-        },
+        headers: { "Content-type": "application/json" },
       };
       const { data } = await axios.post("/api/users/login", values, config);
       const token = data.token;
@@ -54,14 +52,37 @@ const UserLogin = () => {
       navigate("/user-main-page");
     } catch (err) {
       setLoading(false);
-      setError(
-        err.response && err.response.data.message
-          ? err.response.data.message
-          : "Something went wrong"
-      );
+      setError(err.response?.data.message || "Something went wrong");
       setSubmitting(false);
     }
   };
+
+  // Define form fields to use with mapping
+  const formFields = [
+    {
+      name: "email",
+      type: "email",
+      placeholder: "Enter your email",
+    },
+    {
+      name: "password",
+      type: showPassword ? "text" : "password",
+      placeholder: "Enter your password",
+      togglePassword: true,
+    },
+  ];
+
+  // Social login options
+  const socialLogins = [
+    {
+      onClick: handleGoogleSignIn,
+      label: "Sign in with Google",
+      icon: <FcGoogle className="h-5 w-5" />,
+      bgColor: "bg-red-500",
+      hoverColor: "hover:bg-red-600",
+    },
+    // Add more social login options here if needed
+  ];
 
   return (
     <div className="flex flex-col lg:flex-row min-h-screen font-poppins">
@@ -102,52 +123,38 @@ const UserLogin = () => {
             >
               {({ isSubmitting }) => (
                 <Form className="space-y-4">
-                  {/* Email Field */}
-                  <div className="relative">
-                    <Field
-                      type="email"
-                      name="email"
-                      placeholder="Enter your email"
-                      className="w-full p-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-400"
-                    />
-                    <ErrorMessage
-                      name="email"
-                      component="div"
-                      className="text-red-500 text-sm mt-1"
-                    />
-                  </div>
-
-                  {/* Password Field */}
-                  <div className="relative">
-                    <Field
-                      type={showPassword ? "text" : "password"}
-                      name="password"
-                      placeholder="Enter your password"
-                      className="w-full p-4 pr-16 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-400"
-                    />
-
-                    <button
-                      type="button"
-                      className="absolute inset-y-0 right-4 mt-3 flex items-center justify-center h-full text-gray-600"
-                      onClick={() => setShowPassword(!showPassword)}
-                    >
-                      <FontAwesomeIcon
-                        icon={showPassword ? faEyeSlash : faEye}
-                        size="lg"
+                  {formFields.map((field, index) => (
+                    <div className="relative" key={field.name}>
+                      <Field
+                        type={field.type}
+                        name={field.name}
+                        placeholder={field.placeholder}
+                        className="w-full p-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-400"
                       />
-                    </button>
-
-                    <ErrorMessage
-                      name="password"
-                      component="div"
-                      className="text-red-500 text-sm mt-1"
-                    />
-                  </div>
+                      {field.name === "password" && (
+                        <button
+                          type="button"
+                          className="absolute inset-y-0 right-4 mt-3 flex items-center justify-center h-full text-gray-600"
+                          onClick={() => setShowPassword(!showPassword)}
+                        >
+                          <FontAwesomeIcon
+                            icon={showPassword ? faEyeSlash : faEye}
+                            size="lg"
+                          />
+                        </button>
+                      )}
+                      <ErrorMessage
+                        name={field.name}
+                        component="div"
+                        className="text-red-500 text-sm mt-1"
+                      />
+                    </div>
+                  ))}
 
                   <button
                     type="submit"
                     disabled={isSubmitting}
-                    className="w-full bg-purple-500 text-white  p-4 rounded-lg hover:bg-purple-600 transition-colors duration-300 shadow-md"
+                    className="w-full bg-purple-500 text-white p-4 rounded-lg hover:bg-purple-600 transition-colors duration-300 shadow-md"
                   >
                     Sign In
                   </button>
@@ -162,14 +169,17 @@ const UserLogin = () => {
             <hr className="w-full border-gray-300" />
           </div>
 
-          {/* Google Sign-In Button */}
-          <button
-            onClick={handleGoogleSignIn}
-            className="w-full bg-red-500 text-white p-3 rounded-lg hover:bg-red-600 mb-4 flex items-center justify-center space-x-2"
-          >
-            <FcGoogle className="h-5 w-5" />
-            <span>Sign in with Google</span>
-          </button>
+          {/* Social Sign-In Buttons */}
+          {socialLogins.map((login, index) => (
+            <button
+              key={index}
+              onClick={login.onClick}
+              className={`w-full ${login.bgColor} text-white p-3 rounded-lg ${login.hoverColor} mb-4 flex items-center justify-center space-x-2`}
+            >
+              {login.icon}
+              <span>{login.label}</span>
+            </button>
+          ))}
 
           <p className="text-center text-gray-500">
             Don’t have an account?{" "}

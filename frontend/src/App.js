@@ -29,6 +29,7 @@ import AdminProfileForm from "./WebApp/Flows/AdminFlow/SignUpLogin/AdminProfileB
 import AdminProfilePicture from "./WebApp/Flows/AdminFlow/SignUpLogin/AdminProfileBuilding/AdminProfilePicture";
 import AdminMainPage from "./WebApp/Flows/AdminFlow/MainPage/AdminMainPage";
 import TryforFree from "./WebApp/TryforFree";
+import PageNotFound from "./PageNotFound";
 
 function App() {
   const { skillnaavData, reloadData } = useSelector((state) => state.root);
@@ -58,7 +59,7 @@ function App() {
         <Route path="/" element={<Home />} />
         <Route path="/admin" element={<Admin />} />
         <Route path="/admin-login" element={<Login />} />
-        <Route path="*" element={<Navigate to="/" replace />} />
+        {/* <Route path="*" element={<Navigate to="/" replace />} /> */}
 
         {/* Skillnaav Web App Routes */}
         {/* User Flow */}
@@ -71,12 +72,15 @@ function App() {
 
         {/* Partner Flow */}
         <Route path="/partner" element={<PartnerFlow />} />
-        <Route path="/partner-create-account"
+        <Route
+          path="/partner-create-account"
           element={<PartnerCreateAccount />}
         />
         <Route path="/partner/login" element={<PartnerLogin />} />
         <Route path="/partner-profile-form" element={<PartnerProfileForm />} />
-        <Route path="/partner-profile-picture" element={<PartnerProfilePicture />}
+        <Route
+          path="/partner-profile-picture"
+          element={<PartnerProfilePicture />}
         />
         <Route path="/partner-main-page" element={<PartnerMainPage />} />
 
@@ -93,6 +97,9 @@ function App() {
 
         {/* Try for free */}
         <Route path="/choose-role" element={<TryforFree />} />
+
+        {/* Page Not Found */}
+        <Route path="*" element={<PageNotFound />} />
       </Routes>
     </BrowserRouter>
   );
