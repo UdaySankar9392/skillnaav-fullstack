@@ -24,6 +24,7 @@ app.use(
   })
 );
 
+require("./models/webapp-models/socialLogins");
 // Routes
 const userRoutes = require("./routes/webapp-routes/userRoutes");
 const internRoutes = require("./routes/webapp-routes/internshipPostRoutes");
@@ -31,7 +32,7 @@ const skillnaavRoute = require("./routes/skillnaavRoute");
 const applicationRoutes = require("./routes/webapp-routes/applicationRoutes");
 const partnerRoutes = require("./routes/webapp-routes/partnerRoutes"); // Import Partner routes
 const adminRoutes = require("./routes/webapp-routes/adminRoutes"); // Import Admin routes
-
+const authRoutes = require("./routes/webapp-routes/authRouter");
 // Define routes
 app.use("/api/users", userRoutes); // User Web App routes
 app.use("/api/interns", internRoutes); // Partner to Admin Intern Posts
@@ -40,6 +41,9 @@ app.use("/api/skillnaav", skillnaavRoute); // Skillnaav routes
 app.use("/api/contact", skillnaavRoute); // Contact route (Verify if this is correct)
 app.use("/api/partners", partnerRoutes); // Partner routes for registration and login
 app.use("/api/admin", adminRoutes); // Admin Web app Routes
+
+//Google Auth Route
+app.use("/auth", authRoutes);
 
 // Serve static assets if in production
 if (process.env.NODE_ENV === "production") {
