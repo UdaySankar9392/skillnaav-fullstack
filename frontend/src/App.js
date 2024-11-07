@@ -53,7 +53,7 @@ function App() {
   }, [skillnaavData, reloadData]);
 
   return (
-    <GoogleOAuthProvider clientId={`${process.env.GOOGLE_CLIENT_ID}`}>
+    <GoogleOAuthProvider clientId="797086316899-7e8m1sq9unes39qos8r69ng6ipleeejb.apps.googleusercontent.com">
       <BrowserRouter>
         <Routes>
           {/* Skillnaav Website Routes */}
