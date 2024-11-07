@@ -205,7 +205,7 @@ const PartnerManagement = () => {
               <td className="px-4 py-2">{internship.jobTitle}</td>
               <td className="px-4 py-2">{internship.companyName}</td>
               <td className="px-4 py-2">{internship.location}</td>
-              <td className="px-4 py-2">{internship.stipendOrSalary}</td>
+              <td className="px-4 py-2">{internship.salaryDetails}</td>
               <td className="px-4 py-2 flex space-x-2">
                 <button
                   className={`px-3 py-1 rounded-md text-white ${internship.adminApproved
