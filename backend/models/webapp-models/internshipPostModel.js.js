@@ -9,21 +9,20 @@ const internshipPostingSchema = mongoose.Schema(
     jobDescription: { type: String, required: true },
     startDate: { type: Date, required: true },
     endDateOrDuration: { type: String, required: true },
-    stipendOrSalary: { type: String },
+    salaryDetails: { type: String ,  required: true},
     duration: {type: String, required: true },
     qualifications: { type: [String], required: true },
-    // preferredExperience: { type: String },
-    // applicationDeadline: { type: Date, required: true },
-    // applicationProcess: { type: String, required: true },
+    // currency: { type: String, required: true }, 
+    // time: { type: String, required: true },  
+    
     contactInfo: {
       name: { type: String, required: true },
       email: { type: String, required: true },
       phone: { type: String, required: true },
     },
-    // applicationLinkOrEmail: { type: String, required: true },
     imgUrl: { type: String, required: true },
-    studentApplied: { type: Boolean, default: false }, // New field
-    adminApproved: { type: Boolean, default: false }, // New field
+    studentApplied: { type: Boolean, default: false }, 
+    adminApproved: { type: Boolean, default: false }, 
   },
   { timestamps: true }
 );
