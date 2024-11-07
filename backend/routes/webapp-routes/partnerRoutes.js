@@ -7,6 +7,7 @@ const {
   getAllPartners,
   approvePartner,
   rejectPartner,
+  checkEmailExists,
 } = require("../../controllers/partnerController");
 const { protect } = require("../../middlewares/authMiddleware");
 
@@ -16,5 +17,6 @@ router.post("/profile", protect, updatePartnerProfile); // Protected route to up
 router.get("/partners", getAllPartners); // Get all partners route
 router.patch("/approve/:partnerId", approvePartner); // Approve partner by ID, add protect middleware if needed
 router.patch("/reject/:partnerId", rejectPartner);
+router.post("/check-email", checkEmailExists);
 
 module.exports = router;
