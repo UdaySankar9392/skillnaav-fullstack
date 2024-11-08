@@ -8,6 +8,8 @@ const {
   approvePartner,
   rejectPartner,
   checkEmailExists,
+  requestPasswordReset,
+  verifyOTPAndResetPassword, 
 } = require("../../controllers/partnerController");
 const { protect } = require("../../middlewares/authMiddleware");
 
@@ -18,5 +20,10 @@ router.get("/partners", getAllPartners); // Get all partners route
 router.patch("/approve/:partnerId", approvePartner); // Approve partner by ID, add protect middleware if needed
 router.patch("/reject/:partnerId", rejectPartner);
 router.post("/check-email", checkEmailExists);
+
+router.post('/request-password-reset', requestPasswordReset); // Request password reset with OTP
+router.post('/verify-otp-reset-password', verifyOTPAndResetPassword); // Verify OTP and reset password
+
+
 
 module.exports = router;

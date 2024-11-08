@@ -14,6 +14,64 @@ const checkIfUserExists = asyncHandler(async (req, res) => {
   res.json({ exists: !!userExists }); // Respond with true or false
 });
 
+
+
+  // Generate a random OTP
+const generateOTP = () => {
+  return Math.floor(100000 + Math.random() * 900000).toString(); // Generates a 6-digit OTP
+};
+
+// Request Password Reset with OTP
+const requestPasswordReset = asyncHandler(async (req, res) => {
+  const { email } = req.body;
+
+  // Find the user by email
+  const user = await Userwebapp.findOne({ email });
+  if (!user) {
+      res.status(404);
+      throw new Error("No account found with that email.");
+  }
+
+  // Generate an OTP and save it to the user model
+  const otp = generateOTP();
+  user.otp = otp; 
+  user.otpExpiration = Date.now() + 300000; // OTP valid for 5 minutes
+  await user.save();
+
+  // Send the OTP to the user's email
+  await notifyUser(user.email, "Your OTP for Password Reset", `<p>Your OTP is: ${otp}</p><p>It is valid for 5 minutes.</p>`);
+
+  res.status(200).json({ message: "OTP sent to your email." });
+});
+
+// Verify OTP and Reset Password
+
+const verifyOTPAndResetPassword = asyncHandler(async (req, res) => {
+  const { email, otp, newPassword } = req.body;
+
+  // Find the user by email and check if the OTP is valid
+  const user = await Userwebapp.findOne({
+      email,
+      otp,
+      otpExpiration: { $gt: Date.now() } // Check if the OTP is still valid
+  });
+
+  if (!user) {
+      res.status(400);
+      throw new Error("Invalid or expired OTP.");
+  }
+
+  // Set the new password (this will be hashed due to pre-save hook)
+  user.password = newPassword;
+  
+  // Clear the OTP fields
+  user.otp = undefined;
+  user.otpExpiration = undefined;
+
+  await user.save();
+
+  res.status(200).json({ message: "Password has been successfully updated." });
+});
 // Register a new user
 const registerUser = asyncHandler(async (req, res) => {
   console.log('Request Body:', req.body); // Log the request body
@@ -29,11 +87,11 @@ const registerUser = asyncHandler(async (req, res) => {
     fieldOfStudy,
     desiredField,
     linkedin,
-    portfolio, // Portfolio is no longer a required field
+    portfolio,
   } = req.body;
 
-  // Check for required fields (excluding portfolio)
-  if (!areFieldsFilled([name, email, password, confirmPassword, universityName, dob, educationLevel, fieldOfStudy, desiredField, linkedin])) {
+  // Check for required fields
+  if (!areFieldsFilled([name, email, password, confirmPassword, universityName, dob, educationLevel, fieldOfStudy, desiredField, linkedin, portfolio])) {
     res.status(400);
     throw new Error("Please fill all required fields.");
   }
@@ -62,7 +120,7 @@ const registerUser = asyncHandler(async (req, res) => {
     fieldOfStudy,
     desiredField,
     linkedin,
-    portfolio, // Portfolio is now optional
+    portfolio,
     adminApproved: false, // Default to false
   });
 
@@ -77,7 +135,7 @@ const registerUser = asyncHandler(async (req, res) => {
       fieldOfStudy: user.fieldOfStudy,
       desiredField: user.desiredField,
       linkedin: user.linkedin,
-      portfolio: user.portfolio, // Portfolio is included if provided
+      portfolio: user.portfolio,
       token: generateToken(user._id), // Generate token
       adminApproved: user.adminApproved, // Include admin approval status
     });
@@ -86,7 +144,6 @@ const registerUser = asyncHandler(async (req, res) => {
     throw new Error("Error occurred while registering user.");
   }
 });
-
 
 // Authenticate user (login)
 const authUser = asyncHandler(async (req, res) => {
@@ -108,7 +165,6 @@ const authUser = asyncHandler(async (req, res) => {
         desiredField: user.desiredField,
         linkedin: user.linkedin,
         portfolio: user.portfolio,
-        adminApproved:user.adminApproved,
         token: generateToken(user._id), // Generate token here
       });
     } else {
@@ -140,11 +196,8 @@ const updateUserProfile = asyncHandler(async (req, res) => {
   user.fieldOfStudy = req.body.fieldOfStudy || user.fieldOfStudy;
   user.desiredField = req.body.desiredField || user.desiredField;
   user.linkedin = req.body.linkedin || user.linkedin;
-
-  // Only update portfolio if provided
   user.portfolio = req.body.portfolio || user.portfolio;
 
-  // Update password if provided
   if (req.body.password) {
     user.password = req.body.password;
   }
@@ -161,11 +214,10 @@ const updateUserProfile = asyncHandler(async (req, res) => {
     fieldOfStudy: updatedUser.fieldOfStudy,
     desiredField: updatedUser.desiredField,
     linkedin: updatedUser.linkedin,
-    portfolio: updatedUser.portfolio, // Portfolio included if provided
+    portfolio: updatedUser.portfolio,
     token: generateToken(updatedUser._id), // Regenerate token
   });
 });
-
 
 // Get all users with additional fields
 const getAllUsers = asyncHandler(async (req, res) => {
@@ -179,13 +231,13 @@ const getAllUsers = asyncHandler(async (req, res) => {
   }
 });
 
-// Admin approve user
-// Admin approve user
+// Admin approve a user
 const approveUser = asyncHandler(async (req, res) => {
   const { userId } = req.params; // Use the correct parameter name
   console.log("Approving User ID:", userId); // Log the userId
 
   const user = await Userwebapp.findById(userId);
+  
   if (!user) {
       res.status(404);
       throw new Error("User not found.");
@@ -193,43 +245,40 @@ const approveUser = asyncHandler(async (req, res) => {
 
   // Approve the user
   user.adminApproved = true;
-  await user.save();
-
-  // Send a notification email to the user about their approval
+  
   await notifyUser(user.email, "Your SkillNaav account has been approved!", "Congratulations! Your SkillNaav account has been approved by the admin.");
 
-  res.status(200).json({ message: "User approved successfully." });
+  
+   await user.save();
+
+   res.status(200).json({ message: "User approved successfully." });
 });
 
-
-
-// Admin reject user
+// Admin reject a user
 const rejectUser = asyncHandler(async (req, res) => {
-  const { userId } = req.params; // Use the correct parameter name
-  console.log("Rejecting User ID:", userId); // Log the userId
+   const {userId} = req.params; 
+   console.log("Rejecting User ID:",userId); 
 
-  const user = await Userwebapp.findById(userId);
-  if (!user) {
-    res.status(404);
-    throw new Error("User not found.");
-  }
+   const user=await Userwebapp.findById(userId);
+   if(!user){
+       res.status(404);
+       throw new Error("User not found.");
+   }
 
-  user.adminApproved = false;
-  await user.save(); 
+   // Set approval status to false and save changes.
+   await notifyUser(user.email,"Your SkillNaav account has been rejected.", "Your SkillNaav account has been rejected by the admin.");
 
-  // Optionally, you can log the rejection reason if provided
-  const rejectionReason = req.body.reason || "Your SkillNaav account has been rejected by the admin.";
-  
-  // Send a notification email to the user about their rejection
-  await notifyUser(user.email, "Your SkillNaav account has been rejected.", rejectionReason);
-
-  // Optionally, you can perform any additional actions here (like setting a rejection status)
-  
-  res.status(200).json({ message: "User rejected successfully." });
+   res.status(200).json({message:"User rejected successfully."});
 });
 
-module.exports = { registerUser, authUser, updateUserProfile, getAllUsers, approveUser, rejectUser, checkIfUserExists };
-
-
-
-
+module.exports = { 
+   registerUser, 
+   authUser, 
+   updateUserProfile, 
+   getAllUsers, 
+   approveUser, 
+   rejectUser ,
+   checkIfUserExists, // Exporting the new function to check for existing users.
+   requestPasswordReset,
+   verifyOTPAndResetPassword,
+};

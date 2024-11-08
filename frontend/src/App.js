@@ -16,12 +16,14 @@ import UserFlow from "./WebApp/Flows/UserFlow/UserFlow";
 import UserMainPage from "./WebApp/Flows/UserFlow/MainPage/UserMainPage";
 import UserProfileForm from "./WebApp/Flows/UserFlow/SignUpLogin/UserProfileBuilding/UserProfileForm";
 import UserProfilePicture from "./WebApp/Flows/UserFlow/SignUpLogin/UserProfileBuilding/UserProfilePicture";
+import UserforgotPassword from "./WebApp/Flows/UserFlow/SignUpLogin/UserforgotPassword";
 import PartnerFlow from "./WebApp/Flows/PartnerFlow/PartnerFlow";
 import PartnerCreateAccount from "./WebApp/Flows/PartnerFlow/SignUpLogin/PartnerCreateAccount";
 import PartnerLogin from "./WebApp/Flows/PartnerFlow/SignUpLogin/PartnerLogin";
 import PartnerProfileForm from "./WebApp/Flows/PartnerFlow/SignUpLogin/UserProfileBuilding/PartnerProfileForm";
 import PartnerProfilePicture from "./WebApp/Flows/PartnerFlow/SignUpLogin/UserProfileBuilding/PartnerProfilePicture";
 import PartnerMainPage from "./WebApp/Flows/PartnerFlow/MainPage/PartnerMainPage";
+import PartnerforgotPassword from "./WebApp/Flows/PartnerFlow/SignUpLogin/PartnerforgotPassword";
 // import AdminFlow from "./WebApp/Flows/AdminFlow/AdminFlow";
 import AdminCreateAccount from "./WebApp/Flows/AdminFlow/SignUpLogin/AdminCreateAccount";
 import AdminLogin from "./WebApp/Flows/AdminFlow/SignUpLogin/AdminLogin";
@@ -68,6 +70,8 @@ function App() {
         <Route path="/user-profile-form" element={<UserProfileForm />} />
         <Route path="/user-profile-picture" element={<UserProfilePicture />} />
         <Route path="/user-main-page" element={<UserMainPage />} />
+        <Route path="/user-forgot-password" element={<UserforgotPassword />} />
+
 
         {/* Partner Flow */}
         <Route path="/partner" element={<PartnerFlow />} />
@@ -79,6 +83,8 @@ function App() {
         <Route path="/partner-profile-picture" element={<PartnerProfilePicture />}
         />
         <Route path="/partner-main-page" element={<PartnerMainPage />} />
+        
+        <Route path="/partner-forgot-password" element={<PartnerforgotPassword />} />
 
         {/* Admin Flow */}
         {/* <Route path="/admin-account" element={<AdminFlow />} /> */}

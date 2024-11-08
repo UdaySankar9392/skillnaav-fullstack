@@ -1,5 +1,6 @@
 const mongoose = require("mongoose");
 const bcrypt = require("bcrypt");
+
 const partnerwebappSchema = mongoose.Schema(
   {
     name: { type: String, required: true },
@@ -9,6 +10,8 @@ const partnerwebappSchema = mongoose.Schema(
     institutionId: { type: String, required: true },
     adminApproved: { type: Boolean, default: false },
     active: { type: Boolean, default: false },
+    otp: String, // New field for storing OTP
+    otpExpiration: Date,
   },
   {
     timestamps: true,

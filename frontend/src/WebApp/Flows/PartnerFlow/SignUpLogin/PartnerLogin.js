@@ -123,28 +123,30 @@ const PartnerLogin = () => {
                     />
                   </div>
 
-                  {/* Remember Me and Forgot Password */}
-                  <div className="flex justify-between items-center mb-6">
-                    <div className="flex items-center space-x-2">
-                      <Field
-                        type="checkbox"
-                        name="rememberMe"
-                        id="rememberMe"
-                        className="form-checkbox h-4 w-4 text-teal-500 transition duration-150 ease-in-out"
-                      />
-                      <label
-                        htmlFor="rememberMe"
-                        className="block text-sm mt-4 text-gray-700"
-                      >
-                        Remember me
-                      </label>
-                    </div>
+                  {/* Forgot Password Button */}
+                  <div className="flex justify-end mb-6">
                     <Link
-                      to="/forgot-password"
-                      className="text-sm font-medium mt-4 text-teal-500 hover:text-teal-700 transition duration-150 ease-in-out"
+                      to="/partner-forgot-password" // Navigate to the Forgot Password page
+                      className="text-sm font-medium text-teal-500 hover:text-teal-700 transition duration-150 ease-in-out"
                     >
                       Forgot password?
                     </Link>
+                  </div>
+
+                  {/* Remember Me */}
+                  <div className="flex items-center mb-6">
+                    <Field
+                      type="checkbox"
+                      name="rememberMe"
+                      id="rememberMe"
+                      className="form-checkbox h-4 w-4 text-teal-500 transition duration-150 ease-in-out"
+                    />
+                    <label
+                      htmlFor="rememberMe"
+                      className="block text-sm mt-4 ml-2 text-gray-700"
+                    >
+                      Remember me
+                    </label>
                   </div>
 
                   {/* Sign In Button */}
