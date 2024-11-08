@@ -10,8 +10,10 @@ const PartnerManagement = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isRejectModalOpen, setIsRejectModalOpen] = useState(false);
   const [internshipToReject, setInternshipToReject] = useState(null);
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [internshipToDelete, setInternshipToDelete] = useState(null);
   const [comment, setComment] = useState("");
-  const [showFullDescription, setShowFullDescription] = useState(false); 
+  const [showFullDescription, setShowFullDescription] = useState(false);
 
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
@@ -58,34 +60,15 @@ const PartnerManagement = () => {
 
   const confirmReject = async () => {
     if (!internshipToReject) return;
-
     try {
       await axios.patch(`/api/interns/${internshipToReject._id}/reject`, {
         status: "rejected",
+        reason: comment, // Include the reason here
       });
-      setInternships((prevInternships) =>
-        prevInternships.map((internship) =>
-          internship._id === internshipToReject._id
-            ? { ...internship, adminApproved: false }
-            : internship
-        )
-      );
+      setInternships((prevInternships) => prevInternships.map((internship) => internship._id === internshipToReject._id ? { ...internship, adminApproved: false } : internship));
       setIsRejectModalOpen(false);
     } catch (error) {
       console.error("Error rejecting internship:", error);
-    }
-  };
-
-  const handleDeleteClick = async (internship) => {
-    if (window.confirm(`Are you sure you want to delete the internship: ${internship.jobTitle}?`)) {
-      try {
-        await axios.delete(`/api/interns/${internship._id}`);
-        setInternships((prevInternships) =>
-          prevInternships.filter((i) => i._id !== internship._id)
-        );
-      } catch (error) {
-        console.error("Error deleting internship:", error);
-      }
     }
   };
 
@@ -120,6 +103,30 @@ const PartnerManagement = () => {
     }
   };
 
+
+  const closeDeleteModal = () => {
+    setIsDeleteModalOpen(false);
+    setInternshipToDelete(null); // Reset selected internship to delete
+  };
+
+  const handleDeleteClick = (internship) => {
+    setInternshipToDelete(internship); // Set the internship to delete
+    setIsDeleteModalOpen(true); // Open delete confirmation modal
+  };
+
+
+  const confirmDelete = async () => {
+    if (!internshipToDelete) return;
+    try {
+      await axios.delete(`/api/interns/${internshipToDelete._id}`);
+      setInternships((prevInternships) => prevInternships.filter((i) => i._id !== internshipToDelete._id));
+      closeDeleteModal(); // Close modal after deletion
+    } catch (error) {
+      console.error("Error deleting internship:", error);
+    }
+  };
+
+
   const sortInternships = (internships) => {
     return internships.sort((a, b) => {
       const aValue = a[sortCriteria].toLowerCase();
@@ -149,7 +156,7 @@ const PartnerManagement = () => {
     indexOfLastInternship
   );
   const totalPages = Math.ceil(filteredInternships.length / applicationsPerPage);
-  
+
   return (
     <div className="p-6 rounded-lg shadow-md bg-gray-100 font-poppins text-sm">
       <h2 className="text-2xl font-semibold mb-8 text-center text-gray-800">
@@ -207,32 +214,16 @@ const PartnerManagement = () => {
               <td className="px-4 py-2">{internship.location}</td>
               <td className="px-4 py-2">{internship.salaryDetails}</td>
               <td className="px-4 py-2 flex space-x-2">
-                <button
-                  className={`px-3 py-1 rounded-md text-white ${internship.adminApproved
-                    ? "bg-green-500"
-                    : "bg-blue-500 hover:bg-blue-700"
-                    }`}
-                  onClick={() => handleApprove(internship._id)}
-                  disabled={internship.adminApproved}
-                >
+                <button className={`px-3 py-1 rounded-md text-white ${internship.adminApproved ? "bg-green-500" : "bg-blue-500 hover:bg-blue-700"}`} onClick={() => handleApprove(internship._id)} disabled={internship.adminApproved}>
                   {internship.adminApproved ? "Approved" : "Approve"}
                 </button>
-                <button
-                  className="px-3 py-1 bg-indigo-500 text-white rounded-md hover:bg-indigo-700"
-                  onClick={() => handleReview(internship)}
-                >
+                <button className="px-3 py-1 bg-indigo-500 text-white rounded-md hover:bg-indigo-700" onClick={() => handleReview(internship)}>
                   Review
                 </button>
-                <button
-                  className="px-3 py-1 bg-red-500 text-white rounded-md hover:bg-red-700"
-                  onClick={() => handleRejectClick(internship)}
-                >
+                <button className="px-3 py-1 bg-red-500 text-white rounded-md hover:bg-red-700" onClick={() => handleRejectClick(internship)}>
                   Reject
                 </button>
-                <button
-                  className="px-3 py-1 bg-gray-500 text-white rounded-md hover:bg-gray-700"
-                  onClick={() => handleDeleteClick(internship)}
-                >
+                <button className="px-3 py-1 bg-gray-500 text-white rounded-md hover:bg-gray-700" onClick={() => handleDeleteClick(internship)}>
                   Delete
                 </button>
               </td>
@@ -262,97 +253,142 @@ const PartnerManagement = () => {
         </button>
       </div>
 
- {/* Review Modal */}
-<Modal
-  isOpen={isModalOpen}
-  onRequestClose={closeModal}
-  overlayClassName="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50"
-  className="bg-white p-6 rounded-lg shadow-lg w-96"
->
-  <h2 className="text-lg font-semibold mb-4">Review Internship</h2>
-  {selectedInternship && (
-    <div className="bg-white shadow-md rounded-lg p-4 max-w-md mx-auto">
-      <h3 className="font-medium text-lg text-gray-800 mb-2">{selectedInternship.jobTitle}</h3>
-      <p className="text-sm text-gray-500 mb-1">
-        Start Date: <span className="text-gray-700 font-semibold">{selectedInternship.startDate}</span>
-      </p>
-      <p className="text-sm text-gray-500 mb-1">
-        End Date: <span className="text-gray-700 font-semibold">{selectedInternship.endDateOrDuration}</span>
-      </p>
 
-      {/* Description with Read More */}
-      <div className="relative">
-        <p className={`text-gray-600 text-sm leading-relaxed ${showFullDescription ? 'overflow-auto' : 'line-clamp-3'}`} style={{ maxHeight: showFullDescription ? 'none' : '4.5em' }}>
-          {selectedInternship.jobDescription}
-        </p>
-        {!showFullDescription && (
-          <button
-            onClick={() => setShowFullDescription(true)}
-            className="text-blue-500 text-xs mt-2"
-          >
-            Read More
-          </button>
-        )}
-      </div>
-
-      {/* Comment Section */}
-      <textarea
-        placeholder="Leave a comment..."
-        value={comment}
-        onChange={(e) => setComment(e.target.value)}
-        className="w-full border border-gray-300 p-3 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none mb-4"
-        rows="4"
-      />
-
-      {/* Submit Button */}
-      <button
-        onClick={handleCommentSubmit}
-        className="w-full bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition duration-200 ease-in-out focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:outline-none shadow-lg"
+      {/* Delete Confirmation Modal */}
+      <Modal
+        isOpen={isDeleteModalOpen}
+        onRequestClose={closeDeleteModal}
+        overlayClassName="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-[999]" // Ensure overlay has a lower z-index
+        className="bg-white p-6 rounded-lg shadow-lg w-96 z-[1000]" // Ensure modal has a higher z-index
       >
-        Submit Comment
-      </button>
-    </div>
-  )}
+        <h2 className="text-lg font-semibold mb-4">Confirm Deletion</h2>
+        {internshipToDelete && (
+          <div>
+            <p>
+              Are you sure you want to delete the internship for
+              <strong> {internshipToDelete.jobTitle} </strong> at
+              <strong> {internshipToDelete.companyName} </strong>?
+            </p>
+            <div className="flex space-x-2 mt-4">
+              <button
+                onClick={confirmDelete}
+                className="w-full bg-red-600 text-white px-4 py-2 rounded-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500"
+              >
+                Delete
+              </button>
+              <button
+                onClick={closeDeleteModal}
+                className="w-full bg-gray-300 text-gray-700 px-4 py-2 rounded-md hover:bg-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-400"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        )}
+      </Modal>
+      {/* Review Modal (Continuation) */}
+      <Modal
+        isOpen={isModalOpen}
+        onRequestClose={closeModal}
+        overlayClassName="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-[999]" // Ensure overlay has a lower z-index
+        className="bg-white p-6 rounded-lg shadow-lg w-96 z-[1000]" // Ensure modal has a higher z-index
+      >
+        <h2 className="text-lg font-semibold mb-4">Review Internship</h2>
+        {selectedInternship && (
+          <div className="bg-white shadow-md rounded-lg p-4 max-w-md mx-auto">
+            <h3 className="font-medium text-lg text-gray-800 mb-2">{selectedInternship.jobTitle}</h3>
+            <p className="text-sm text-gray-500 mb-1">
+              Start Date: <span className="text-gray-700 font-semibold">{selectedInternship.startDate}</span>
+            </p>
+            <p className="text-sm text-gray-500 mb-1">
+              End Date: <span className="text-gray-700 font-semibold">{selectedInternship.endDateOrDuration}</span>
+            </p>
 
-  {/* Close Button */}
-  <button onClick={closeModal} className="mt-4 text-red-500">
-    Close
-  </button>
-</Modal>
+            {/* Description with Read More */}
+            <div className="relative">
+              <p className={`text-gray-600 text-sm leading-relaxed ${showFullDescription ? 'overflow-auto' : 'line-clamp-3'}`} style={{ maxHeight: showFullDescription ? 'none' : '4.5em' }}>
+                {selectedInternship.jobDescription}
+              </p>
+              {!showFullDescription && (
+                <button
+                  onClick={() => setShowFullDescription(true)}
+                  className="text-blue-500 text-xs mt-2"
+                >
+                  Read More
+                </button>
+              )}
+            </div>
+
+            {/* Comment Section */}
+            <textarea
+              placeholder="Leave a comment..."
+              value={comment}
+              onChange={(e) => setComment(e.target.value)}
+              className="w-full border border-gray-300 p-3 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none mb-4"
+              rows="4"
+            />
+
+            {/* Submit Button */}
+            <button
+              onClick={handleCommentSubmit}
+              className="w-full bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition duration-200 ease-in-out focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:outline-none shadow-lg"
+            >
+              Submit Comment
+            </button>
+
+            {/* Close Button */}
+            <button
+              onClick={closeModal}
+              className="w-full bg-gray-300 text-gray-700 px-4 py-2 rounded-md hover:bg-gray-400 mt-2"
+            >
+              Close
+            </button>
+          </div>
+        )}
+      </Modal>
 
 
-{/* Reject Modal */}
-<Modal
-  isOpen={isRejectModalOpen}
-  onRequestClose={closeRejectModal}
-  overlayClassName="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50"
-  className="bg-white p-6 rounded-lg shadow-lg w-96"
->
-  <h2 className="text-lg font-semibold mb-4">Reject Internship</h2>
-  {internshipToReject && (
-    <div>
-      <p>
-        Are you sure you want to reject the internship: <strong>{internshipToReject.jobTitle}</strong>?
-      </p>
-    
-      <div className="mt-4 flex space-x-2">
-        <button
-          onClick={confirmReject}
-          className="bg-red-500 text-white px-4 py-2 rounded-md hover:bg-red-600"
-        >
-          Confirm Reject
-        </button>
-        <button
-          onClick={closeRejectModal}
-          className="text-gray-500 border border-gray-300 px-4 py-2 rounded-md hover:bg-gray-100"
-        >
-          Cancel
-        </button>
-      </div>
-    </div>
-  )}
-</Modal>
 
+
+      {/* Reject Modal */}
+      <Modal
+        isOpen={isRejectModalOpen}
+        onRequestClose={closeRejectModal}
+        overlayClassName="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-[999]" // Ensure overlay has a lower z-index
+        className="bg-white p-6 rounded-lg shadow-lg w-96 z-[1000]" // Ensure modal has a higher z-index
+      >
+        <h2 className="text-lg font-semibold mb-4">Reject Internship</h2>
+        {internshipToReject && (
+          <div>
+            <p className="text-gray-700 mb-4">
+              Are you sure you want to reject the internship for <strong>{internshipToReject.jobTitle}</strong> at <strong>{internshipToReject.companyName}</strong>?
+            </p>
+
+            <textarea
+              placeholder="Optional rejection comment..."
+              value={comment}
+              onChange={(e) => setComment(e.target.value)}
+              className="w-full border border-gray-300 p-3 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none mb-4"
+              rows="4"
+            />
+
+            <div className="flex space-x-2">
+              <button
+                onClick={confirmReject}
+                className="w-full bg-red-600 text-white px-4 py-2 rounded-md hover:bg-red-700 focus:ring-2 focus:ring-red-500"
+              >
+                Confirm Reject
+              </button>
+              <button
+                onClick={closeRejectModal}
+                className="w-full bg-gray-300 text-gray-700 px-4 py-2 rounded-md hover:bg-gray-400"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        )}
+      </Modal>
     </div>
   );
 };

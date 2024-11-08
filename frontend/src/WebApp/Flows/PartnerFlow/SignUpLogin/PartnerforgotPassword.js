@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
+import { Link } from "react-router-dom";
+
 
 const ForgotPassword = () => {
     const [email, setEmail] = useState('');
@@ -66,7 +68,7 @@ const ForgotPassword = () => {
             const response = await axios.post('/api/partners/verify-otp-reset-password', { email, otp, newPassword });
             setMessage(response.data.message); // Display success message after password update
             // Navigate to login after successful password reset
-            // The login button will be shown below
+            // The login link will be shown below
         } catch (err) {
             setError(err.response && err.response.data.message ? err.response.data.message : 'Something went wrong');
         }
@@ -89,6 +91,15 @@ const ForgotPassword = () => {
                         className='p-2 border border-gray rounded'
                     />
                     <button type='submit' className='bg-teal-500 text-white p-2 rounded'>Send OTP</button>
+                    <p className="text-center text-gray-500 font-poppins font-medium text-base leading-6">
+            
+            <Link
+              to="/partner/login"
+              className="text-teal-500 hover:underline font-semibold"
+            >
+              Back
+            </Link>
+          </p>
                 </form>
             ) : (
                 <>
@@ -127,16 +138,19 @@ const ForgotPassword = () => {
                         </form>
                     )}
                     
-                    {/* Show Login button after successful password reset */}
+                    {/* Show Login link after successful password reset */}
                     {message.includes("successfully updated") && (
                         <div className="mt-4">
-                            <p>Password has been successfully updated!</p>
-                            <button
-                                onClick={() => navigate('/partner/login')} // Navigate to login page
-                                className="bg-teal-500 text-white p-2 rounded mt-2"
-                            >
-                                Login
-                            </button>
+                            
+                            <p className="text-center text-gray-500 font-poppins font-medium text-base leading-6">
+            
+            <Link
+              to="/partner/login"
+              className="text-teal-500 hover:underline font-semibold"
+            >
+              Login
+            </Link>
+          </p>
                         </div>
                     )}
                 </>
