@@ -8,6 +8,8 @@ const {
   approveUser,
   rejectUser,
   checkIfUserExists,
+  requestPasswordReset,
+  verifyOTPAndResetPassword,
 } = require("../../controllers/userController");
 const { protect } = require("../../middlewares/authMiddleware");
 
@@ -18,5 +20,7 @@ router.get("/users", getAllUsers); // Get all users route
 router.patch("/approve/:userId", approveUser); // Approve user by ID, add protect middleware if needed
 router.patch("/reject/:userId", rejectUser);
 router.get('/check-email', checkIfUserExists); 
+router.post('/request-password-reset', requestPasswordReset); // Request password reset with OTP
+router.post('/verify-otp-reset-password', verifyOTPAndResetPassword);
 
 module.exports = router;
