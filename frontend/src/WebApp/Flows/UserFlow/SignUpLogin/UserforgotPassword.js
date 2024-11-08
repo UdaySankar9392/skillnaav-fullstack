@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
+import { Link } from "react-router-dom";
+
 
 const ForgotPassword = () => {
     const [email, setEmail] = useState('');
@@ -77,28 +79,37 @@ const ForgotPassword = () => {
             <h1 className='text-xl font-bold mb-4'>{step === 1 ? "Forgot Password" : "Verify OTP"}</h1>
             {error && <div className='bg-red-200 text-red-600 p-3 mb-4 rounded'>{error}</div>}
             {message && <div className='bg-green-200 text-green-600 p-3 mb-4 rounded'>{message}</div>}
-            
+
             {step === 1 ? (
                 <form onSubmit={handleRequestOtp} className='flex flex-col space-y-4'>
-                    <input 
-                        type='email' 
-                        placeholder='Enter your email' 
-                        value={email} 
-                        onChange={(e) => setEmail(e.target.value)} 
-                        required 
+                    <input
+                        type='email'
+                        placeholder='Enter your email'
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                        required
                         className='p-2 border border-gray rounded'
                     />
                     <button type='submit' className='bg-teal-500 text-white p-2 rounded'>Send OTP</button>
+                    <p className="text-center text-gray-500 font-poppins font-medium text-base leading-6">
+
+                        <Link
+                            to="/user/login"
+                            className="text-teal-500 hover:underline font-semibold"
+                        >
+                            Back
+                        </Link>
+                    </p>
                 </form>
             ) : (
                 <>
                     <form onSubmit={handleVerifyOtp} className='flex flex-col space-y-4'>
-                        <input 
-                            type='text' 
-                            placeholder='Enter your OTP' 
-                            value={otp} 
-                            onChange={(e) => setOtp(e.target.value)} 
-                            required 
+                        <input
+                            type='text'
+                            placeholder='Enter your OTP'
+                            value={otp}
+                            onChange={(e) => setOtp(e.target.value)}
+                            required
                             className='p-2 border border-gray rounded'
                         />
                         <button type='submit' className='bg-teal-500 text-white p-2 rounded'>Verify OTP</button>
@@ -107,36 +118,39 @@ const ForgotPassword = () => {
                     {/* Show reset password form only after verifying OTP */}
                     {message.includes("OTP verified") && (
                         <form onSubmit={handleResetPassword} className='flex flex-col space-y-4 mt-4'>
-                            <input 
-                                type='password' 
-                                placeholder='Enter new password' 
-                                value={newPassword} 
-                                onChange={(e) => setNewPassword(e.target.value)} 
-                                required 
+                            <input
+                                type='password'
+                                placeholder='Enter new password'
+                                value={newPassword}
+                                onChange={(e) => setNewPassword(e.target.value)}
+                                required
                                 className='p-2 border border-gray rounded'
                             />
-                            <input 
-                                type='password' 
-                                placeholder='Confirm new password' 
-                                value={confirmPassword} 
-                                onChange={(e) => setConfirmPassword(e.target.value)} 
-                                required 
+                            <input
+                                type='password'
+                                placeholder='Confirm new password'
+                                value={confirmPassword}
+                                onChange={(e) => setConfirmPassword(e.target.value)}
+                                required
                                 className='p-2 border border-gray rounded'
                             />
                             <button type='submit' className='bg-teal-500 text-white p-2 rounded'>Reset Password</button>
                         </form>
                     )}
-                    
+
                     {/* Show Login button after successful password reset */}
                     {message.includes("successfully updated") && (
                         <div className="mt-4">
-                            <p>Password has been successfully updated!</p>
-                            <button
-                                onClick={() => navigate('/user/login')} // Navigate to login page
-                                className="bg-teal-500 text-white p-2 rounded mt-2"
-                            >
-                                Login
-                            </button>
+
+                            <p className="text-center text-gray-500 font-poppins font-medium text-base leading-6">
+
+                                <Link
+                                    to="/user/login"
+                                    className="text-teal-500 hover:underline font-semibold"
+                                >
+                                    Login
+                                </Link>
+                            </p>
                         </div>
                     )}
                 </>
@@ -146,3 +160,19 @@ const ForgotPassword = () => {
 };
 
 export default ForgotPassword;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

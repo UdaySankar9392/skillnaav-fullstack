@@ -75,7 +75,7 @@ const ApplyCards = ({ job, onBack }) => {
             </div>
             <div className="flex items-center text-gray-500 mt-2 text-sm md:text-base">
               <FaDollarSign className="mr-2" />
-              <p>{job.stipendOrSalary || "Not specified"}</p>
+              <p>{job.salaryDetails || "Not specified"}</p>
             </div>
             <button
               onClick={handleApply}

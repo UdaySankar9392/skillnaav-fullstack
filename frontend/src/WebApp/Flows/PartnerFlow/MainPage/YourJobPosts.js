@@ -94,6 +94,39 @@ const YourJobPosts = () => {
     setIsRejectModalOpen(false);
   };
 
+  const updateField = (field, value) => {
+    setSelectedInternship((prev) => ({
+      ...prev,
+      [field]: value,
+    }));
+  };
+
+  const handleUpdateJob = async (e) => {
+    e.preventDefault();
+    if (!selectedInternship) return;
+
+    // Set adminApproved to false when the internship is updated
+    const updatedInternship = { ...selectedInternship, adminApproved: false };
+
+    try {
+      const response = await axios.put(
+        `/api/interns/${updatedInternship._id}`,
+        updatedInternship
+      );
+      console.log("Internship updated:", response.data);
+
+      setInternships((prevInternships) =>
+        prevInternships.map((internship) =>
+          internship._id === updatedInternship._id ? response.data : internship
+        )
+      );
+      closeModal();
+    } catch (error) {
+      console.error("Error updating internship:", error);
+    }
+  };
+
+
   // Sorting logic
   const sortInternships = (internships) => {
     return internships.sort((a, b) => {
@@ -174,11 +207,10 @@ const YourJobPosts = () => {
             <div className="mt-4">
               <strong>Status:</strong>{" "}
               <span
-                className={`inline-block px-2 py-1 rounded-full font-bold ${
-                  internship.adminApproved
-                    ? "bg-green-200 text-green-800"
-                    : "bg-red-200 text-red-800"
-                }`}
+                className={`inline-block px-2 py-1 rounded-full font-bold ${internship.adminApproved
+                  ? "bg-green-200 text-green-800"
+                  : "bg-red-200 text-red-800"
+                  }`}
               >
                 {internship.adminApproved ? "Accepted" : "Not Approved"}
               </span>
@@ -220,56 +252,182 @@ const YourJobPosts = () => {
       <Modal
         isOpen={isModalOpen}
         onRequestClose={closeModal}
-        contentLabel="Internship Details"
-        className="fixed font-poppins inset-0 flex items-center justify-center"
-        overlayClassName=" fixed inset-0 bg-black bg-opacity-50"
+        contentLabel="Edit Internship Details"
+        className="fixed font-poppins inset-0 z-[1000] flex items-center justify-center overflow-hidden"
+        overlayClassName="fixed inset-0 bg-black bg-opacity-50 z-[999]"
       >
-        <div className="bg-white p-6 rounded-lg shadow-lg max-w-2xl w-full">
+        <div className="bg-white p-6 rounded-lg shadow-lg max-w-2xl w-full z-[1000] overflow-y-auto max-h-[90vh]">
           {selectedInternship && (
-            <>
-              {selectedInternship.imageUrl && (
-                <img
-                  src={selectedInternship.imageUrl}
-                  alt={selectedInternship.jobTitle}
-                  className="mb-4 w-full h-40 object-cover rounded-lg"
+            <form onSubmit={handleUpdateJob}>
+              <h2 className="text-2xl font-semibold mb-4">Update Internship Details</h2>
+
+              {/* Job Title */}
+              <div className="mb-4">
+                <label className="block font-medium mb-1">Job Title</label>
+                <input
+                  type="text"
+                  value={selectedInternship.jobTitle || ""}
+                  onChange={(e) => updateField("jobTitle", e.target.value)}
+                  className="p-2 border rounded w-full"
                 />
-              )}
-              <h2 className="text-2xl font-semibold mb-4">
-                {selectedInternship.jobTitle}
-              </h2>
-              <p className="mb-2">
-                <strong>Company:</strong> {selectedInternship.companyName}
-              </p>
-              <p className="mb-2">
-                <strong>Location:</strong> {selectedInternship.location}
-              </p>
-              <p className="mb-2">
-                <strong>Job Description:</strong>{" "}
-                {selectedInternship.jobDescription}
-              </p>
-              <p className="mb-2">
-                <strong>Qualifications:</strong>{" "}
-                {selectedInternship.qualifications}
-              </p>
-              <p className="mb-2">
-                <strong>Start Date:</strong> {selectedInternship.startDate}
-              </p>
-              <p className="mb-2">
-                <strong>End Date:</strong> {selectedInternship.endDateOrDuration}
-              </p>
-              <div className="flex justify-end mt-4">
+              </div>
+
+              {/* Company Name */}
+              <div className="mb-4">
+                <label className="block font-medium mb-1">Company Name</label>
+                <input
+                  type="text"
+                  value={selectedInternship.companyName || ""}
+                  onChange={(e) => updateField("companyName", e.target.value)}
+                  className="p-2 border rounded w-full"
+                />
+              </div>
+
+              {/* Location */}
+              <div className="mb-4">
+                <label className="block font-medium mb-1">Location</label>
+                <input
+                  type="text"
+                  value={selectedInternship.location || ""}
+                  onChange={(e) => updateField("location", e.target.value)}
+                  className="p-2 border rounded w-full"
+                />
+              </div>
+
+              {/* Job Type */}
+              <div className="mb-4">
+                <label className="block font-medium mb-1">Job Type</label>
+                <input
+                  type="text"
+                  value={selectedInternship.jobType || ""}
+                  onChange={(e) => updateField("jobType", e.target.value)}
+                  className="p-2 border rounded w-full"
+                />
+              </div>
+
+              {/* Job Description */}
+              <div className="mb-4">
+                <label className="block font-medium mb-1">Job Description</label>
+                <textarea
+                  value={selectedInternship.jobDescription || ""}
+                  onChange={(e) => updateField("jobDescription", e.target.value)}
+                  className="p-2 border rounded w-full"
+                  rows={3}
+                />
+              </div>
+
+              {/* Start Date */}
+              <div className="mb-4">
+                <label className="block font-medium mb-1">Start Date</label>
+                <input
+                  type="date"
+                  value={selectedInternship.startDate || ""}
+                  onChange={(e) => updateField("startDate", e.target.value)}
+                  className="p-2 border rounded w-full"
+                />
+              </div>
+
+              {/* End Date / Duration */}
+              <div className="mb-4">
+                <label className="block font-medium mb-1">End Date / Duration</label>
+                <input
+                  type="text"
+                  value={selectedInternship.endDateOrDuration || ""}
+                  onChange={(e) => updateField("endDateOrDuration", e.target.value)}
+                  className="p-2 border rounded w-full"
+                />
+              </div>
+
+              {/* Duration */}
+              <div className="mb-4">
+                <label className="block font-medium mb-1">Duration</label>
+                <input
+                  type="text"
+                  value={selectedInternship.duration || ""}
+                  onChange={(e) => updateField("duration", e.target.value)}
+                  className="p-2 border rounded w-full"
+                />
+              </div>
+
+              {/* Stipend/Salary */}
+              <div className="mb-4">
+                <label className="block font-medium mb-1">Stipend/Salary</label>
+                <input
+                  type="text"
+                  value={selectedInternship.salaryDetails || ""}
+                  onChange={(e) => updateField("salaryDetails", e.target.value)}
+                  className="p-2 border rounded w-full"
+                />
+              </div>
+
+              {/* Qualifications */}
+              <div className="mb-4">
+                <label className="block font-medium mb-1">Qualifications</label>
+                <textarea
+                  value={selectedInternship.qualifications || ""}
+                  onChange={(e) => updateField("qualifications", e.target.value)}
+                  className="p-2 border rounded w-full"
+                  rows={3}
+                />
+              </div>
+
+              {/* Contact Info Fields */}
+              <h3 className="text-lg font-semibold mt-6 mb-2">Contact Info</h3>
+
+              {/* Name Field */}
+              <div className="mb-4">
+                <label className="block font-medium mb-1">Contact Name</label>
+                <input
+                  type="text"
+                  value={selectedInternship.contactInfo?.name || ""}
+                  onChange={(e) => updateField("contactInfo.name", e.target.value)} // Update nested field
+                  className="p-2 border rounded w-full"
+                />
+              </div>
+
+              {/* Email Field */}
+              <div className="mb-4">
+                <label className="block font-medium mb-1">Email</label>
+                <input
+                  type="email"
+                  value={selectedInternship.contactInfo?.email || ""}
+                  onChange={(e) => updateField("contactInfo.email", e.target.value)} // Update nested field
+                  className="p-2 border rounded w-full"
+                />
+              </div>
+
+              {/* Phone Field */}
+              <div className="mb-4">
+                <label className="block font-medium mb-1">Phone</label>
+                <input
+                  type="text"
+                  value={selectedInternship.contactInfo?.phone || ""}
+                  onChange={(e) => updateField("contactInfo.phone", e.target.value)} // Update nested field
+                  className="p-2 border rounded w-full"
+                />
+              </div>
+
+              {/* Action Buttons */}
+              <div className="flex justify-end space-x-4">
                 <button
+                  type="button"
                   onClick={closeModal}
                   className="px-4 py-2 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400"
                 >
-                  Close
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="px-4 py-2 bg-indigo-500 text-white rounded-md hover:bg-indigo-600"
+                >
+                  Save
                 </button>
               </div>
-            </>
+            </form>
           )}
         </div>
       </Modal>
-     
+
     </div>
   );
 };

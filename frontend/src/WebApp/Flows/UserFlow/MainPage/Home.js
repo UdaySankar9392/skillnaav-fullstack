@@ -115,7 +115,7 @@ const Home = () => {
                     </p>
                     <p>
                       <FontAwesomeIcon icon={faDollarSign} />{" "}
-                      {job.stipendOrSalary}
+                      {job.salaryDetails}
                     </p>
                   </div>
                   <div className="flex items-center justify-between">
