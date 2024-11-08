@@ -17,6 +17,13 @@ const userwebappSchema = new mongoose.Schema(
       type: String,
       required: true,
     },
+    otp: { 
+      type: String 
+    },
+    otpExpiration: { 
+      type: Date 
+    },
+ 
     universityName: {
       type: String,
       required: true,
@@ -43,7 +50,7 @@ const userwebappSchema = new mongoose.Schema(
     },
     portfolio: {
       type: String,
-      required: false,
+      
     },
     adminApproved: {
       type: Boolean,
@@ -57,6 +64,7 @@ const userwebappSchema = new mongoose.Schema(
   {
     timestamps: true,
   }
+  
 );
 
 // Hash password before saving
