@@ -91,7 +91,7 @@ const registerUser = asyncHandler(async (req, res) => {
   } = req.body;
 
   // Check for required fields
-  if (!areFieldsFilled([name, email, password, confirmPassword, universityName, dob, educationLevel, fieldOfStudy, desiredField, linkedin, portfolio])) {
+  if (!areFieldsFilled([name, email, password, confirmPassword, universityName, dob, educationLevel, fieldOfStudy, desiredField, linkedin, ])) {
     res.status(400);
     throw new Error("Please fill all required fields.");
   }
@@ -221,7 +221,7 @@ const updateUserProfile = asyncHandler(async (req, res) => {
 
 // Get all users with additional fields
 const getAllUsers = asyncHandler(async (req, res) => {
-  const users = await Userwebapp.find({}, "name email universityName dob educationLevel fieldOfStudy desiredField linkedin portfolio adminApproved");
+  const users = await Userwebapp.find({}, "name email universityName dob educationLevel fieldOfStudy desiredField linkedin  adminApproved");
 
   if (users && users.length > 0) {
     res.status(200).json(users);
