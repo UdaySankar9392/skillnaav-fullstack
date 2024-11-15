@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
-import { AiOutlineClose, AiOutlineDownload } from "react-icons/ai";
+import { AiOutlineClose, AiOutlineSearch, AiOutlineDownload } from "react-icons/ai";
 import jsPDF from "jspdf";
 
 const UserManagement = () => {
@@ -11,6 +11,7 @@ const UserManagement = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [confirmAction, setConfirmAction] = useState(null);
   const [confirmLoading, setConfirmLoading] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
 
   const [currentPage, setCurrentPage] = useState(1);
   const usersPerPage = 10;
@@ -95,7 +96,14 @@ const UserManagement = () => {
 
   const indexOfLastUser = currentPage * usersPerPage;
   const indexOfFirstUser = indexOfLastUser - usersPerPage;
-  const currentUsers = users.slice(indexOfFirstUser, indexOfLastUser);
+
+  // Filter users based on search query
+  const filteredUsers = users.filter(
+    (user) =>
+      user.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      user.email.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+  const currentUsers = filteredUsers.slice(indexOfFirstUser, indexOfLastUser);
 
   const paginateNext = () => setCurrentPage((prevPage) => Math.min(prevPage + 1, totalPages));
   const paginatePrevious = () => setCurrentPage((prevPage) => Math.max(prevPage - 1, 1));
@@ -112,11 +120,32 @@ const UserManagement = () => {
     return <div className="text-center text-red-500">Error fetching data: {error}</div>;
   }
 
-  const totalPages = Math.ceil(users.length / usersPerPage);
+  const totalPages = Math.ceil(filteredUsers.length / usersPerPage);
 
   return (
     <div className="p-6 bg-white rounded-lg shadow-lg max-w-6xl mx-auto">
-      <h2 className="text-3xl font-bold mb-6 text-center text-gray-800">Pending Student Registrations</h2>
+      <h2 className="text-3xl font-bold mb-6 text-center text-gray-800">Student Applications for Approval</h2>
+
+      {/* Search Bar */}
+      <div className="mb-4 flex justify-center items-center relative w-full max-w-3xl">
+  <input
+    type="text"
+    placeholder="Search by name or email"
+    value={searchQuery}
+    onChange={(e) => setSearchQuery(e.target.value)}
+    className="px-12 py-2 border rounded-lg w-full focus:outline-none focus:ring-2 focus:ring-blue-500"
+  />
+  <AiOutlineSearch size={20} className="absolute left-4 top-1/2 transform -translate-y-0 text-gray-600" />
+  {searchQuery && (
+    <AiOutlineClose
+      size={20}
+      className="absolute right-4 top-1/2 transform -translate-y-0 text-gray-600 cursor-pointer"
+      onClick={() => setSearchQuery("")}
+    />
+  )}
+</div>
+
+
       <div className="overflow-x-auto">
         <table className="min-w-full table-auto divide-y divide-gray-200">
           <thead className="bg-gray-200">
@@ -180,7 +209,9 @@ const UserManagement = () => {
         >
           Previous
         </button>
-        <span className="px-4 py-2 text-gray-700">{currentPage} of {totalPages}</span>
+        <span className="px-4 py-2 text-sm text-gray-600">
+          Page {currentPage} of {totalPages}
+        </span>
         <button
           onClick={paginateNext}
           className={`px-4 py-2 rounded ${currentPage === totalPages ? 'bg-gray-300' : 'bg-blue-500 text-white hover:bg-blue-600'}`}
@@ -190,59 +221,67 @@ const UserManagement = () => {
         </button>
       </div>
 
-      {/* Existing Modal and Confirm Action Components */}
-      {/* Modal for user details */}
-      {isModalOpen && selectedUser && (
-        <div className="fixed inset-0 flex items-center justify-center z-50 bg-black bg-opacity-50">
-          <div className="bg-white rounded-lg shadow-lg w-full max-w-md max-h-screen overflow-y-auto">
-            <div className="flex justify-between items-center p-4 bg-blue-600 text-white rounded-t-lg">
-              <h3 className="text-lg font-semibold">User Details</h3>
-              <button onClick={closeModal} className="text-white">
-                <AiOutlineClose size={20} />
-              </button>
-            </div>
-            <div className="p-6">
-              <p className="mb-2"><strong>Name:</strong> {selectedUser.name}</p>
-              <p className="mb-2"><strong>Email:</strong> {selectedUser.email}</p>
-              <p className="mb-2"><strong>University Name:</strong> {selectedUser.universityName}</p>
-              <p className="mb-2"><strong>Date of Birth:</strong> {selectedUser.dob}</p>
-              <p className="mb-2"><strong>Educational Level:</strong> {selectedUser.educationLevel}</p>
-              <p className="mb-2"><strong>Field of Study:</strong> {selectedUser.fieldOfStudy}</p>
-              <p className="mb-2"><strong>Desired Field:</strong> {selectedUser.desiredField}</p>
-              <button
-                onClick={downloadPDF}
-                className="mt-4 px-4 py-2 bg-blue-600 text-white font-semibold rounded hover:bg-blue-700 flex items-center justify-center"
-              >
-                <AiOutlineDownload className="mr-2" />
-                Download PDF
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      {/* Modal */}
+{isModalOpen && selectedUser && (
+  <div
+    className="fixed inset-0 bg-gray-800 bg-opacity-50 flex justify-center items-center z-50"
+    onClick={closeModal}
+  >
+    <div
+      className="bg-white rounded-lg p-6 w-96 relative"
+      onClick={(e) => e.stopPropagation()}
+    >
+      {/* Close Button */}
+      <button
+        onClick={closeModal}
+        className="absolute top-2 right-2 text-gray-600 hover:text-gray-900 focus:outline-none"
+      >
+        <span className="text-2xl">&times;</span>
+      </button>
 
+      <h3 className="text-xl font-semibold mb-4">User Details</h3>
+      <div className="space-y-2">
+        <p><strong>Name:</strong> {selectedUser.name}</p>
+        <p><strong>Email:</strong> {selectedUser.email}</p>
+        <p><strong>University:</strong> {selectedUser.universityName || "N/A"}</p>
+        <p><strong>Date of Birth:</strong> {selectedUser.dob || "N/A"}</p>
+        <p><strong>Educational Level:</strong> {selectedUser.educationLevel || "N/A"}</p>
+        <p><strong>Field of Study:</strong> {selectedUser.fieldOfStudy || "N/A"}</p>
+        <p><strong>Desired Field:</strong> {selectedUser.desiredField || "N/A"}</p>
+      </div>
+      <div className="mt-4 flex justify-end">
+        <button
+          onClick={downloadPDF}
+          className="px-4 py-2 bg-blue-500 text-white rounded-md"
+        >
+          Download PDF
+        </button>
+      </div>
+    </div>
+  </div>
+)}
+
+
+      {/* Confirmation Modal */}
       {confirmAction && (
-        <div className="fixed inset-0 flex items-center justify-center z-50 bg-black bg-opacity-50">
-          <div className="bg-white rounded-lg shadow-lg p-6 max-w-md">
-            <h3 className="text-lg font-semibold mb-4">
-              Confirm {confirmAction.type === "approve" ? "Approval" : "Rejection"}
-            </h3>
-            <p className="text-gray-700 mb-4">
+         <div className="fixed inset-0 bg-gray-800 bg-opacity-50 flex justify-center items-center z-50">
+          <div className="bg-white rounded-lg p-6 w-96">
+            <h3 className="text-lg font-semibold">
               Are you sure you want to {confirmAction.type} this user?
-            </p>
-            <div className="flex justify-end space-x-4">
-              <button
-                onClick={() => setConfirmAction(null)}
-                className="px-4 py-2 bg-gray-300 text-gray-800 rounded hover:bg-gray-400"
-              >
-                Cancel
-              </button>
+            </h3>
+            <div className="mt-4 flex space-x-4 justify-end">
               <button
                 onClick={confirmActionHandler}
-                className="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600"
+                className="px-4 py-2 bg-green-500 text-white rounded-md"
                 disabled={confirmLoading}
               >
-                {confirmLoading ? "Processing..." : "Confirm"}
+                {confirmLoading ? 'Processing...' : 'Yes'}
+              </button>
+              <button
+                onClick={() => setConfirmAction(null)}
+                className="px-4 py-2 bg-gray-500 text-white rounded-md"
+              >
+                No
               </button>
             </div>
           </div>

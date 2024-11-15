@@ -32,21 +32,27 @@ const UserCreateAccount = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
-  const handleSubmit= async(values,{setSubmitting}) => {
-    try{
-        // Check if the email already exists before proceeding.
-        const response= await axios.get(`/api/users/check-email?email=${values.email}`);
-        if(response.data.exists){
-            setErrorMessage("Email already registered.");
-            setSubmitting(false);
-            return; 
-        }
-        navigate("/user-profile-form", { state:{userData : values}});
-    }catch(error){
-        setErrorMessage("email already existing.");
+  const handleSubmit = async (values, { setSubmitting }) => {
+    try {
+      // Check if the email already exists before proceeding.
+      const response = await axios.get(`/api/users/check-email?email=${values.email}`);
+      if (response.data.exists) {
+        setErrorMessage("Email already registered.");
+        setSubmitting(false);
+        return;
+      }
+  
+      // Clear any previous data in localStorage
+      localStorage.removeItem("userFormData");
+  
+      // Navigate to UserProfileForm with user data
+      navigate("/user-profile-form", { state: { userData: values } });
+    } catch (error) {
+      setErrorMessage("Error checking email.");
+      setSubmitting(false);
     }
-    setSubmitting(false);
-};
+  };
+  
 
   const handleGoogleSignIn = () => {
     account.createOAuth2Session(
