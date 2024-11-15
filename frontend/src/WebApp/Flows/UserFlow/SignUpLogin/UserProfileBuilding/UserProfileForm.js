@@ -3,27 +3,16 @@ import { useNavigate, useLocation } from "react-router-dom";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 
-const universitySuggestions = [
-  "Harvard University",
-  "Stanford University",
-  "Massachusetts Institute of Technology",
-  "University of Oxford",
-  "University of Cambridge",
-  "California Institute of Technology",
-  "Princeton University",
-  "Yale University",
-  "University of Chicago",
-  "Imperial College London",
-  // Add more universities as needed
-];
-
 const UserProfileForm = () => {
   const location = useLocation();
+  const navigate = useNavigate();
   const userData = location.state?.userData || {}; // Access user data
 
+
+  // Initialize form data with empty values (to ensure empty fields on initial load)
   const [formData, setFormData] = useState({
     universityName: "",
-    dob: null, // dob will be a Date object
+    dob: null,
     educationLevel: "",
     fieldOfStudy: "",
     ...userData, // Initialize formData with userData if available
@@ -31,14 +20,24 @@ const UserProfileForm = () => {
 
   const [filteredSuggestions, setFilteredSuggestions] = useState([]);
   const [isFormValid, setIsFormValid] = useState(false);
-  const navigate = useNavigate();
 
-  // Validate form on every change
+  // Effect to handle loading form data from location state or localStorage
+  useEffect(() => {
+    const savedData = localStorage.getItem("userFormData");
+
+    if (savedData) {
+      // Load saved data from localStorage
+      setFormData(JSON.parse(savedData));
+    }
+  }, []); // Empty dependency array ensures this runs only once on component mount
+
+  // Update validation for form
   useEffect(() => {
     const { universityName, dob, educationLevel, fieldOfStudy } = formData;
     setIsFormValid(universityName && dob && educationLevel && fieldOfStudy);
   }, [formData]);
 
+  // Handle input changes
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData((prevData) => ({
@@ -46,6 +45,7 @@ const UserProfileForm = () => {
       [name]: value,
     }));
 
+    // Filtering university suggestions as user types
     if (name === "universityName") {
       const suggestions = universitySuggestions.filter((university) =>
         university.toLowerCase().includes(value.toLowerCase())
@@ -54,26 +54,45 @@ const UserProfileForm = () => {
     }
   };
 
+  // Handle date picker change
   const handleDateChange = (date) => {
+    const updatedDate = new Date(date);
+    updatedDate.setHours(0, 0, 0, 0);
     setFormData((prevData) => ({
       ...prevData,
-      dob: date,
+      dob: updatedDate,
     }));
   };
 
   const handleSubmit = () => {
-    if (isFormValid) {
-      console.log("Form Data:", formData);
-      navigate("/user-profile-picture", { state: { formData } });
-    }
+    // Log formData to console
+    console.log("Form Data Submitted:", formData);
+  
+    // Save data to localStorage
+    localStorage.setItem("userFormData", JSON.stringify(formData));
+  
+    // Navigate to user profile picture page
+    navigate("/user-profile-picture", { state: { formData } });
   };
+  
 
+  // Example university suggestions (this could come from an API or a more extensive list)
+  const universitySuggestions = [
+    "Harvard University",
+    "Stanford University",
+    "University of California",
+    "Massachusetts Institute of Technology",
+    "Oxford University",
+    // Add more universities as needed
+  ];
+
+  // Handle suggestion selection
   const handleSuggestionClick = (suggestion) => {
     setFormData((prevData) => ({
       ...prevData,
       universityName: suggestion,
     }));
-    setFilteredSuggestions([]);
+    setFilteredSuggestions([]); // Clear suggestions after selection
   };
 
   return (
@@ -100,11 +119,7 @@ const UserProfileForm = () => {
             {filteredSuggestions.length > 0 && (
               <ul className="absolute z-10 w-full bg-white border border-gray-300 rounded-md shadow-lg mt-1 max-h-40 overflow-y-auto">
                 {filteredSuggestions.map((suggestion, index) => (
-                  <li
-                    key={index}
-                    onClick={() => handleSuggestionClick(suggestion)}
-                    className="cursor-pointer px-4 py-2 hover:bg-purple-100"
-                  >
+                  <li key={index} onClick={() => handleSuggestionClick(suggestion)} className="cursor-pointer px-4 py-2 hover:bg-purple-100">
                     {suggestion}
                   </li>
                 ))}
@@ -112,9 +127,7 @@ const UserProfileForm = () => {
             )}
           </div>
           <div>
-            <label htmlFor="dob" className="block text-sm font-medium text-gray-700">
-              Date of Birth
-            </label>
+            <label htmlFor="dob" className="block text-sm font-medium text-gray-700">Date of Birth</label>
             <DatePicker
               selected={formData.dob}
               onChange={handleDateChange}
@@ -128,7 +141,6 @@ const UserProfileForm = () => {
             />
           </div>
         </div>
-
         <div className="space-y-4">
           <div className="w-full h-12 p-3 bg-[#F9F0FF] border-b border-[#E6C4FB]">
             <h2 className="text-16px font-bold text-gray-700">EDUCATIONAL INFORMATION</h2>
@@ -174,33 +186,28 @@ const UserProfileForm = () => {
               </div>
             </div>
           </div>
+
           <div>
-            <label htmlFor="fieldOfStudy" className="block text-sm font-medium text-gray-700">
-              Field of Interest
-            </label>
+            <label htmlFor="fieldOfStudy" className="block text-sm font-medium text-gray-700">Field of Study</label>
             <select
-              id="fieldOfStudy"
               name="fieldOfStudy"
               value={formData.fieldOfStudy}
               onChange={handleChange}
-              className="mt-2 block w-full px-3 py-2 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-purple-500 focus:border-purple-500"
+              className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-purple-500 focus:border-purple-500"
             >
-              <option value="">Select Your Field</option>
-              <option value="space">Space Internships</option>
-              <option value="aero">Aeronautical Internships</option>
-              <option value="tech">Tech Internships</option>
-              <option value="research">Research Internships</option>
-              <option value="education">Education Internships</option>
+              <option value="">Select your field of study</option>
+              <option value="eng">Engineering Internships</option>
+              <option value="med">Medical Internships</option>
             </select>
           </div>
         </div>
 
-        <div className="flex space-x-4">
+        <div className="flex justify-end mt-6">
           <button
             type="button"
-            onClick={handleSubmit}
             disabled={!isFormValid}
-            className={`w-full py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white ${isFormValid ? "bg-purple-600 hover:bg-purple-700" : "bg-purple-300 cursor-not-allowed"} focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500`}
+            onClick={handleSubmit}
+            className="bg-purple-500 text-white px-6 py-3 rounded-md hover:bg-purple-600 disabled:bg-gray-400"
           >
             Continue
           </button>

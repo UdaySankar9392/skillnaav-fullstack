@@ -1,16 +1,26 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import axios from "axios";
 
 const UserProfilePicture = () => {
   const location = useLocation();
   const navigate = useNavigate();
-  const [formData, setFormData] = useState({
-    fieldOfStudy: location.state?.formData.fieldOfStudy || "",
-    desiredField: "",
-    linkedin: "",
-    portfolio: "",
+  
+  // Initialize formData with localStorage or location state
+  const [formData, setFormData] = useState(() => {
+    const savedData = localStorage.getItem("userProfileData");
+    return savedData ? JSON.parse(savedData) : {
+      fieldOfStudy: location.state?.formData.fieldOfStudy || "",
+      desiredField: "",
+      linkedin: "",
+      portfolio: "",
+    };
   });
+
+  // Save form data to localStorage whenever it changes
+  useEffect(() => {
+    localStorage.setItem("userProfileData", JSON.stringify(formData));
+  }, [formData]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -35,6 +45,8 @@ const UserProfilePicture = () => {
       const response = await axios.post('/api/users/register', completeProfileData);
 
       if (response.status === 201) {
+        // Clear localStorage after successful submission
+        localStorage.removeItem("userProfileData");
         navigate("/user-main-page");
       }
     } catch (error) {

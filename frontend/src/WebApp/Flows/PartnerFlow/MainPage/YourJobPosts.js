@@ -186,9 +186,10 @@ const YourJobPosts = () => {
               <img
                 src={internship.imgUrl}
                 alt={internship.jobTitle}
-                className="mb-4 w-full h-40 object-cover rounded-lg"
+                className="mb-4 w-full h-40 object-contain rounded-lg"
               />
             )}
+
             <h3 className="text-xl font-semibold mb-2">
               {internship.jobTitle}
             </h3>
@@ -331,7 +332,7 @@ const YourJobPosts = () => {
               <div className="mb-4">
                 <label className="block font-medium mb-1">End Date / Duration</label>
                 <input
-                  type="text"
+                  type="date"
                   value={selectedInternship.endDateOrDuration || ""}
                   onChange={(e) => updateField("endDateOrDuration", e.target.value)}
                   className="p-2 border rounded w-full"

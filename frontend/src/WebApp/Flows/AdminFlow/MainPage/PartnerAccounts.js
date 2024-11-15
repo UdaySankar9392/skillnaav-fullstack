@@ -11,6 +11,7 @@ const PartnerManagement = () => {
   const [confirmAction, setConfirmAction] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage] = useState(10);
+  const [searchQuery, setSearchQuery] = useState("");
 
   useEffect(() => {
     const fetchPartners = async () => {
@@ -26,6 +27,12 @@ const PartnerManagement = () => {
 
     fetchPartners();
   }, []);
+
+  // Filtered partners based on search query
+  const filteredPartners = partners.filter((partner) =>
+    partner.universityName.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    partner.email.toLowerCase().includes(searchQuery.toLowerCase())
+  );
 
   const handleApprove = async () => {
     try {
@@ -90,8 +97,12 @@ const PartnerManagement = () => {
   // Pagination logic
   const indexOfLastPartner = currentPage * itemsPerPage;
   const indexOfFirstPartner = indexOfLastPartner - itemsPerPage;
-  const currentPartners = partners.slice(indexOfFirstPartner, indexOfLastPartner);
-  const totalPages = Math.ceil(partners.length / itemsPerPage);
+  const currentPartners = filteredPartners.slice(indexOfFirstPartner, indexOfLastPartner);
+  const totalPages = Math.ceil(filteredPartners.length / itemsPerPage);
+
+  const handleSearch = (e) => {
+    setSearchQuery(e.target.value);
+  };
 
   if (loading) {
     return (
@@ -107,7 +118,18 @@ const PartnerManagement = () => {
 
   return (
     <div className="p-6 bg-white rounded-lg shadow-lg max-w-6xl mx-auto">
-      <h2 className="text-3xl font-bold mb-6 text-center text-gray-800">Pending Partner Registrations</h2>
+      <h2 className="text-3xl font-bold mb-6 text-center text-gray-800">Partner Applications for Approval </h2>
+
+      {/* Search Bar */}
+      <div className="mb-4">
+        <input
+          type="text"
+          value={searchQuery}
+          onChange={handleSearch}
+          placeholder="Search by University Name or Email"
+          className="w-full p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400"
+        />
+      </div>
       <div className="overflow-x-auto">
         <table className="min-w-full table-auto divide-y divide-gray-200 shadow-md rounded-lg">
           <thead className="bg-gray-200">
@@ -129,7 +151,7 @@ const PartnerManagement = () => {
                   <span
                     className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${partner.status === "Approved" ? "bg-green-100 text-green-600"
                       : partner.status === "Rejected" ? "bg-red-100 text-red-600"
-                      : "bg-yellow-100 text-yellow-600"
+                        : "bg-yellow-100 text-yellow-600"
                       }`}
                   >
                     {partner.status}
