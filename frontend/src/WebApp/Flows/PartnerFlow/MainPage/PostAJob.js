@@ -1,8 +1,12 @@
-import React, { useState } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import axios from "axios";
 import firebase from "firebase/compat/app";
 import "firebase/compat/storage";
 import { useTabContext } from "./UserHomePageContext/HomePageContext";
+
+// API Keys and URL for API Calls (for example purposes)
+const COUNTRY_API_URL = 'https://restcountries.com/v3.1/all';  // Fetch all countries
+const CITY_API_URL = 'https://wft-geo-db.p.rapidapi.com/v1/geo/cities';  // GeoDB Cities API for cities
 
 const PostAJob = () => {
   const { saveJob } = useTabContext();
@@ -16,10 +20,10 @@ const PostAJob = () => {
     jobDescription: "",
     startDate: "",
     endDateOrDuration: "",
-    duration: "", // Duration (if needed)
+    duration: "",
     stipendOrSalary: "",
-    currency: "", // Default value
-    time: "", // Default value
+    currency: "USD",
+    time: "",
     qualifications: "",
     contactInfo: {
       name: "",
@@ -31,9 +35,119 @@ const PostAJob = () => {
     adminApproved: false,
   });
 
+  const [countries, setCountries] = useState([]);
+  const [cities, setCities] = useState([]);
+  const [countrySuggestions, setCountrySuggestions] = useState([]);
+  const [citySuggestions, setCitySuggestions] = useState([]);
   const [uploading, setUploading] = useState(false);
   const [previewUrl, setPreviewUrl] = useState(null);
+  const [isDropdownVisible, setIsDropdownVisible] = useState(false);
 
+  // Fetch all countries when the component mounts
+  useEffect(() => {
+    const fetchCountries = async () => {
+      try {
+        const response = await axios.get(COUNTRY_API_URL);
+        setCountries(response.data);
+      } catch (error) {
+        console.error("Error fetching countries:", error);
+      }
+    };
+
+    fetchCountries();
+  }, []);
+
+  // Debounced search for country suggestions
+  const debouncedSearchCountries = useCallback(
+    async (query) => {
+      if (!query) {
+        setCountrySuggestions([]);
+        return;
+      }
+
+      const filteredCountries = countries.filter((country) =>
+        country.name.common.toLowerCase().includes(query.toLowerCase())
+      );
+      setCountrySuggestions(filteredCountries);
+    },
+    [countries]
+  );
+
+  const handleCountryInputChange = (e) => {
+    const { value } = e.target;
+    setFormData((prev) => ({ ...prev, country: value }));
+    debouncedSearchCountries(value);
+
+    setCitySuggestions([]);
+  };
+
+  // Fetch cities based on selected country
+// Fetch cities based on selected country
+useEffect(() => {
+  if (!formData.country) return;
+
+  const fetchCities = async () => {
+      try {
+          // Find the selected country's alpha-2 code
+          const selectedCountry = countries.find(country => 
+              country.name.common.toLowerCase() === formData.country.toLowerCase()
+          );
+
+          if (!selectedCountry) return; // Exit if no matching country found
+
+          // Fetch cities using the country's alpha-2 code
+          const response = await axios.get(CITY_API_URL, {
+              headers: {
+                  "X-RapidAPI-Key": "7025bea304msh17f75625e027c56p185594jsncd48a2c69153", // Replace with your RapidAPI key
+                  "X-RapidAPI-Host": "wft-geo-db.p.rapidapi.com",
+              },
+              params: {
+                  countryIds: selectedCountry.cca2, // Use alpha-2 code for filtering by country
+                  limit: 100, // Adjust limit as needed to fetch more cities
+                  minPopulation: 100000, // Optional filter for larger cities
+              },
+          });
+          setCities(response.data.data); // Assuming 'data' contains cities array
+      } catch (error) {
+          console.error("Error fetching cities:", error);
+      }
+  };
+
+  fetchCities();
+}, [formData.country]);
+
+// Debounced search for city suggestions
+const debouncedSearchCities = useCallback(async (query) => {
+  if (!query) {
+      setCitySuggestions([]);
+      setIsDropdownVisible(false);
+      return;
+  }
+
+  // Filter cities based on user input
+  const filteredCities = cities.filter((city) =>
+      city.name.toLowerCase().includes(query.toLowerCase())
+  );
+
+  setCitySuggestions(filteredCities);
+  setIsDropdownVisible(true);
+}, [cities]);
+
+// Handle user input change for city field
+const handleCityInputChange = (e) => {
+  const { value } = e.target;
+
+  // Update formData only for city input change
+  setFormData((prev) => ({ ...prev, city: value }));
+  
+  debouncedSearchCities(value);
+};
+
+// Handle city selection from dropdown
+const handleCitySelect = (cityName) => {
+  setFormData((prev) => ({ ...prev, city: cityName }));
+  setIsDropdownVisible(false); // Hide dropdown after selection
+};
   const handleChange = (e) => {
     const { name, value } = e.target;
     if (name.includes("contactInfo.")) {
@@ -48,25 +162,60 @@ const PostAJob = () => {
   };
 
   const handleQualificationsChange = (e) => {
+    const { value } = e.target;
+    // Split the input by commas and trim extra spaces
     setFormData((prev) => ({
       ...prev,
-      qualifications: e.target.value.split(",").map((q) => q.trim()),
+      qualifications: value.split(",").map((q) => q.trim()),
     }));
   };
+
+  const calculateDuration = useCallback(() => {
+    const { startDate, endDateOrDuration } = formData;
+
+    if (!startDate || !endDateOrDuration) {
+      setFormData((prev) => ({ ...prev, duration: "" }));
+      return;
+    }
+
+    const start = new Date(startDate);
+    const end = new Date(endDateOrDuration);
+
+    if (end <= start) {
+      setFormData((prev) => ({ ...prev, duration: "Invalid duration" }));
+      return;
+    }
+
+    const months = end.getMonth() - start.getMonth() + 12 * (end.getFullYear() - start.getFullYear());
+    const days = end.getDate() - start.getDate();
+
+    const durationText = months > 0
+      ? `${months} month${months > 1 ? "s" : ""}${days > 0 ? ` and ${days} day${days > 1 ? "s" : ""}` : ""}`
+      : `${days} day${days > 1 ? "s" : ""}`;
+
+    setFormData((prev) => ({ ...prev, duration: durationText }));
+  }, [formData.startDate, formData.endDateOrDuration]);
+
+  useEffect(() => {
+    calculateDuration();
+  }, [formData.startDate, formData.endDateOrDuration, calculateDuration]);
+
 
   const resetForm = () => {
     setFormData({
       jobTitle: "",
       companyName: "",
-      location: "",
+      city: "",
+      country: "",
       jobType: "Internship",
       jobDescription: "",
       startDate: "",
       endDateOrDuration: "",
-      salaryDetails: "",
-      qualifications: "",
-      
+      duration: "",
+      stipendOrSalary: "",
+      currency: "USD",
       time: "",
+      qualifications: "",
       contactInfo: {
         name: "",
         email: "",
@@ -84,12 +233,11 @@ const PostAJob = () => {
 
     const completeFormData = {
       ...formData,
-      location: `${formData.city}, ${formData.country}`, // Combine city and country
-      salaryDetails: `${formData.stipendOrSalary} ${formData.currency} (${formData.time})`, // Combine stipend, currency, and time
-      jobDuration: formData.duration || "N/A", // Use "N/A" if duration is not provided
+      location: `${formData.city}, ${formData.country}`,
+      salaryDetails: `${formData.stipendOrSalary} ${formData.currency} (${formData.time})`,
+      jobDuration: formData.duration || "N/A",
     };
 
-    // Proceed with the post request using completeFormData
     try {
       const response = await axios.post("/api/interns", completeFormData);
       console.log("Internship posted successfully:", response.data);
@@ -102,10 +250,7 @@ const PostAJob = () => {
 
   const handleFileUpload = async (event) => {
     const selectedFile = event.target.files[0];
-    if (!selectedFile) {
-      console.log("No file selected.");
-      return;
-    }
+    if (!selectedFile) return;
 
     setUploading(true);
     const reader = new FileReader();
@@ -127,47 +272,92 @@ const PostAJob = () => {
 
   return (
     <div className="max-w-4xl font-poppins mx-auto p-6 bg-white rounded-lg shadow-lg mt-8">
-      <h2 className="text-2xl font-semibold text-gray-800 mb-4">
-        Post an Internship
-      </h2>
+      <h2 className="text-2xl font-semibold text-gray-800 mb-4">Post an Internship</h2>
       <form onSubmit={handleSubmit} className="space-y-6">
-        {/* Input Fields */}
-        {Object.entries({
-          jobTitle: "Job Title",
-          companyName: "Company Name",
-          qualifications: "Qualifications",
-        }).map(([key, label]) => (
-          <div key={key}>
-            <label className="block text-gray-700 font-medium mb-2">
-              {label}
-            </label>
-            {key === "jobType" ? (
-              <select
-                name={key}
-                value={formData[key]}
-                onChange={handleChange}
-                className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring focus:ring-teal-500"
-                required
-              >
-                <option value="Full-Time">Full-Time</option>
-                <option value="Part-Time">Part-Time</option>
-                <option value="Contract">Contract</option>
-                <option value="Internship">Internship</option>
-              </select>
-            ) : (
-              <input
-                type="text"
-                name={key}
-                value={formData[key]}
-                onChange={handleChange}
-                className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring focus:ring-teal-500"
-                placeholder={`Enter ${label.toLowerCase()}`}
-                required
-              />
-            )}
-          </div>
-        ))}
-        
+        {/* Other form fields... */}
+        <div>
+          <label className="block text-gray-700 font-medium mb-2">Job Title</label>
+          <input
+            type="text"
+            name="jobTitle"
+            value={formData.jobTitle}
+            onChange={handleChange}
+            className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring focus:ring-teal-500"
+            placeholder="Enter job title"
+            required
+          />
+        </div>
+
+        <div>
+          <label className="block text-gray-700 font-medium mb-2">Company Name</label>
+          <input
+            type="text"
+            name="companyName"
+            value={formData.companyName}
+            onChange={handleChange}
+            className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring focus:ring-teal-500"
+            placeholder="Enter company name"
+            required
+          />
+        </div>
+        <div>
+  <label className="block text-gray-700 font-medium mb-2">Location</label>
+  <div className="flex space-x-4">
+    {/* Country Autocomplete */}
+    <input
+      type="text"
+      name="country"
+      value={formData.country}
+      onChange={handleCountryInputChange}
+      className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring focus:ring-teal-500"
+      placeholder="Start typing country name"
+      list="country-suggestions"
+      required
+    />
+    <datalist id="country-suggestions">
+      {countrySuggestions.map((country) => (
+        <option key={country.cca3} value={country.name.common}>
+          {country.name.common}
+        </option>
+      ))}
+    </datalist>
+
+    {/* City Autocomplete */}
+    <input
+                          type="text"
+                          name="city"
+                          value={formData.city || ""}
+                          onChange={handleCityInputChange}
+                          onFocus={() => setIsDropdownVisible(true)}
+                          onBlur={() => setTimeout(() => setIsDropdownVisible(false), 200)}
+                          placeholder="Start typing city name"
+                          list="city-suggestions"
+                          autoComplete="off"
+                      />
+                      <datalist id="city-suggestions">
+                          {citySuggestions.map((city) => (
+                              <option key={city.id} value={city.name}>
+                                  {city.name}, {city.countryCode}
+                              </option>
+                          ))}
+                      </datalist>
+  </div>
+</div>
+
+        {/* Other form fields... */}
+        <div>
+          <label className="block text-gray-700 font-medium mb-2">Job Description</label>
+          <textarea
+            name="jobDescription"
+            value={formData.jobDescription}
+            onChange={handleChange}
+            className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring focus:ring-teal-500"
+            placeholder="Describe the job responsibilities, requirements, etc."
+            rows="4"
+            required
+          ></textarea>
+        </div>
+
         {/* Salary (Stipend), Currency, and Time Dropdowns */}
         <div>
           <label className="block text-gray-700 font-medium mb-2">Stipend/Salary</label>
@@ -208,14 +398,14 @@ const PostAJob = () => {
             className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring focus:ring-teal-500"
             required
           >
-            <option value="Hourly">Per Hour</option>
-            <option value="day">per Day</option>
-            <option value="Monthly">per Month</option>
-            <option value="week">per Week</option>
+            <option value="Per Hour">Per Hour</option>
+            <option value="Per Day">Per Day</option>
+            <option value="Per Month">Per Month</option>
+            <option value="Per week">Per Week</option>
           </select>
         </div>
 
-        {/* Start Date and End Date */}
+
         <div>
           <label className="block text-gray-700 font-medium mb-2">Start Date</label>
           <input
@@ -240,118 +430,76 @@ const PostAJob = () => {
           />
         </div>
 
-        {/* Duration */}
         <div>
-          <label className="block text-gray-700 font-medium mb-2">Duration</label>
+          <label className="block text-gray-700 font-medium mb-2">Calculated Duration</label>
           <input
             type="text"
             name="duration"
             value={formData.duration}
-            onChange={handleChange}
             className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring focus:ring-teal-500"
-            placeholder="Enter duration (e.g., 6 months)"
-            required
+            placeholder="Duration will be calculated"
+            readOnly
           />
         </div>
 
-        {/* City and Country */}
         <div>
-          <label className="block text-gray-700 font-medium mb-2">City</label>
+          <label className="block text-gray-700 font-medium mb-2">Qualifications</label>
           <input
             type="text"
-            name="city"
-            value={formData.city}
-            onChange={handleChange}
+            name="qualifications"
+            value={formData.qualifications}
+            onChange={handleQualificationsChange}
             className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring focus:ring-teal-500"
-            placeholder="Enter city"
+            placeholder="Enter required qualifications, separated by commas"
             required
           />
         </div>
+
         <div>
-          <label className="block text-gray-700 font-medium mb-2">Country</label>
-          <input
-            type="text"
-            name="country"
-            value={formData.country}
-            onChange={handleChange}
-            className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring focus:ring-teal-500"
-            placeholder="Enter country"
-            required
-          />
+          <label className="block text-gray-700 font-medium mb-2">Contact Information</label>
+          <div className="space-y-2">
+            <input
+              type="text"
+              name="contactInfo.name"
+              value={formData.contactInfo.name}
+              onChange={handleChange}
+              className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring focus:ring-teal-500"
+              placeholder="Contact Name"
+              required
+            />
+            <input
+              type="email"
+              name="contactInfo.email"
+              value={formData.contactInfo.email}
+              onChange={handleChange}
+              className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring focus:ring-teal-500"
+              placeholder="Contact Email"
+              required
+            />
+            <input
+              type="text"
+              name="contactInfo.phone"
+              value={formData.contactInfo.phone}
+              onChange={handleChange}
+              className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring focus:ring-teal-500"
+              placeholder="Contact Phone"
+            />
+          </div>
         </div>
 
-                {/* Job Description with Scrollable Textarea */}
-                <div>
-          <label className="block text-gray-700 font-medium mb-2">Job Description</label>
-          <textarea
-            name="jobDescription"
-            value={formData.jobDescription}
-            onChange={handleChange}
-            className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring focus:ring-teal-500"
-            placeholder="Enter job description"
-            style={{
-              resize: "vertical", // Allows the user to expand vertically
-              maxHeight: "150px", // Limits the max height
-              overflowY: "auto", // Enables scroll
-              scrollbarWidth: "none", // Hides the scrollbar for Firefox
-            }}
-            required
-          />
-        </div>
-
-        {/* Contact Info */}
         <div>
-          <label className="block text-gray-700 font-medium mb-2">Contact Info</label>
-          <input
-            type="text"
-            name="contactInfo.name"
-            value={formData.contactInfo.name}
-            onChange={handleChange}
-            className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring focus:ring-teal-500"
-            placeholder="Enter name"
-            required
-          />
-          <input
-            type="email"
-            name="contactInfo.email"
-            value={formData.contactInfo.email}
-            onChange={handleChange}
-            className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring focus:ring-teal-500"
-            placeholder="Enter email"
-            required
-          />
-          <input
-            type="tel"
-            name="contactInfo.phone"
-            value={formData.contactInfo.phone}
-            onChange={handleChange}
-            className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring focus:ring-teal-500"
-            placeholder="Enter phone number"
-            required
-          />
+          <label className="block text-gray-700 font-medium mb-2">Upload Job Image</label>
+          <input type="file" onChange={handleFileUpload} className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-teal-50 file:text-teal-700 hover:file:bg-teal-100" />
+          {uploading && <p className="text-teal-700">Uploading image...</p>}
+          {previewUrl && <img src={previewUrl} alt="Preview" className="mt-4 h-32 object-cover rounded-lg shadow-lg" />}
         </div>
 
-        {/* Image Upload */}
-        <div>
-          <label className="block text-gray-700 font-medium mb-2">Upload Logo/Image</label>
-          <input
-            type="file"
-            onChange={handleFileUpload}
-            className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring focus:ring-teal-500"
-            required
-          />
-        </div>
-
-        {/* Submit Button */}
-        <div className="flex justify-between">
-          <button
-            type="submit"
-            className="bg-teal-600 text-white p-3 rounded-lg font-medium"
-          >
-            Post Job
-          </button>
-          {uploading && <p>Uploading...</p>}
-        </div>
+        <button
+          type="submit"
+          className="w-full p-3 bg-teal-600 text-white font-semibold rounded-lg hover:bg-teal-700 focus:outline-none focus:ring focus:ring-teal-300"
+        >
+          Submit
+        </button>
       </form>
     </div>
   );

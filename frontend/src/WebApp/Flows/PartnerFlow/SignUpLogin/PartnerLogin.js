@@ -6,8 +6,8 @@ import axios from "axios";
 import Loading from "../../../Warnings/Loading/Loading";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faEye, faEyeSlash } from "@fortawesome/free-solid-svg-icons";
-import partnerImage from "../../../../assets-webapp/partner.jpg";
 import partner2Image from "../../../../assets-webapp/partner2_img.jpg";
+import ForgotPasswordModal from "../SignUpLogin/PartnerforgotPassword"; // Import the ForgotPasswordModal component
 
 const validationSchema = Yup.object({
   email: Yup.string().email("Invalid email address").required("Required"),
@@ -19,6 +19,7 @@ const PartnerLogin = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [isModalOpen, setIsModalOpen] = useState(false); // State to control modal visibility
 
   const handleSubmit = async (values, { setSubmitting }) => {
     setError("");
@@ -125,12 +126,13 @@ const PartnerLogin = () => {
 
                   {/* Forgot Password Button */}
                   <div className="flex justify-end mb-6">
-                    <Link
-                      to="/partner-forgot-password" // Navigate to the Forgot Password page
+                    <button
+                      type="button"
+                      onClick={() => setIsModalOpen(true)} // Open the modal when clicked
                       className="text-sm font-medium text-teal-500 hover:text-teal-700 transition duration-150 ease-in-out"
                     >
                       Forgot password?
-                    </Link>
+                    </button>
                   </div>
 
                   {/* Remember Me */}
@@ -170,17 +172,20 @@ const PartnerLogin = () => {
           </div>
 
           {/* Sign Up */}
-          <p className="text-center text-gray-500">
-            Don’t have an account?{" "}
+          <p className="text-center text-sm">
+            Don't have an account?{" "}
             <Link
               to="/partner-create-account"
-              className="text-teal-500 hover:underline font-semibold"
+              className="text-teal-500 hover:text-teal-700 font-semibold"
             >
               Sign up
             </Link>
           </p>
         </div>
       </div>
+
+      {/* Forgot Password Modal */}
+      <ForgotPasswordModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} />
     </div>
   );
 };

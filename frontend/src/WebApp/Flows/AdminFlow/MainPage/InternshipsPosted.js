@@ -194,43 +194,44 @@ const PartnerManagement = () => {
         </select>
       </div>
 
-      <table className="min-w-full bg-white rounded-lg shadow-lg">
-        <thead className="bg-gray-200">
-          <tr>
-            <th className="px-4 py-2 text-left font-semibold text-gray-600">S.No</th>
-            <th className="px-4 py-2 text-left font-semibold text-gray-600">Job Title</th>
-            <th className="px-4 py-2 text-left font-semibold text-gray-600">Company</th>
-            <th className="px-4 py-2 text-left font-semibold text-gray-600">Location</th>
-            <th className="px-4 py-2 text-left font-semibold text-gray-600">Stipend/Salary</th>
-            <th className="px-4 py-2 text-left font-semibold text-gray-600">Actions</th>
-          </tr>
-        </thead>
-        <tbody className="divide-y divide-gray-200">
-          {currentInternships.map((internship, index) => (
-            <tr key={internship._id} className="hover:bg-gray-50 transition-colors">
-              <td className="px-4 py-2">{index + 1 + (currentPage - 1) * applicationsPerPage}</td>
-              <td className="px-4 py-2">{internship.jobTitle}</td>
-              <td className="px-4 py-2">{internship.companyName}</td>
-              <td className="px-4 py-2">{internship.location}</td>
-              <td className="px-4 py-2">{internship.salaryDetails}</td>
-              <td className="px-4 py-2 flex space-x-2">
-                <button className={`px-3 py-1 rounded-md text-white ${internship.adminApproved ? "bg-green-500" : "bg-blue-500 hover:bg-blue-700"}`} onClick={() => handleApprove(internship._id)} disabled={internship.adminApproved}>
-                  {internship.adminApproved ? "Approved" : "Approve"}
-                </button>
-                <button className="px-3 py-1 bg-indigo-500 text-white rounded-md hover:bg-indigo-700" onClick={() => handleReview(internship)}>
-                  Review
-                </button>
-                <button className="px-3 py-1 bg-red-500 text-white rounded-md hover:bg-red-700" onClick={() => handleRejectClick(internship)}>
-                  Reject
-                </button>
-                <button className="px-3 py-1 bg-gray-500 text-white rounded-md hover:bg-gray-700" onClick={() => handleDeleteClick(internship)}>
-                  Delete
-                </button>
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
+      <table className="min-w-full bg-white rounded-lg shadow-lg overflow-auto">
+  <thead className="bg-gray-200">
+    <tr>
+      <th className="px-4 py-2 text-left font-semibold text-gray-600">S.No</th>
+      <th className="px-4 py-2 text-left font-semibold text-gray-600">Job Title</th>
+      <th className="px-4 py-2 text-left font-semibold text-gray-600">Company</th>
+      <th className="px-4 py-2 text-left font-semibold text-gray-600">Location</th>
+      <th className="px-4 py-2 text-left font-semibold text-gray-600">Stipend/Salary</th>
+      <th className="px-4 py-2 text-left font-semibold text-gray-600">Actions</th>
+    </tr>
+  </thead>
+  <tbody className="divide-y divide-gray-200">
+    {currentInternships.map((internship, index) => (
+      <tr key={internship._id} className="hover:bg-gray-50 transition-colors">
+        <td className="px-4 py-2">{index + 1 + (currentPage - 1) * applicationsPerPage}</td>
+        <td className="px-4 py-2">{internship.jobTitle}</td>
+        <td className="px-4 py-2">{internship.companyName}</td>
+        <td className="px-4 py-2">{internship.location}</td>
+        <td className="px-4 py-2">{internship.salaryDetails}</td>
+        <td className="px-4 py-2 flex space-x-2">
+          <button className={`px-3 py-1 rounded-md text-white ${internship.adminApproved ? "bg-green-500" : "bg-blue-500 hover:bg-blue-700"}`} onClick={() => handleApprove(internship._id)} disabled={internship.adminApproved}>
+            {internship.adminApproved ? "Approved" : "Approve"}
+          </button>
+          <button className="px-3 py-1 bg-indigo-500 text-white rounded-md hover:bg-indigo-700" onClick={() => handleReview(internship)}>
+            Review
+          </button>
+          <button className="px-3 py-1 bg-red-500 text-white rounded-md hover:bg-red-700" onClick={() => handleRejectClick(internship)}>
+            Reject
+          </button>
+          <button className="px-3 py-1 bg-gray-500 text-white rounded-md hover:bg-gray-700" onClick={() => handleDeleteClick(internship)}>
+            Delete
+          </button>
+        </td>
+      </tr>
+    ))}
+  </tbody>
+</table>
+
 
       {/* Pagination */}
       <div className="flex justify-between mt-4">
