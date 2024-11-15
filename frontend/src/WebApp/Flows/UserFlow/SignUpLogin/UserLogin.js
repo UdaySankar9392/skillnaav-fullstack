@@ -10,6 +10,7 @@ import { faEye, faEyeSlash } from "@fortawesome/free-solid-svg-icons";
 import { Client, Account } from "appwrite";
 import { FcGoogle } from "react-icons/fc";
 import { useGoogleLogin } from "@react-oauth/google";
+import ForgotPasswordModal from "../SignUpLogin/UserforgotPassword"; // Import the modal
 
 const client = new Client();
 client
@@ -28,6 +29,7 @@ const UserLogin = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [isModalOpen, setIsModalOpen] = useState(false); // State to control modal visibility
 
   const handleSubmit = async (values, { setSubmitting }) => {
     setError("");
@@ -81,7 +83,9 @@ const UserLogin = () => {
   //     console.error("Login failed:", error);
   //   },
   // });
-const login =()=>{}
+
+  const login = () => {};
+
   return (
     <div className="flex flex-col lg:flex-row min-h-screen font-poppins">
       {/* Left Section (Image) */}
@@ -163,12 +167,13 @@ const login =()=>{}
 
                   {/* Forgot Password Button */}
                   <div className="flex justify-end mb-6">
-                    <Link
-                      to="/user-forgot-password" // Navigate to the Forgot Password page
+                    <button
+                      type="button"
+                      onClick={() => setIsModalOpen(true)} // Open the modal
                       className="text-sm font-medium text-teal-500 hover:text-teal-700 transition duration-150 ease-in-out"
                     >
                       Forgot password?
-                    </Link>
+                    </button>
                   </div>
 
                   <button
@@ -188,25 +193,28 @@ const login =()=>{}
             <hr className="w-full border-gray-300" />
           </div>
           {/* Google Sign-In Button */}
-
           <button
             onClick={() => login()}
             className="w-full bg-red-500 text-white p-3 rounded-lg hover:bg-red-600 mb-4 flex items-center justify-center space-x-2"
           >
-            <FcGoogle className="h-5 w-5" /> {/* Google Icon */}
+            <FcGoogle className="text-xl" />
             <span>Sign in with Google</span>
           </button>
-          <p className="text-center text-gray-500 mt-8">
-            Don’t have an account?{" "}
-            <Link
-              to="/user-create-account"
-              className="text-purple-500 hover:underline font-semibold"
-            >
-              Sign up
-            </Link>
-          </p>
+
+          {/* Sign Up Button */}
+          <div className="flex justify-center mt-4">
+            <p className="text-sm text-gray-600">
+              Don't have an account?{" "}
+              <Link to="/user-create-account" className="text-teal-500 hover:text-teal-700">
+                Sign Up
+              </Link>
+            </p>
+          </div>
         </div>
       </div>
+
+      {/* ForgotPasswordModal Component */}
+      <ForgotPasswordModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} />
     </div>
   );
 };
