@@ -5,11 +5,13 @@ import {
   FaUserFriends,
   FaBriefcase,
   FaDollarSign,
+  FaTrashAlt, // Icon for Bin
 } from "react-icons/fa";
 import UserManagement from "./UserManagement";
 import PartnerManagement from "./InternshipsPosted";
 import PartnerAccounts from "./PartnerAccounts";
 import InternshipPosts from "./InternshipsPosted"; // New Component for Internship Posts
+import Bin from "./Bin";
 
 const BodyContent = () => {
   const { selectedTab } = useTabContext();
@@ -101,6 +103,13 @@ const BodyContent = () => {
         return (
           <div className="text-center mt-4">
             <h2>Settings Content Coming Soon...</h2>
+          </div>
+        );
+
+      case "bin":
+        return (
+          <div className="text-center mt-4">
+           <Bin/>
           </div>
         );
 
