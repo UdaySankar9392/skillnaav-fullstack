@@ -195,9 +195,12 @@ const UserProfileForm = () => {
               onChange={handleChange}
               className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-purple-500 focus:border-purple-500"
             >
-              <option value="">Select your field of study</option>
-              <option value="eng">Engineering Internships</option>
-              <option value="med">Medical Internships</option>
+               <option value="">Select Your Field</option>
+              <option value="space">Space Internships</option>
+              <option value="aero">Aeronautical Internships</option>
+              <option value="tech">Tech Internships</option>
+              <option value="research">Research Internships</option>
+              <option value="education">Education Internships</option>
             </select>
           </div>
         </div>
@@ -207,7 +210,7 @@ const UserProfileForm = () => {
             type="button"
             disabled={!isFormValid}
             onClick={handleSubmit}
-            className="bg-purple-500 text-white px-6 py-3 rounded-md hover:bg-purple-600 disabled:bg-gray-400"
+            className="bg-purple-500 text-white w-full px-6 py-3 rounded-md hover:bg-purple-600 disabled:bg-gray-400"
           >
             Continue
           </button>

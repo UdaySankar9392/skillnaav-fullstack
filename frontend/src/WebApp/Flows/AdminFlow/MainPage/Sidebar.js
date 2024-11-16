@@ -8,6 +8,7 @@ import {
   faCogs,
   faSignOutAlt,
   faChevronDown, // For dropdown arrow
+  faTrash, // For the Bin icon
 } from "@fortawesome/free-solid-svg-icons";
 import logo from "../../../../assets-webapp/Skillnaav-logo.png"; // Replace with your actual logo path
 import { useTabContext } from "./UserHomePageContext/HomePageContext"; // Adjust path as needed
@@ -139,6 +140,21 @@ const Sidebar = () => {
             >
               <FontAwesomeIcon icon={faCogs} className="w-5 h-5 mr-3" />
               <span>Settings</span>
+            </button>
+          </li>
+
+          {/* Bin Section */}
+          <li>
+            <button
+              onClick={() => handleTabClick("bin")}
+              className={`flex items-center p-3 rounded-lg w-full text-left font-medium ${
+                selectedTab === "bin"
+                  ? "bg-blue-100 text-blue-600"
+                  : "text-gray-700 hover:bg-gray-200"
+              }`}
+            >
+              <FontAwesomeIcon icon={faTrash} className="w-5 h-5 mr-3" />
+              <span>Bin</span>
             </button>
           </li>
         </ul>
