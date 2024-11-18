@@ -81,73 +81,45 @@ const PostAJob = () => {
     setCitySuggestions([]);
   };
 
-  // Fetch cities based on selected country
-// Fetch cities based on selected country
-useEffect(() => {
-  if (!formData.country) return;
-
-  const fetchCities = async () => {
-      try {
-          // Find the selected country's alpha-2 code
-          const selectedCountry = countries.find(country => 
-              country.name.common.toLowerCase() === formData.country.toLowerCase()
-          );
-
-          if (!selectedCountry) return; // Exit if no matching country found
-
-          // Fetch cities using the country's alpha-2 code
-          const response = await axios.get(CITY_API_URL, {
-              headers: {
-                  "X-RapidAPI-Key": "7025bea304msh17f75625e027c56p185594jsncd48a2c69153", // Replace with your RapidAPI key
-                  "X-RapidAPI-Host": "wft-geo-db.p.rapidapi.com",
-              },
-              params: {
-                  countryIds: selectedCountry.cca2, // Use alpha-2 code for filtering by country
-                  limit: 100, // Adjust limit as needed to fetch more cities
-                  minPopulation: 100000, // Optional filter for larger cities
-              },
-          });
-          setCities(response.data.data); // Assuming 'data' contains cities array
-      } catch (error) {
-          console.error("Error fetching cities:", error);
-      }
-  };
-
-  fetchCities();
-}, [formData.country]);
-
-// Debounced search for city suggestions
-const debouncedSearchCities = useCallback(async (query) => {
+ // Debounced search for city suggestions based on user input
+ const debouncedSearchCities = useCallback(async (query) => {
   if (!query) {
-      setCitySuggestions([]);
-      setIsDropdownVisible(false);
-      return;
+    setCitySuggestions([]);
+    return;
   }
+  try {
+    const response = await axios.get(CITY_API_URL, {
+      headers: {
+        "X-RapidAPI-Key": "7025bea304msh17f75625e027c56p185594jsncd48a2c69153",
+        "X-RapidAPI-Host": "wft-geo-db.p.rapidapi.com",
+      },
+      params: {
+        namePrefix: query,
+        limit: 10,
+        minPopulation: 100000,
+      },
+    });
+    setCitySuggestions(response.data.data);
+  } catch (error) {
+    console.error("Error fetching cities:", error);
+  }
+}, []);
 
-  // Filter cities based on user input
-  const filteredCities = cities.filter((city) =>
-      city.name.toLowerCase().includes(query.toLowerCase())
-  );
-
-  setCitySuggestions(filteredCities);
-  setIsDropdownVisible(true);
-}, [cities]);
-
-// Handle user input change for city field
 const handleCityInputChange = (e) => {
   const { value } = e.target;
-
-  // Update formData only for city input change
   setFormData((prev) => ({ ...prev, city: value }));
-  
   debouncedSearchCities(value);
 };
 
-// Handle city selection from dropdown
 const handleCitySelect = (cityName) => {
   setFormData((prev) => ({ ...prev, city: cityName }));
-  setIsDropdownVisible(false); // Hide dropdown after selection
+  setCitySuggestions([]);
 };
+
+// const handleCountryInputChange = (e) => {
+//   const { value } = e.target;
+//   setFormData((prev) => ({ ...prev, country: value }));
+// };
   const handleChange = (e) => {
     const { name, value } = e.target;
     if (name.includes("contactInfo.")) {
@@ -323,24 +295,33 @@ const handleCitySelect = (cityName) => {
     </datalist>
 
     {/* City Autocomplete */}
-    <input
-                          type="text"
-                          name="city"
-                          value={formData.city || ""}
-                          onChange={handleCityInputChange}
-                          onFocus={() => setIsDropdownVisible(true)}
-                          onBlur={() => setTimeout(() => setIsDropdownVisible(false), 200)}
-                          placeholder="Start typing city name"
-                          list="city-suggestions"
-                          autoComplete="off"
-                      />
-                      <datalist id="city-suggestions">
-                          {citySuggestions.map((city) => (
-                              <option key={city.id} value={city.name}>
-                                  {city.name}, {city.countryCode}
-                              </option>
-                          ))}
-                      </datalist>
+    <div className="relative">
+  {/* City Input Field */}
+  <input
+    type="text"
+    name="city"
+    value={formData.city}
+    onChange={handleCityInputChange}
+    className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring focus:ring-teal-500"
+    placeholder="Start typing city"
+    required
+  />
+
+  {/* City Suggestions Dropdown */}
+  {citySuggestions.length > 0 && (
+    <ul className="absolute z-10 w-full max-h-48 mt-2 overflow-y-auto bg-white border border-gray-300 rounded-lg shadow-lg">
+      {citySuggestions.map((city) => (
+        <li
+          key={city.id}
+          className="px-4 py-2 cursor-pointer hover:bg-teal-50 hover:text-teal-700"
+          onClick={() => handleCitySelect(city.name)}
+        >
+          {city.name}
+        </li>
+      ))}
+    </ul>
+  )}
+</div>
   </div>
 </div>
 

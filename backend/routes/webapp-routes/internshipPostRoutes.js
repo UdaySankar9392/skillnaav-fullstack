@@ -3,17 +3,17 @@ const InternshipPosting = require("../../models/webapp-models/internshipPostMode
 const notifyUser = require("../../utils/notifyUser.js");
 const router = express.Router();
 
-// GET all internship postings
+// GET all internship postings (excluding deleted)
 router.get("/", async (req, res) => {
   try {
-    const internships = await InternshipPosting.find({});
+    // Filter internships to exclude those that are soft-deleted
+    const internships = await InternshipPosting.find({ deleted: false });
     res.json(internships);
   } catch (error) {
-    res
-      .status(500)
-      .json({ message: "Server Error: Unable to fetch internships" });
+    res.status(500).json({ message: "Server Error: Unable to fetch internships" });
   }
 });
+
 
 // POST create a new internship posting
 router.post("/", async (req, res) => {
@@ -38,6 +38,7 @@ router.post("/", async (req, res) => {
       studentApplied: req.body.studentApplied || false,
       adminApproved: req.body.adminApproved || false,
       adminReviewed: req.body.adminReviewed || false,
+      deleted: req.body.admindeleted || false 
     });
 
     const createdInternship = await newInternship.save();
@@ -47,6 +48,106 @@ router.post("/", async (req, res) => {
     res
       .status(400)
       .json({ message: "Error: Unable to create internship post" });
+  }
+});
+// GET all deleted internship postings (soft deleted)
+router.get("/bin", async (req, res) => {
+  try {
+    const deletedInternships = await InternshipPosting.find({ deleted: true });
+
+    if (deletedInternships.length === 0) {
+      return res.status(404).json({ message: "No deleted internships found" });
+    }
+
+    res.json(deletedInternships);
+  } catch (error) {
+    console.error("Error fetching deleted internships:", error);
+    res.status(500).json({
+      message: "Server Error: Unable to fetch deleted internships",
+      error: error.message,
+    });
+  }
+});
+
+
+
+// Soft delete an internship posting by ID (mark as deleted)
+router.delete("/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    // Find the internship by ID
+    const internship = await InternshipPosting.findById(id);
+
+    if (!internship) {
+      return res.status(404).json({ message: "Internship not found" });
+    }
+
+    // Mark the internship as deleted (soft delete)
+    internship.deleted = true;  // Set the 'deleted' field to true
+    await internship.save();  // Save the updated internship document
+
+    res.json({ message: "Internship marked as deleted successfully" });
+  } catch (error) {
+    console.error("Error during deletion:", error);
+    res.status(500).json({
+      message: "Server Error: Unable to delete the internship",
+      error: error.message,
+    });
+  }
+});
+
+// Restore an internship by setting 'deleted' to false
+router.patch("/:id/restore", async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    // Find the internship by ID
+    const internship = await InternshipPosting.findById(id);
+
+    // Check if the internship exists
+    if (!internship) {
+      return res.status(404).json({ message: "Internship not found" });
+    }
+
+    // Set 'deleted' to false (restore the internship)
+    internship.deleted = false;
+
+    // Save the updated internship document
+    await internship.save();
+
+    // Return the restored internship
+    res.status(200).json({
+      message: "Internship restored successfully",
+      internship,
+    });
+  } catch (error) {
+    console.error("Error restoring internship:", error);
+    res.status(500).json({
+      message: "Server Error: Unable to restore internship",
+      error: error.message,
+    });
+  }
+});
+
+// Permanently delete an internship posting by ID
+router.delete("/:id/permanent", async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const deletedInternship = await InternshipPosting.findByIdAndDelete(id);
+
+    if (!deletedInternship) {
+      return res.status(404).json({ message: "Internship not found" });
+    }
+
+    res.json({ message: "Internship permanently deleted" });
+  } catch (error) {
+    console.error("Error during permanent deletion:", error);
+    res.status(500).json({
+      message: "Server Error: Unable to permanently delete the internship",
+      error: error.message,
+    });
   }
 });
 
@@ -221,10 +322,13 @@ router.patch("/:id/reject", async (req, res) => {
   }
 });
 
-// Get all approved internships
+// GET all approved internships (excluding deleted ones)
 router.get("/approved", async (req, res) => {
   try {
-    const approvedInternships = await InternshipPosting.find({ adminApproved: true });
+    const approvedInternships = await InternshipPosting.find({
+      adminApproved: true,
+      deleted: false, // Exclude soft-deleted internships
+    });
     res.json(approvedInternships);
   } catch (error) {
     console.error("Error fetching approved internships:", error);
@@ -234,7 +338,6 @@ router.get("/approved", async (req, res) => {
     });
   }
 });
-
 
 router.post("/:id/review", async (req, res) => {
   const { reviewText } = req.body;
