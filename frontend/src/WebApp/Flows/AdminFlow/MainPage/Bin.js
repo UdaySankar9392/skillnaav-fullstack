@@ -10,7 +10,7 @@ const BinManagement = () => {
   useEffect(() => {
     const fetchDeletedInternships = async () => {
       try {
-        const response = await axios.get("/api/internships/bin");
+        const response = await axios.get("/api/interns/bin");
         setDeletedInternships(response.data);
       } catch (error) {
         setError("Failed to load deleted internships. Please try again later.");
@@ -21,10 +21,13 @@ const BinManagement = () => {
 
     fetchDeletedInternships();
   }, []);
- 
+  
   const handleRestore = async (internId) => {
     try {
-      await axios.patch(`/api/internships/${internId}/restore`);
+      // Send a PATCH request to restore the internship (set deleted: false)
+      await axios.patch(`api/interns/${internId}/restore`, { deleted: false });
+  
+      // After successful restore, update the state to reflect the change
       setDeletedInternships((prevInternships) =>
         prevInternships.filter((i) => i._id !== internId)
       );
@@ -32,13 +35,13 @@ const BinManagement = () => {
       setError("Failed to restore internship. Please try again.");
     }
   };
-
+   
   const handlePermanentDelete = async (internId) => {
     const confirmed = window.confirm("Are you sure you want to permanently delete this internship?");
     if (!confirmed) return;
 
     try {
-      await axios.delete(`/api/internships/${internId}/permanent`);
+      await axios.delete(`api/interns/${internId}/permanent`);
       setDeletedInternships((prevInternships) =>
         prevInternships.filter((i) => i._id !== internId)
       );
@@ -67,6 +70,8 @@ const BinManagement = () => {
             <th className="px-4 py-2 text-left font-semibold text-gray-600">S.No</th>
             <th className="px-4 py-2 text-left font-semibold text-gray-600">Job Title</th>
             <th className="px-4 py-2 text-left font-semibold text-gray-600">Company</th>
+            <th className="px-4 py-2 text-left font-semibold text-gray-600">Location</th>
+            <th className="px-4 py-2 text-left font-semibold text-gray-600">Stipend</th>
             <th className="px-4 py-2 text-left font-semibold text-gray-600">Actions</th>
           </tr>
         </thead>
@@ -76,6 +81,8 @@ const BinManagement = () => {
               <td className="px-4 py-2">{index + 1}</td>
               <td className="px-4 py-2">{internship.jobTitle}</td>
               <td className="px-4 py-2">{internship.companyName}</td>
+              <td className="px-4 py-2">{internship.location}</td>
+              <td className="px-4 py-2">{internship.stipend}</td>
               <td className="px-4 py-2 flex space-x-2">
                 <button
                   className="px-3 py-1 bg-green-500 text-white rounded-md hover:bg-green-700"
