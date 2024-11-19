@@ -99,12 +99,13 @@ const PartnerManagement = () => {
             : internship
         )
       );
-      closeModal();
+      closeModal(); // Close modal after successful submission
     } catch (error) {
       console.error("Error submitting review:", error);
     }
   };
-  
+
+
   const closeDeleteModal = () => {
     setIsDeleteModalOpen(false);
     setInternshipToDelete(null); // Reset selected internship to delete
@@ -114,24 +115,24 @@ const PartnerManagement = () => {
     setInternshipToDelete(internship); // Set the internship to delete
     setIsDeleteModalOpen(true); // Open delete confirmation modal
   };
-  
+
   const confirmDelete = async () => {
     if (!internshipToDelete) return;
-  
+
     try {
       // Optimistic UI update: Immediately move the internship to the deleted list
       setDeletedInternships((prev) => [...prev, internshipToDelete]);
-  
+
       // Call API to mark the internship as deleted (soft delete)
       const response = await axios.delete(`/api/interns/${internshipToDelete._id}`);
-      
+
       console.log("Marked as deleted:", response.data);
-  
+
       // Update the internships list by removing the deleted internship
       setInternships((prevInternships) =>
         prevInternships.filter((i) => i._id !== internshipToDelete._id)
       );
-  
+
       closeDeleteModal(); // Close the modal after deletion
     } catch (error) {
       // If an error occurs, revert the optimistic UI changes and show an error message
@@ -144,7 +145,7 @@ const PartnerManagement = () => {
       alert("Error deleting internship. Please try again later.");
     }
   };
-  
+
 
   const sortInternships = (internships) => {
     return internships.sort((a, b) => {
@@ -214,57 +215,60 @@ const PartnerManagement = () => {
       </div>
 
       <div className="mb-4 overflow-x-auto scrollbar-thin scrollbar-thumb-gray-400 scrollbar-track-gray-200">
-  <table className="min-w-full bg-white rounded-lg shadow-lg">
-    <thead className="bg-gray-200">
-      <tr>
-        <th className="px-4 py-2 text-left font-semibold text-gray-600">S.No</th>
-        <th className="px-4 py-2 text-left font-semibold text-gray-600">Job Title</th>
-        <th className="px-4 py-2 text-left font-semibold text-gray-600">Company</th>
-        <th className="px-4 py-2 text-left font-semibold text-gray-600">Location</th>
-        <th className="px-4 py-2 text-left font-semibold text-gray-600">Stipend/Salary</th>
-        <th className="px-4 py-2 text-left font-semibold text-gray-600">Actions</th>
-      </tr>
-    </thead>
-    <tbody className="divide-y divide-gray-200">
-      {currentInternships.map((internship, index) => (
-        <tr key={internship._id} className="hover:bg-gray-50 transition-colors">
-          <td className="px-4 py-2">{index + 1 + (currentPage - 1) * applicationsPerPage}</td>
-          <td className="px-4 py-2">{internship.jobTitle}</td>
-          <td className="px-4 py-2">{internship.companyName}</td>
-          <td className="px-4 py-2">{internship.location}</td>
-          <td className="px-4 py-2">{internship.salaryDetails}</td>
-          <td className="px-4 py-2 flex space-x-2">
-            <button
-              className={`px-3 py-1 rounded-md text-white ${internship.adminApproved ? "bg-green-500" : "bg-blue-500 hover:bg-blue-700"}`}
-              onClick={() => handleApprove(internship._id)}
-              disabled={internship.adminApproved}
-            >
-              {internship.adminApproved ? "Approved" : "Approve"}
-            </button>
-            <button
-              className="px-3 py-1 bg-indigo-500 text-white rounded-md hover:bg-indigo-700"
-              onClick={() => handleReview(internship)}
-            >
-              Review
-            </button>
-            <button
-              className="px-3 py-1 bg-red-500 text-white rounded-md hover:bg-red-700"
-              onClick={() => handleRejectClick(internship)}
-            >
-              Reject
-            </button>
-            <button
-              className="px-3 py-1 bg-gray-500 text-white rounded-md hover:bg-gray-700"
-              onClick={() => handleDeleteClick(internship)}
-            >
-              Delete
-            </button>
-          </td>
-        </tr>
-      ))}
-    </tbody>
-  </table>
-</div>
+        <table className="min-w-full bg-white rounded-lg shadow-lg">
+          <thead className="bg-gray-200">
+            <tr>
+              <th className="px-4 py-2 text-left font-semibold text-gray-600">S.No</th>
+              <th className="px-4 py-2 text-left font-semibold text-gray-600">Job Title</th>
+              <th className="px-4 py-2 text-left font-semibold text-gray-600">Company</th>
+              <th className="px-4 py-2 text-left font-semibold text-gray-600">Location</th>
+              <th className="px-4 py-2 text-left font-semibold text-gray-600">Stipend/Salary</th>
+              <th className="px-4 py-2 text-left font-semibold text-gray-600">Actions</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-gray-200">
+            {currentInternships.map((internship, index) => (
+              <tr key={internship._id} className="hover:bg-gray-50 transition-colors">
+                <td className="px-4 py-2">{index + 1 + (currentPage - 1) * applicationsPerPage}</td>
+                <td className="px-4 py-2">{internship.jobTitle}</td>
+                <td className="px-4 py-2">{internship.companyName}</td>
+                <td className="px-4 py-2">{internship.location}</td>
+                <td className="px-4 py-2">{internship.salaryDetails}</td>
+                <td className="px-4 py-2 flex space-x-2">
+                  <button
+                    className={`px-3 py-1 rounded-md text-white ${internship.adminApproved ? "bg-green-500" : "bg-blue-500 hover:bg-blue-700"}`}
+                    onClick={() => handleApprove(internship._id)}
+                    disabled={internship.adminApproved}
+                  >
+                    {internship.adminApproved ? "Approved" : "Approve"}
+                  </button>
+                  <button
+                    className={`px-3 py-1 rounded-md text-white ${internship.isAdminReviewed ? "bg-green-500 cursor-not-allowed" : "bg-indigo-500 hover:bg-indigo-700"
+                      }`}
+                    onClick={() => !internship.isAdminReviewed && handleReview(internship)}
+                    disabled={internship.isAdminReviewed}
+                  >
+                    {internship.isAdminReviewed ? "Reviewed" : "Review"}
+                  </button>
+
+                  <button
+                    className="px-3 py-1 bg-red-500 text-white rounded-md hover:bg-red-700"
+                    onClick={() => handleRejectClick(internship)}
+                  >
+                    Reject
+                  </button>
+                  <button
+                    className="px-3 py-1 bg-gray-500 text-white rounded-md hover:bg-gray-700"
+                    onClick={() => handleDeleteClick(internship)}
+                  >
+                    Delete
+                  </button>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
       {/* Pagination */}
       <div className="flex justify-between mt-4">
         <button
