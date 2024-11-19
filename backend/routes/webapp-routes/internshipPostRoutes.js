@@ -343,51 +343,56 @@ router.post("/:id/review", async (req, res) => {
   const { reviewText } = req.body;
 
   if (!reviewText) {
-    return res.status(400).json({ message: "All fields are required for a review" });
+    return res.status(400).json({ message: "Review text is required." });
   }
 
   try {
     const internship = await InternshipPosting.findById(req.params.id);
-    console.log("ID being used:", req.params.id);
-
-
-    if (internship) { 
-      if (!internship.reviews) {
-      internship.reviews = []; // Initialize if undefined
+    if (!internship) {
+      return res.status(404).json({ message: "Internship not found." });
     }
-      // Add the review to the internship
-      internship.reviews.push({ reviewText });
-      internship.isAdminReviewed = true; // Mark as reviewed
-      internship.adminReviewText = reviewText; // Store admin feedback
-      await internship.save();
 
-      // Prepare email content
-      const emailContent = `
-        A new review has been posted for your internship listing "${internship.jobTitle}"!
+    if (!Array.isArray(internship.reviews)) {
+      internship.reviews = [];
+    }
 
-        Admin Review: "${reviewText}"
-      `;
+    internship.reviews.push({ reviewText });
+    internship.isAdminReviewed = true;
+    internship.adminReviewText = reviewText;
 
-      // Send email
+    await internship.save();
+
+    // Send email notification
+    const emailContent = `
+      A new review has been posted for your internship listing "${internship.jobTitle}"!
+      
+      Admin Review: "${reviewText}"
+    `;
+
+    if (internship.contactInfo && internship.contactInfo.email) {
       try {
         console.log(`Sending email to: ${internship.contactInfo.email}`);
-        await notifyUser(internship.contactInfo.email, "New Internship Review Received", emailContent);
+        await notifyUser(
+          internship.contactInfo.email,
+          "New Internship Review Received",
+          emailContent
+        );
       } catch (emailError) {
         console.error("Failed to send review email:", emailError);
       }
-
-      res.status(201).json({
-        message: "Review added successfully, marked as reviewed, and email sent",
-        review: internship.reviews[internship.reviews.length - 1],
-        isAdminReviewed: internship.isAdminReviewed,
-        adminReviewText: internship.adminReviewText,
-      });
     } else {
-      res.status(404).json({ message: "Internship not found" });
+      console.warn("No valid email address found for contact information.");
     }
+
+    res.status(201).json({
+      message: "Review added successfully, marked as reviewed, and email sent.",
+      review: internship.reviews[internship.reviews.length - 1],
+      isAdminReviewed: internship.isAdminReviewed,
+      adminReviewText: internship.adminReviewText,
+    });
   } catch (error) {
     console.error("Error adding review:", error);
-    res.status(500).json({ message: "Server Error: Unable to add review", error: error.message });
+    res.status(500).json({ message: "Server error: Unable to add review.", error: error.message });
   }
 });
 

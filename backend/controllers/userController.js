@@ -254,21 +254,32 @@ const approveUser = asyncHandler(async (req, res) => {
    res.status(200).json({ message: "User approved successfully." });
 });
 
-// Admin reject a user
+// Admin rejects a user
 const rejectUser = asyncHandler(async (req, res) => {
-   const {userId} = req.params; 
-   console.log("Rejecting User ID:",userId); 
+  const { userId } = req.params;
+  console.log("Rejecting User ID:", userId);
 
-   const user=await Userwebapp.findById(userId);
-   if(!user){
-       res.status(404);
-       throw new Error("User not found.");
-   }
+  // Find the user by ID
+  const user = await Userwebapp.findById(userId);
+  if (!user) {
+    res.status(404);
+    throw new Error("User not found.");
+  }
 
-   // Set approval status to false and save changes.
-   await notifyUser(user.email,"Your SkillNaav account has been rejected.", "Your SkillNaav account has been rejected by the admin.");
+  // Update the user's admin approval status to false and set status to 'Rejected'
+  user.adminApproved = false;
+  user.status = "Rejected";
+  await user.save();
 
-   res.status(200).json({message:"User rejected successfully."});
+  // Notify the user about the rejection
+  await notifyUser(
+    user.email,
+    "Your SkillNaav account has been rejected.",
+    "Your SkillNaav account has been rejected by the admin."
+  );
+
+  // Send a success response
+  res.status(200).json({ message: "User rejected successfully." });
 });
 
 module.exports = { 
