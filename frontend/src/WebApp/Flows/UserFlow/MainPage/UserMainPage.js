@@ -7,39 +7,65 @@
 
 // const UserMainPage = () => {
 //   const [userInfo, setUserInfo] = useState(null);
+//   const [loading, setLoading] = useState(true); // Loading state
+//   const [isApproved, setIsApproved] = useState(false); // Track if user is approved
 
-//   // Retrieve user info from localStorage on component mount
 //   useEffect(() => {
-//     const storedUserInfo = localStorage.getItem("userInfo");
-//     if (storedUserInfo) {
-//       setUserInfo(JSON.parse(storedUserInfo)); // Parse and store in state
-//     }
-//   }, []);
+//     const fetchUserInfo = async () => {
+//       try {
+//         const response = await fetch("http://localhost:5000/api/users/users", {
+//           method: "GET",
+//           headers: {
+//             Authorization: `Bearer ${localStorage.getItem("token")}`,
+//           },
+//         });
 
-//   const isApproved = userInfo?.adminApproved;
+//         if (!response.ok) {
+//           throw new Error("Failed to fetch user info");
+//         }
+
+//         const data = await response.json();
+//         setUserInfo(data);
+//         setIsApproved(data.adminApproved); // Set approval status based on the response
+//       } catch (error) {
+//         console.error("Failed to fetch user info:", error);
+//       } finally {
+//         setLoading(false); // Stop loading once the data is fetched
+//       }
+//     };
+
+//     fetchUserInfo();
+//   }, []);
 
 //   return (
 //     <TabProvider>
-//       <div className="flex">
+//       <div className="flex relative">
 //         <Sidebar />
 //         <div className="flex-1 flex flex-col">
 //           <Navbar />
-//           {/* Display content conditionally based on admin approval */}
-//           {isApproved ? (
-//             <BodyContent />
-//           ) : (
+
+//           {/* Show loading skeleton while fetching data */}
+//           {loading ? (
 //             <div className="p-4">
-//               <h2>User Information</h2>
-//               {userInfo ? (
-//                 // <pre>{JSON.stringify(userInfo, null, 2)}</pre>
-//                 <p>User not approved</p>
-//               ) : (
-//                 <p>Not approved yet.</p>
-//               )}
-//               <div className="mt-4">
-//                 <Skeleton active title={false} paragraph={{ rows: 8 }} />
-//               </div>
+//               <Skeleton active />
 //             </div>
+//           ) : (
+//             <>
+//               {/* Render BodyContent only if user is approved */}
+//               {isApproved ? (
+//                 <BodyContent />
+//               ) : (
+//                 <div className="p-4">
+//                   <h2>User Information</h2>
+//                   <p>User account is not approved by admin yet.</p>
+//                 </div>
+//               )}
+
+//               {/* Mask content if user is not approved */}
+//               {!isApproved && userInfo && (
+//                 <div className="absolute inset-0 bg-gray-500 opacity-50 z-10" />
+//               )}
+//             </>
 //           )}
 //         </div>
 //       </div>
@@ -48,6 +74,13 @@
 // };
 
 // export default UserMainPage;
+
+
+
+
+
+
+
 
 
 import React from "react";
@@ -71,3 +104,6 @@ const UserMainPage = () => {
 };
 
 export default UserMainPage;
+
+
+

@@ -14,21 +14,37 @@ const ApplyCards = ({ job, onBack }) => {
   const [isApplied, setIsApplied] = useState(
     applications.some((appJob) => appJob.jobTitle === job.jobTitle)
   );
+  const [resume, setResume] = useState(null);
+
+  const handleFileChange = (event) => {
+    setResume(event.target.files[0]); // Save the selected file to state
+  };
 
   const handleApply = async () => {
     if (isApplied) return; // Prevent multiple applications
+    if (!resume) {
+      alert("Please upload your resume before applying!");
+      return;
+    }
+
+    const formData = new FormData();
+    formData.append("resume", resume); // Add file to FormData
+    formData.append("studentApplied", true);
 
     try {
-      const response = await axios.put(`/api/interns/${job._id}`, {
-        studentApplied: true,
+      const response = await axios.put(`/api/interns/${job._id}`, formData, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
       });
 
       if (response.status === 200) {
         setIsApplied(true);
+        alert("Application submitted successfully!");
       }
     } catch (error) {
       console.error("Error applying for the job:", error);
-      // Optionally, handle the error (e.g., show a notification)
+      alert("Failed to submit your application. Please try again.");
     }
   };
 
@@ -77,9 +93,22 @@ const ApplyCards = ({ job, onBack }) => {
               <FaDollarSign className="mr-2" />
               <p>{job.salaryDetails || "Not specified"}</p>
             </div>
+            <div className="mt-4">
+              <input
+                type="file"
+                accept=".pdf,.doc,.docx"
+                onChange={handleFileChange}
+                className="block w-full text-sm text-gray-500
+                file:mr-4 file:py-2 file:px-4
+                file:rounded-full file:border-0
+                file:text-sm file:font-semibold
+                file:bg-purple-50 file:text-purple-700
+                hover:file:bg-purple-100"
+              />
+            </div>
             <button
               onClick={handleApply}
-              className={`text-white ${
+              className={`text-white mt-4 ${
                 isApplied ? "bg-green-500" : "bg-purple-500 hover:bg-purple-600"
               } px-4 py-2 rounded-full font-semibold`}
               disabled={isApplied}
