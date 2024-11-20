@@ -16,26 +16,23 @@ const internshipPostingSchema = mongoose.Schema(
       email: { type: String, required: true },
       phone: { type: String, required: true },
     },
-    imgUrl: { type: String, required: true },
+    imgUrl: { type: String, default: "https://default-image-url.com/image.png" },
     studentApplied: { type: Boolean, default: false },
     adminApproved: { type: Boolean, default: false },
-    deleted: { type: Boolean, default: false }, // Field for soft delete
-    
-    // // Add a 'chat' field for messaging
+    deleted: { type: Boolean, default: false },
+    // partnerId: { type: mongoose.Schema.Types.ObjectId, ref: "partnererwebapps"}, // Partner reference
+    // Chat or messaging (commented for now)
     // chat: [
     //   {
-    //     senderId: { type: String, required: true }, // ID of the sender (e.g., admin or partner)
-    //     text: { type: String, required: true }, // Message content
-    //     timestamp: { type: Date, default: Date.now }, // Timestamp for the message
+    //     senderId: { type: mongoose.Schema.Types.ObjectId, ref: "Userwebapp", required: true },
+    //     text: { type: String, required: true },
+    //     timestamp: { type: Date, default: Date.now },
     //   },
     // ],
   },
-  { timestamps: true }
+  { timestamps: true } // Automatically adds createdAt and updatedAt
 );
 
-const InternshipPosting = mongoose.model(
-  "InternshipPosting",
-  internshipPostingSchema
-);
+const InternshipPosting = mongoose.model("InternshipPosting", internshipPostingSchema);
 
 module.exports = InternshipPosting;

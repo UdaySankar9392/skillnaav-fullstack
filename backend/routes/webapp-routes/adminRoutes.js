@@ -20,10 +20,10 @@
 // module.exports = router;
 // routes/admin.js
 const express = require('express');
+const { loginUser } = require('../../controllers/adminController');
 const router = express.Router();
-const { loginAdmin } = require("../../controllers/adminController");
 
-
-router.post('/login', loginAdmin);
+// Login Route
+router.post('/login', loginUser);
 
 module.exports = router;
