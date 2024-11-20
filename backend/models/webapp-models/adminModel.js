@@ -78,11 +78,39 @@
 // module.exports = Adminwebapp;
 // models/Admin.js
 const mongoose = require('mongoose');
+const bcrypt = require('bcryptjs');
 
-const AdminSchema = new mongoose.Schema({
-  username: { type: String, required: true, unique: true },
-  password: { type: String, required: true },
+// Define the schema
+const adminwebappsSchema = new mongoose.Schema({
+  name: {
+    type: String,
+    required: true
+  },
+  email: {
+    type: String,
+    required: true,
+    unique: true
+  },
+  password: {
+    type: String,
+    required: true
+  },
+  isAdmin: {
+    type: Boolean,
+    default: false
+  },
+  pic: {
+    type: String,
+    default: 'https://example.com/avatar.png'
+  },
+}, {
+  timestamps: true
 });
 
-const Admin = mongoose.model('Admin', AdminSchema);
-module.exports = Admin;
+// Method to compare passwords
+adminwebappsSchema.methods.matchPassword = async function(enteredPassword) {
+  return await bcrypt.compare(enteredPassword, this.password);
+};
+
+// Create the model using the schema and export it
+module.exports = mongoose.model('adminwebapps', adminwebappsSchema);

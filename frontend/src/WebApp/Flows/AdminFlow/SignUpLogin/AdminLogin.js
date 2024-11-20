@@ -191,7 +191,7 @@
 import React, { useState } from "react";
 import { Formik, Form, Field, ErrorMessage } from "formik";
 import * as Yup from "yup";
-import { useNavigate, Link } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import Loading from "../../../Warnings/Loading/Loading";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
@@ -200,7 +200,7 @@ import adminImage from "../../../../assets-webapp/partner.jpg";
 
 // Validation schema for Formik
 const validationSchema = Yup.object({
-  username: Yup.string().required("Required"), // Changed to username
+  email: Yup.string().email("Invalid email address").required("Required"),
   password: Yup.string().required("Required"),
 });
 
@@ -210,80 +210,86 @@ const AdminLogin = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
-  // Function to handle form submission
   const handleSubmit = async (values, { setSubmitting }) => {
     setError("");
     setLoading(true);
+  
     try {
+      // API configuration
       const config = {
         headers: {
           "Content-Type": "application/json",
         },
       };
-      const { data } = await axios.post("/api/admin/login", values, config);
-      localStorage.setItem("adminInfo", JSON.stringify(data));
+  
+      // Make API call to admin login endpoint
+      const { data } = await axios.post(
+        "/api/admin/login", // Ensure this matches the backend route
+        values,
+        config
+      );
+  
+      console.log("Login response:", data);
+  
+      // Store the token and admin details in localStorage
+      localStorage.setItem("adminToken", data.token);
+      localStorage.setItem("adminInfo", JSON.stringify({
+        id: data.id,
+        name: data.name,
+        email: data.email,
+        isAdmin: data.isAdmin,
+        pic: data.pic
+      }));
+  
+      // Redirect to admin dashboard
       navigate("/admin-main-page");
     } catch (err) {
-      setError(err.response?.data?.message || "Something went wrong");
+      console.error("Login error:", err.response || err.message);
+  
+      // Show error message returned from the backend or fallback message
+      setError(err.response?.data?.message || "Login failed. Please try again.");
     } finally {
       setLoading(false);
       setSubmitting(false);
     }
   };
-
+  
   return (
     <div className="flex flex-col lg:flex-row min-h-screen font-poppins">
-      {/* Left Side Image */}
       <div className="hidden lg:flex lg:w-1/2 items-center justify-center">
-        <img
-          src={adminImage}
-          alt="Admin Login"
-          className="w-full h-full object-cover"
-        />
+        <img src={adminImage} alt="Admin Login" className="w-full h-full object-cover" />
       </div>
 
-      {/* Right Side Login Form */}
       <div className="flex flex-col items-center justify-center p-8 w-full lg:w-1/2 bg-white">
         <div className="w-full max-w-md">
-          <h1 className="text-3xl font-extrabold mb-4 text-center text-gray-800">
-            Dear Admin, Welcome!
-          </h1>
-          <h2 className="text-lg font-medium mb-6 text-center text-gray-600">
-            Please sign in to your account
-          </h2>
+          <h1 className="text-3xl font-extrabold mb-4 text-center text-gray-800">Admin Login</h1>
+          <h2 className="text-lg font-medium mb-6 text-center text-gray-600">Sign in to access the dashboard</h2>
 
-          {/* Error Message */}
           {error && (
             <div className="bg-red-200 text-red-600 p-3 mb-4 text-center rounded-lg">
               {error}
             </div>
           )}
 
-          {/* Loading */}
           {loading ? (
             <Loading />
           ) : (
             <Formik
-              initialValues={{ username: "", password: "" }} // Changed to username
+              initialValues={{ email: "", password: "" }}
               validationSchema={validationSchema}
               onSubmit={handleSubmit}
             >
               {({ isSubmitting }) => (
                 <Form className="space-y-4">
-                  {/* Username Field */}
+                  {/* Email Field */}
                   <div className="relative">
                     <Field
-                      type="text"
-                      name="username" // Changed to username
-                      placeholder="Enter your username" // Changed placeholder
+                      type="email"
+                      name="email"
+                      placeholder="Enter your email"
                       className="w-full p-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-400"
-                      aria-label="Username" // Changed aria-label
                     />
-                    <ErrorMessage
-                      name="username" // Changed to username
-                      component="div"
-                      className="text-red-500 text-sm mt-1"
-                    />
+                    <ErrorMessage name="email" component="div" className="text-red-500 text-sm mt-1" />
                   </div>
 
                   {/* Password Field */}
@@ -293,55 +299,18 @@ const AdminLogin = () => {
                       name="password"
                       placeholder="Enter your password"
                       className="w-full p-4 pr-16 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-400"
-                      aria-label="Password"
                     />
                     <button
                       type="button"
                       className="absolute inset-y-0 right-4 flex items-center"
                       onClick={() => setShowPassword(!showPassword)}
-                      aria-label={
-                        showPassword ? "Hide Password" : "Show Password"
-                      }
                     >
-                      <FontAwesomeIcon
-                        icon={showPassword ? faEyeSlash : faEye}
-                        size="lg"
-                        className="text-gray-600 mt-5"
-                      />
+                      <FontAwesomeIcon icon={showPassword ? faEyeSlash : faEye} size="lg" className="text-gray-600" />
                     </button>
-                    <ErrorMessage
-                      name="password"
-                      component="div"
-                      className="text-red-500 text-sm mt-1"
-                    />
+                    <ErrorMessage name="password" component="div" className="text-red-500 text-sm mt-1" />
                   </div>
 
-                  {/* Remember Me and Forgot Password */}
-                  <div className="flex justify-between items-center mb-6">
-                    <div className="flex items-center space-x-2">
-                      <Field
-                        type="checkbox"
-                        name="rememberMe"
-                        id="rememberMe"
-                        className="form-checkbox h-4 w-4 text-blue-500 transition duration-150 ease-in-out"
-                      />
-                      <label
-                        htmlFor="rememberMe"
-                        className="block text-sm mt-5 text-gray-700"
-                      >
-                        Remember me
-                      </label>
-                    </div>
-
-                    <Link
-                      to="/admin/login"
-                      className="text-sm mt-5 font-medium text-blue-500 hover:text-blue-700 transition duration-150 ease-in-out"
-                    >
-                      Forgot password?
-                    </Link>
-                  </div>
-
-                  {/* Sign In Button */}
+                  {/* Submit Button */}
                   <button
                     type="submit"
                     disabled={isSubmitting}
@@ -353,13 +322,6 @@ const AdminLogin = () => {
               )}
             </Formik>
           )}
-
-          {/* Divider */}
-          <div className="flex items-center my-6">
-            <hr className="w-full border-gray-300" />
-            <span className="px-3 text-gray-500">OR</span>
-            <hr className="w-full border-gray-300" />
-          </div>
         </div>
       </div>
     </div>
@@ -367,3 +329,4 @@ const AdminLogin = () => {
 };
 
 export default AdminLogin;
+
