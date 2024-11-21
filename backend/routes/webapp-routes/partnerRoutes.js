@@ -9,7 +9,8 @@ const {
   rejectPartner,
   checkEmailExists,
   requestPasswordReset,
-  verifyOTPAndResetPassword, 
+  verifyOTPAndResetPassword,
+  getPartnerProfile, 
 } = require("../../controllers/partnerController");
 const { protect } = require("../../middlewares/authMiddleware");
 
@@ -23,6 +24,7 @@ router.post("/check-email", checkEmailExists);
 
 router.post('/request-password-reset', requestPasswordReset); // Request password reset with OTP
 router.post('/verify-otp-reset-password', verifyOTPAndResetPassword); // Verify OTP and reset password
+router.get("/profile", protect, getPartnerProfile);
 
 
 

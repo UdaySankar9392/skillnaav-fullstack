@@ -1,10 +1,9 @@
 const jwt = require("jsonwebtoken");
 const asyncHandler = require("express-async-handler");
-const Userwebapp = require("../models/webapp-models/userModel"); // Adjust path as necessary
-const Partnerwebapp = require("../models/webapp-models/partnerModel"); // Adjust path for partner model
+const Partnerwebapp = require("../models/webapp-models/partnerModel"); // Adjust path as necessary
 
-// Middleware to protect routes for both users and partners
-const protect = asyncHandler(async (req, res, next) => {
+// Middleware to protect routes for partners
+const partnerProtect = asyncHandler(async (req, res, next) => {
   let token;
 
   // Check if authorization header is present
@@ -13,40 +12,31 @@ const protect = asyncHandler(async (req, res, next) => {
     req.headers.authorization.startsWith("Bearer")
   ) {
     token = req.headers.authorization.split(" ")[1]; // Extract token from header
-    console.log("Verifying token:", token); // Log the token before verification
+    console.log("Verifying partner token:", token); // Log the token before verification
 
     try {
       // Verify token and decode it
       const decoded = jwt.verify(token, process.env.JWT_SECRET); // Use your secret key
-      let user;
+      // Find the partner by ID and exclude password from the response
+      req.partner = await Partnerwebapp.findById(decoded.id).select("-password");
 
-      // Check which model to use for user verification (check for the "partner" route)
-      if (req.originalUrl.includes("partners")) {
-        // If the URL includes "partners", use Partnerwebapp
-        user = await Partnerwebapp.findById(decoded.id).select("-password");
-      } else {
-        // Otherwise, use Userwebapp
-        user = await Userwebapp.findById(decoded.id).select("-password");
+      // Check if partner exists
+      if (!req.partner) {
+        return res.status(401).json({ message: "Not authorized, partner not found" });
       }
-
-      // Check if user exists
-      if (!user) {
-        return res.status(401).json({ message: "Not authorized, user not found" });
-      }
-
-      req.user = user; // Attach user to the request object
+      
       next(); // Proceed to the next middleware or route handler
     } catch (error) {
       console.error("Error verifying token:", error); // Log any errors
       let message = "Not authorized, token failed";
-
+      
       // Handle specific JWT errors
       if (error.name === "JsonWebTokenError") {
         message = "Not authorized, token invalid";
       } else if (error.name === "TokenExpiredError") {
         message = "Not authorized, token expired";
       }
-
+      
       res.status(401).json({ message });
     }
   } else {
@@ -55,4 +45,4 @@ const protect = asyncHandler(async (req, res, next) => {
   }
 });
 
-module.exports = { protect }; // Export the middleware for use in routes
+module.exports = { partnerProtect }; // Export the middleware for use in partner routes
