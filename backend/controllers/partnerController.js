@@ -6,7 +6,7 @@ const crypto = require('crypto');
 const nodemailer = require('nodemailer');
 // Get partner profile
 const getPartnerProfile = asyncHandler(async (req, res) => {
-    const partner = await Partnerwebapp.findById(req.partner._id);
+    const partner = await Partnerwebapp.findById(req.user._id);
 
     if (partner) {
         res.json({
