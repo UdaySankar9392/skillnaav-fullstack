@@ -4,6 +4,25 @@ const generateToken = require("../utils/generateToken");
 const notifyUser = require("../utils/notifyUser");
 const crypto = require('crypto');
 const nodemailer = require('nodemailer');
+// Get partner profile
+const getPartnerProfile = asyncHandler(async (req, res) => {
+    const partner = await Partnerwebapp.findById(req.partner._id);
+
+    if (partner) {
+        res.json({
+            _id: partner._id,
+            name: partner.name,
+            email: partner.email,
+            universityName: partner.universityName,
+            institutionId: partner.institutionId,
+            adminApproved: partner.adminApproved,
+            active: partner.active,
+        });
+    } else {
+        res.status(404);
+        throw new Error("Partner not found.");
+    }
+});
 
 // Helper function to check required fields
 const areFieldsFilled = (fields) => fields.every((field) => field);
@@ -126,32 +145,32 @@ const registerPartner = asyncHandler(async (req, res) => {
 });
 
 // Authenticate partner (login)
+// Authenticate partner (login)
 const authPartner = asyncHandler(async (req, res) => {
     const { email, password } = req.body;
-
+  
     const partner = await Partnerwebapp.findOne({ email });
-
-    if (partner && (await partner.matchPassword(password))) {
-        // Check if the partner is approved by an admin and is active
-        if (partner.adminApproved && partner.active) {
-            res.json({
-                _id: partner._id,
-                name: partner.name,
-                email: partner.email,
-                universityName: partner.universityName,
-                institutionId: partner.institutionId,
-                token: generateToken(partner._id), // Generate token here
-            });
-        } else {
-            // Partner is not approved or not active
-            res.status(403);
-            throw new Error("Partner account is not approved or is inactive.");
-        }
+  
+    if (partner && await partner.matchPassword(password)) {
+      // Generate token regardless of admin approval
+      const token = generateToken(partner._id);
+  
+      res.json({
+        _id: partner._id,
+        name: partner.name,
+        email: partner.email,
+        universityName: partner.universityName,
+        institutionId: partner.institutionId,
+        token, // Generate token here
+        adminApproved: partner.adminApproved, // Include admin approval status
+        active: partner.active // Include active status
+      });
     } else {
-        res.status(400);
-        throw new Error("Invalid email or password.");
+      res.status(400);
+      throw new Error("Invalid email or password.");
     }
-});
+  });
+  
 
 // Update partner profile
 const updatePartnerProfile = asyncHandler(async (req, res) => {
@@ -246,5 +265,6 @@ module.exports = {
    rejectPartner,
    checkEmailExists,
    requestPasswordReset,
-   verifyOTPAndResetPassword // Exporting verifyOTPAndResetPassword function 
+   verifyOTPAndResetPassword, // Exporting verifyOTPAndResetPassword function 
+   getPartnerProfile,
 };
