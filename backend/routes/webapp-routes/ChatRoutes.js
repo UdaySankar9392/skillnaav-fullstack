@@ -1,11 +1,14 @@
 const express = require('express');
 const router = express.Router();
-const { getChatMessages, sendMessage } = require('../../controllers/ChatController');
+const { getChatMessages, sendMessage, getMessages, sendReply } = require('../../controllers/ChatController');
 
-router.get('/:internshipId', getChatMessages);
+router.get('/:partnerId', getChatMessages);
 
 
 // Route to send a message
 router.post('/', sendMessage);
+
+router.get('/:internshipId', getMessages); // Fetch messages for admin
+router.post('/send', sendReply);
 
 module.exports = router;
