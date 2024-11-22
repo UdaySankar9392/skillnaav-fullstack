@@ -9,6 +9,7 @@ const internshipPostingSchema = mongoose.Schema(
     startDate: { type: Date, required: true },
     endDateOrDuration: { type: String, required: true },
     salaryDetails: { type: String, required: true },
+    partnerId: { type: String, required: true }, 
     duration: { type: String, required: true },
     qualifications: { type: [String], required: true },
     contactInfo: {
@@ -20,15 +21,8 @@ const internshipPostingSchema = mongoose.Schema(
     studentApplied: { type: Boolean, default: false },
     adminApproved: { type: Boolean, default: false },
     deleted: { type: Boolean, default: false },
-    // partnerId: { type: mongoose.Schema.Types.ObjectId, ref: "partnererwebapps"}, // Partner reference
-    // Chat or messaging (commented for now)
-    // chat: [
-    //   {
-    //     senderId: { type: mongoose.Schema.Types.ObjectId, ref: "Userwebapp", required: true },
-    //     text: { type: String, required: true },
-    //     timestamp: { type: Date, default: Date.now },
-    //   },
-    // ],
+    
+    
   },
   { timestamps: true } // Automatically adds createdAt and updatedAt
 );

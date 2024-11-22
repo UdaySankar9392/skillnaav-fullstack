@@ -35,6 +35,9 @@ const PartnerLogin = () => {
       // Save token and adminApproved status to localStorage
       localStorage.setItem("token", data.token);
       localStorage.setItem("adminApproved", data.adminApproved); // Save adminApproved status
+      localStorage.setItem("partnerId", data._id);
+      console.log("Partner ID:", data._id);
+      
   
       setLoading(false);
       navigate("/partner-main-page");

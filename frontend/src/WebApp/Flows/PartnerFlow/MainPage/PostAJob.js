@@ -202,14 +202,28 @@ const handleCitySelect = (cityName) => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-
+  
+    // Retrieve the partnerId from localStorage
+    const partnerId = localStorage.getItem('partnerId');
+    console.log("Partner ID from localStorage:", partnerId);
+  
+    // Check if partnerId is found in localStorage
+    if (!partnerId) {
+      console.error("No partner ID found in localStorage.");
+      return;
+    }
+  
+    // Include partnerId in the internship data
     const completeFormData = {
       ...formData,
       location: `${formData.city}, ${formData.country}`,
       salaryDetails: `${formData.stipendOrSalary} ${formData.currency} (${formData.time})`,
       jobDuration: formData.duration || "N/A",
+      partnerId: partnerId, // Add partnerId here
     };
 
+    console.log("Complete form data being sent:", completeFormData);
+  
     try {
       const response = await axios.post("/api/interns", completeFormData);
       console.log("Internship posted successfully:", response.data);

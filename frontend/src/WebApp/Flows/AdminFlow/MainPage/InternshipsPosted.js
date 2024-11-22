@@ -121,9 +121,9 @@ const PartnerManagement = () => {
       const response = await axios.post(`/api/chats`, {
         internshipId: selectedInternship._id, // Include selected internship ID
         senderId: adminId,
-        receiverId: selectedInternship.submitterId, // Assuming you have submitterId in internship data
+        receiverId: selectedInternship.partnerId, // Assuming you have submitterId in internship data
         message: newMessage,
-      });
+      });  
   
       // Update chat history with new message
       setChatMessages((prev) => [
@@ -174,8 +174,24 @@ const PartnerManagement = () => {
       console.error("Error deleting internship:", error);
       alert("Error deleting internship. Please try again later.");
     }
-  };
+  };  
+  
+  useEffect(() => {
+    const fetchMessages = async () => {
+      if (!selectedInternship) return; // Avoid fetching if no internship is selected
+      try {
+        const response = await axios.get(`/api/chats/${selectedInternship._id}`);
+        setChatMessages(response.data); // Set messages to state
+      } catch (error) {
+        console.error("Error fetching messages:", error);
+      }
+    };
+  
+    fetchMessages();
+  }, [selectedInternship]); // Trigger on selectedInternship change
+  
 
+  
 
   const sortInternships = (internships) => {
     return internships.sort((a, b) => {

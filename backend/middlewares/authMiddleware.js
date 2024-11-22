@@ -20,12 +20,10 @@ const protect = asyncHandler(async (req, res, next) => {
       const decoded = jwt.verify(token, process.env.JWT_SECRET); // Use your secret key
       let user;
 
-      // Check which model to use for user verification (check for the "partner" route)
-      if (req.originalUrl.includes("partners")) {
-        // If the URL includes "partners", use Partnerwebapp
+      if (req.isPartner) {
         user = await Partnerwebapp.findById(decoded.id).select("-password");
+        console.log("Partner user found:", user);
       } else {
-        // Otherwise, use Userwebapp
         user = await Userwebapp.findById(decoded.id).select("-password");
       }
 
@@ -55,4 +53,4 @@ const protect = asyncHandler(async (req, res, next) => {
   }
 });
 
-module.exports = { protect }; // Export the middleware for use in routes
+module.exports = { protect }; // Export the middleware for use in routes

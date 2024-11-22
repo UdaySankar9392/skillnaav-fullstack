@@ -14,6 +14,13 @@ const {
 } = require("../../controllers/partnerController");
 const { protect } = require("../../middlewares/authMiddleware");
 
+
+// Middleware to set req.isPartner for all partner routes
+router.use((req, res, next) => {
+  req.isPartner = true; // Mark as partner
+  next();
+});
+
 router.post("/register", registerPartner); 
 router.post("/login", authPartner); 
 router.post("/profile", protect, updatePartnerProfile); // Protected route to update partner profile
@@ -28,4 +35,4 @@ router.get("/profile", protect, getPartnerProfile);
 
 
 
-module.exports = router;
+module.exports = router;

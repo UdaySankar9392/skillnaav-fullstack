@@ -38,6 +38,7 @@ router.post("/", async (req, res) => {
       studentApplied: req.body.studentApplied || false,
       adminApproved: req.body.adminApproved || false,
       adminReviewed: req.body.adminReviewed || false,
+      partnerId: req.body.partnerId,
       deleted: req.body.admindeleted || false 
     });
 
@@ -186,6 +187,7 @@ router.put("/:id", async (req, res) => {
     imgUrl,
     studentApplied,
     adminApproved,
+    partnerId,
   } = req.body;
 
   try {
@@ -212,6 +214,7 @@ router.put("/:id", async (req, res) => {
         ...(imgUrl && { imgUrl }),
         ...(studentApplied !== undefined && { studentApplied }),
         ...(adminApproved !== undefined && { adminApproved }),
+        ...(partnerId && { partnerId }), 
       },
       { new: true } // Return the updated document
     );
