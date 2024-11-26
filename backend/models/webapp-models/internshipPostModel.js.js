@@ -9,7 +9,7 @@ const internshipPostingSchema = mongoose.Schema(
     startDate: { type: Date, required: true },
     endDateOrDuration: { type: String, required: true },
     salaryDetails: { type: String, required: true },
-    partnerId: { type: String, required: true }, 
+    partnerId: { type: mongoose.Schema.Types.ObjectId, ref: "Partner", required: true }, 
     duration: { type: String, required: true },
     qualifications: { type: [String], required: true },
     contactInfo: {

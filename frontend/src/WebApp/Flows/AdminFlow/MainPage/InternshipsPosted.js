@@ -90,24 +90,10 @@ const PartnerManagement = () => {
     setIsRejectModalOpen(false);
   };
 
-  // const handleCommentSubmit = async () => {
-  //   try {
-  //     await axios.post(`/api/interns/${selectedInternship._id}/review`, { reviewText: comment });
-  //     setInternships((prevInternships) =>
-  //       prevInternships.map((internship) =>
-  //         internship._id === selectedInternship._id
-  //           ? { ...internship, isAdminReviewed: true, adminReviewText: comment }
-  //           : internship
-  //       )
-  //     );
-  //     closeModal(); // Close modal after successful submission
-  //   } catch (error) {
-  //     console.error("Error submitting review:", error);
-  //   }
-  // };
+
   const handleSendMessage = async () => {
     if (!newMessage.trim()) return; // Prevent sending empty messages
-  
+
     try {
       // Retrieve the admin ID from localStorage
       const adminInfo = JSON.parse(localStorage.getItem("adminInfo"));
@@ -116,21 +102,21 @@ const PartnerManagement = () => {
         return;
       }
       const adminId = adminInfo.id; // Use the dynamically fetched admin ID
-  
+
       // Send message to backend
       const response = await axios.post(`/api/chats`, {
         internshipId: selectedInternship._id, // Include selected internship ID
         senderId: adminId,
         receiverId: selectedInternship.partnerId, // Assuming you have submitterId in internship data
         message: newMessage,
-      });  
-  
+      });
+
       // Update chat history with new message
       setChatMessages((prev) => [
         ...prev,
-        { sender: adminId, text: newMessage, timestamp: new Date() },
+        { sender: adminId, message: newMessage, timestamp: new Date() },
       ]);
-      
+
       setNewMessage(""); // Clear input field
     } catch (error) {
       console.error("Error sending message:", error.response.data); // Log detailed error response
@@ -174,11 +160,12 @@ const PartnerManagement = () => {
       console.error("Error deleting internship:", error);
       alert("Error deleting internship. Please try again later.");
     }
-  };  
-  
+  };
+
   useEffect(() => {
     const fetchMessages = async () => {
       if (!selectedInternship) return; // Avoid fetching if no internship is selected
+      console.log("Fetching messages for internshipId:", selectedInternship._id); // Log the internshipId
       try {
         const response = await axios.get(`/api/chats/${selectedInternship._id}`);
         setChatMessages(response.data); // Set messages to state
@@ -186,12 +173,8 @@ const PartnerManagement = () => {
         console.error("Error fetching messages:", error);
       }
     };
-  
     fetchMessages();
   }, [selectedInternship]); // Trigger on selectedInternship change
-  
-
-  
 
   const sortInternships = (internships) => {
     return internships.sort((a, b) => {
@@ -315,29 +298,29 @@ const PartnerManagement = () => {
           </tbody>
         </table>
       </div>
-      
+
       {/* Pagination */}
       <div className="overflow-x-auto">
-      <div className="flex justify-between mt-4 whitespace-nowrap">
-        <button
-          className="bg-gray-300 text-gray-700 rounded-md px-4 py-2 disabled:opacity-50"
-          onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
-          disabled={currentPage === 1}
-        >
-          Previous
-        </button>
-        <span className="text-gray-700">
-          Page {currentPage} of {totalPages}
-        </span>
-        <button
-          className="bg-gray-300 text-gray-700 rounded-md px-4 py-2 disabled:opacity-50"
-          onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
-          disabled={currentPage === totalPages}
-        >
-          Next
-        </button>
+        <div className="flex justify-between mt-4 whitespace-nowrap">
+          <button
+            className="bg-gray-300 text-gray-700 rounded-md px-4 py-2 disabled:opacity-50"
+            onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+            disabled={currentPage === 1}
+          >
+            Previous
+          </button>
+          <span className="text-gray-700">
+            Page {currentPage} of {totalPages}
+          </span>
+          <button
+            className="bg-gray-300 text-gray-700 rounded-md px-4 py-2 disabled:opacity-50"
+            onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
+            disabled={currentPage === totalPages}
+          >
+            Next
+          </button>
+        </div>
       </div>
-    </div>
 
       {/* Delete Confirmation Modal */}
       <Modal
@@ -371,61 +354,63 @@ const PartnerManagement = () => {
           </div>
         )}
       </Modal>
-  {/* Review Modal */}
+      {/* Review Modal */}
       <Modal
-        isOpen={isModalOpen}
-        onRequestClose={closeModal}
-        overlayClassName="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50"
-        className="bg-white p-6 rounded-lg shadow-lg w-96"
-      >
-        <h2 className="text-lg font-semibold mb-4">Chat with Submitter</h2>
-        {selectedInternship && (
-          <div>
-            <div className="h-64 border border-gray-300 rounded-md overflow-y-auto mb-4 p-3">
-              {chatMessages.map((msg, index) => (
-                <div
-                  key={index}
-                  className={`mb-2 ${
-                    msg.sender === "admin"
-                      ? "text-right text-blue-600"
-                      : "text-left text-gray-800"
-                  }`}
-                >
-                  <p className="bg-gray-200 inline-block px-3 py-1 rounded-md">
-                    <strong>{msg.sender === "admin" ? "You" : "Submitter"}:</strong> {msg.text}
-                  </p>
-                  <span className="text-xs text-gray-500 ml-2">
-                    {new Date(msg.timestamp).toLocaleTimeString()}
-                  </span>
-                </div>
-              ))}
-            </div>
+  isOpen={isModalOpen}
+  onRequestClose={closeModal}
+  overlayClassName="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-[999]" // Ensure overlay has a lower z-index
+  className="bg-white p-6 rounded-lg shadow-lg w-96 z-[1000]" 
+>
+  <h2 className="text-lg font-semibold mb-4">Chat with Submitter</h2>
 
-            <textarea
-              placeholder="Type your message..."
-              value={newMessage}
-              onChange={(e) => setNewMessage(e.target.value)}
-              className="w-full border border-gray-300 p-3 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none mb-4"
-              rows="3"
-            />
-
-            <div className="flex space-x-2">
-              <button
-                onClick={handleSendMessage}
-                className="w-full bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 focus:ring-2 focus:ring-blue-500"
-              >
-                Send Message
-              </button>
-              <button
-                onClick={closeModal}
-                className="w-full bg-gray-300 text-gray-700 px-4 py-2 rounded-md hover:bg-gray-400"
-              >
-                Close
-              </button>
-            </div>
+  {selectedInternship && (
+    <div>
+      <div className="h-64 border border-gray-300 rounded-md overflow-y-auto mb-4 p-3">
+        {chatMessages.map((msg, index) => (
+          <div
+            key={index}
+            className={`mb-2 ${msg.sender === "admin"
+                ? "text-right text-blue-600" // Admin messages on right
+                : msg.sender === "partner"
+                  ? "text-left text-green-600" // Partner messages on left
+                  : "text-left text-gray-800" // Default for other senders
+              }`}
+          >
+            <p className="bg-gray-200 inline-block px-3 py-1 rounded-md">
+              <strong>{msg.sender === "admin" ? "You" : msg.sender === "partner" ? "Submitter" : "partner"}:</strong> {msg.message}
+            </p>
+            <span className="text-xs text-gray-500 ml-2">
+              {new Date(msg.timestamp).toLocaleTimeString()}
+            </span>
           </div>
-        )}
-      </Modal>
+        ))}
+      </div>
+
+      <textarea
+        placeholder="Type your message..."
+        value={newMessage}
+        onChange={(e) => setNewMessage(e.target.value)}
+        className="w-full border border-gray-300 p-3 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none mb-4"
+        rows="3"
+      />
+
+      <div className="flex space-x-2">
+        <button
+          onClick={handleSendMessage}
+          className="w-full bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 focus:ring-2 focus:ring-blue-500"
+        >
+          Send Message
+        </button>
+        <button
+          onClick={closeModal}
+          className="w-full bg-gray-300 text-gray-700 px-4 py-2 rounded-md hover:bg-gray-400"
+        >
+          Close
+        </button>
+      </div>
+    </div>
+  )}
+</Modal>
 
       {/* Reject Modal */}
       <Modal
