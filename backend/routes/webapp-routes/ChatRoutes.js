@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 const { getChatMessages, sendMessage, getMessages, sendReply } = require('../../controllers/ChatController');
 
-router.get('/:partnerId', getChatMessages);
+router.get('/:partnerId/:internshipId', getChatMessages);
 
 
 // Route to send a message

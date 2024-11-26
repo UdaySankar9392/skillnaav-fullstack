@@ -3,20 +3,27 @@ const Userwebapp = require('../models/webapp-models/userModel'); // Import User 
 
 // Fetch chat messages based on partnerId
 const getChatMessages = async (req, res) => {
-  const { partnerId } = req.params; // Extract partnerId from the request params
+  const { internshipId, partnerId } = req.params; // Extract partnerId from the request params
 
   // Log the incoming request
   console.log('Received request to fetch messages for partnerId:', partnerId);
 
   try {
     // Check if partnerId is provided
-    if (!partnerId) {
+    if ( !internshipId || !partnerId) {
       console.error('No partnerId provided in request parameters.');
       return res.status(400).json({ error: 'Partner ID is required.' });
     }
 
     // Find messages associated with the partnerId
-    const messages = await Chat.find({ receiver: partnerId }).sort({ timestamp: 1 });
+    const messages = await Chat.find({
+      internship: internshipId,
+      $or: [
+          // Messages sent by the admin
+        { receiver: partnerId }  // Messages where partner is the receiver
+      ]
+    }).sort({ timestamp: 1 });
+    
 
     // Log the number of messages found
     console.log(`Number of messages found for partnerId ${partnerId}:`, messages.length);
@@ -98,45 +105,40 @@ const sendReply = async (req, res) => {
 
 
 const getMessages = async (req, res) => {
-  const { adminId } = req.params; // Extract partnerId from the request params
+  const { internshipId } = req.params;  // Get internshipId from URL parameter
 
-  // Log the incoming request
-  console.log('Received request to fetch messages for adminId:', adminId);
+  console.log('Received request to fetch messages for internshipId:', internshipId);
 
   try {
-    // Check if partnerId is provided
-    if (!adminId) {
-      console.error('No adminId provided in request parameters.');
-      return res.status(400).json({ error: 'admin ID is required.' });
+    if (!internshipId) {
+      return res.status(400).json({ error: 'Internship ID is required.' });
     }
 
-    // Find messages associated with the partnerId
-    const messages = await Chat.find({ receiver: adminId }).sort({ timestamp: 1 });
+    // Find all messages for the given internshipId
+    const messages = await Chat.find({
+      internship: internshipId,  // Filter by internshipId
+    }).sort({ timestamp: 1 });
 
-    // Log the number of messages found
-    console.log(`Number of messages found for adminId ${adminId}:`, messages.length);
+    console.log(`Number of messages found for internshipId ${internshipId}:`, messages.length);
 
     if (!messages.length) {
-      return res.status(404).json({ error: 'No messages found for this partner.' });
+      return res.status(404).json({ error: 'No messages found for this internship.' });
     }
 
-    // Log the messages being sent back
-    console.log('Sending back the following messages:', messages);
-    
-    // Map the response to only include relevant fields (if necessary)
+    // Prepare the response data to send back
     const responseMessages = messages.map(msg => ({
       sender: msg.sender,
       receiver: msg.receiver,
       message: msg.message,
-       
     }));
 
-    res.status(200).json(responseMessages); // Send the filtered messages back in response
+    res.status(200).json(responseMessages);  // Send the messages in the response
   } catch (err) {
     console.error('Error fetching chat messages:', err);
     res.status(500).json({ error: 'Failed to fetch chat messages', details: err.message });
   }
 };
+
 
 module.exports = {
   getChatMessages,
