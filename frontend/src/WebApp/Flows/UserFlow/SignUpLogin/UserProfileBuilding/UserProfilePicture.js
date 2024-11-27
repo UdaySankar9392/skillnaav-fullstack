@@ -5,75 +5,164 @@ import axios from "axios";
 const UserProfilePicture = () => {
   const location = useLocation();
   const navigate = useNavigate();
-  
-  // Initialize formData with localStorage or location state
+
   const [formData, setFormData] = useState(() => {
     const savedData = localStorage.getItem("userProfileData");
-    return savedData ? JSON.parse(savedData) : {
-      fieldOfStudy: location.state?.formData.fieldOfStudy || "",
+    const googleData = localStorage.getItem("userFormData");
+  
+    if (googleData && savedData) {
+      // Merge googleData and savedData
+      return {
+        ...JSON.parse(savedData),
+        ...JSON.parse(googleData), // googleData will overwrite savedData in case of conflicts
+      };
+    }
+  
+    if (googleData) {
+      return JSON.parse(googleData);
+    }
+  
+    if (savedData) {
+      return JSON.parse(savedData);
+    }
+  
+    // Fallback to initialData
+    const initialData = {
+      fieldOfStudy: location.state?.formData?.fieldOfStudy || "",
       desiredField: "",
       linkedin: "",
       portfolio: "",
+      name: location.state?.googleUser?.name || "",
+      email: location.state?.googleUser?.email || "",
     };
+  
+    return initialData;
   });
+  
 
-  // Save form data to localStorage whenever it changes
+  const [profilePicture, setProfilePicture] = useState(null);
+  const [previewUrl, setPreviewUrl] = useState(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
   useEffect(() => {
     localStorage.setItem("userProfileData", JSON.stringify(formData));
   }, [formData]);
+
+  // Clean up the preview URL when the component unmounts or when picture is removed
+  useEffect(() => {
+    return () => {
+      if (previewUrl) {
+        URL.revokeObjectURL(previewUrl);
+      }
+    };
+  }, [previewUrl]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData({ ...formData, [name]: value });
   };
 
-  const handleSubmit = async () => {
-    // Combine the formData with location.state.formData
-    const completeProfileData = {
-      ...location.state.formData,
-      ...formData,
-    };
+  const handleImageChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      setProfilePicture(file);
+      const newPreviewUrl = URL.createObjectURL(file);
+      setPreviewUrl(newPreviewUrl);
+    } else {
+      setProfilePicture(null);
+      setPreviewUrl(null);
+    }
+  };
 
-    // Validate all required fields except portfolio
-    if (!completeProfileData.name || !completeProfileData.email || !completeProfileData.universityName || !completeProfileData.dob || !completeProfileData.educationLevel || !completeProfileData.fieldOfStudy || !completeProfileData.desiredField || !completeProfileData.linkedin) {
-      alert("Please fill all required fields.");
-      return;
+  const isFormValid = () => {
+    const linkedinUrlPattern = /^https:\/\/(www\.)?linkedin\.com\/.+$/;
+    const portfolioUrlPattern =
+      /^(https?:\/\/)?([\w\d\.-]+)\.([a-z\.]{2,6})(\/[\w\d\.-]*)*\/?$/;
+
+    return (
+      formData.desiredField &&
+      formData.linkedin &&
+      linkedinUrlPattern.test(formData.linkedin) &&
+      (!formData.portfolio || portfolioUrlPattern.test(formData.portfolio))
+    );
+  };
+
+  const handleSubmit = async () => {
+    setIsSubmitting(true); // Show loading state
+
+    // Merge the profile data including Google sign-up data
+
+    const completeProfileData = {
+      ...formData,
+      profilePicture, // Send as file (multipart)
+    };
+    console.log("completeProfileData",completeProfileData);
+    let googleSignUp = completeProfileData.googleSignUp == true ? true : false;
+    console.log("google======", completeProfileData.googleSignUp);
+    if (!googleSignUp) {
+      if (
+        !completeProfileData.name ||
+        !completeProfileData.email ||
+        !completeProfileData.universityName ||
+        !completeProfileData.dob ||
+        !completeProfileData.educationLevel ||
+        !completeProfileData.fieldOfStudy ||
+        !completeProfileData.desiredField ||
+        !completeProfileData.linkedin
+      ) {
+        alert("Please fill all required fields.");
+        setIsSubmitting(false);
+        return;
+      }
     }
 
     try {
-      // Submit the data to your backend/database using Axios
-      const response = await axios.post('/api/users/register', completeProfileData);
+      const formDataToSend = new FormData();
+      Object.entries(completeProfileData).forEach(([key, value]) => {
+        formDataToSend.append(key, value);
+      });
+        let url = googleSignUp ? "/google-login" : "/api/users/register"
+      const response = await axios.post(`${url}`, formDataToSend, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      });
 
       if (response.status === 201) {
-        // Clear localStorage after successful submission
         localStorage.removeItem("userProfileData");
         navigate("/user-main-page");
       }
     } catch (error) {
       console.error("Error submitting form:", error);
-      alert("Registration failed. Please try again.");
+      alert(
+        `Registration failed: ${
+          error.response?.data?.message || "An unknown error occurred."
+        }`
+      );
+    } finally {
+      setIsSubmitting(false); // Hide loading state
     }
-  };
-
-  const isFormValid = () => {
-    return formData.desiredField && formData.linkedin;
   };
 
   return (
     <div className="flex justify-center items-center min-h-screen bg-gray-100 font-poppins">
       <div className="w-full max-w-xl p-8 space-y-6 bg-white shadow-md rounded-lg">
         <div className="space-y-4">
-          <div className="w-full h-12 p-3 bg-purple-100 border-b border-purple-300">
-            <h2 className="text-lg font-bold text-gray-700">PROFESSIONAL INFORMATION</h2>
-          </div>
+          <h2 className="w-full h-12 p-3 bg-purple-100 border-b border-purple-300 text-lg font-bold text-gray-700">
+            PROFESSIONAL INFORMATION
+          </h2>
           <div>
-            <label className="block text-sm font-medium text-gray-700">Desired field of Internship/Job</label>
+            <label
+              htmlFor="desiredField"
+              className="block text-sm font-medium text-gray-700"
+            >
+              Desired field of Internship/Job
+            </label>
             <select
               name="desiredField"
               value={formData.desiredField}
               onChange={handleChange}
-              required
-              className="mt-1 block w-full px-3 py-2 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-purple-500 focus:border-purple-500"
+              className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-purple-500 focus:border-purple-500"
             >
               <option value="">Select Your Field</option>
               <option value="space">Space Internships</option>
@@ -84,60 +173,79 @@ const UserProfilePicture = () => {
             </select>
           </div>
 
-          {/* Upload Profile Information Section */}
-          <div className="w-full h-12 p-3 bg-purple-100 border-b border-purple-300">
-            <h2 className="text-lg font-bold text-gray-700">UPLOAD PROFILE INFORMATION</h2>
+          <h2 className="w-full h-12 p-3 bg-purple-100 border-b border-purple-300 text-lg font-bold text-gray-700">
+            UPLOAD PROFILE PICTURE
+          </h2>
+          <div>
+            <label
+              htmlFor="linkedin"
+              className="block text-sm font-medium text-gray-700"
+            >
+              LinkedIn Profile
+            </label>
+            <input
+              id="linkedin"
+              type="text"
+              name="linkedin"
+              value={formData.linkedin}
+              onChange={handleChange}
+              className="mt-2 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-purple-500 focus:border-purple-500"
+              placeholder="Enter your LinkedIn profile"
+            />
           </div>
-
-          <div className="space-y-4">
-            {/* LinkedIn Profile Input */}
-            <div>
-              <label htmlFor="linkedin" className="block text-sm font-medium text-gray-700">LinkedIn Profile</label>
-              <input
-                id="linkedin"
-                type="text"
-                name="linkedin"
-                value={formData.linkedin}
-                onChange={handleChange}
-                required
-                className="mt-2 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-purple-500 focus:border-purple-500"
-                placeholder="Enter your LinkedIn profile"
-              />
-            </div>
-
-            {/* Portfolio Website Input (Optional) */}
-            <div>
-              <label htmlFor="portfolio" className="block text-sm font-medium text-gray-700">Portfolio Website (Optional)</label>
-              <input
-                id="portfolio"
-                type="text"
-                name="portfolio"
-                value={formData.portfolio}
-                onChange={handleChange}
-                className="mt-2 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-purple-500 focus:border-purple-500"
-                placeholder="Enter your Portfolio URL"
-              />
-            </div>
+          <div>
+            <label
+              htmlFor="portfolio"
+              className="block text-sm font-medium text-gray-700"
+            >
+              Portfolio Website (Optional)
+            </label>
+            <input
+              id="portfolio"
+              type="text"
+              name="portfolio"
+              value={formData.portfolio}
+              onChange={handleChange}
+              className="mt-2 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-purple-500 focus:border-purple-500"
+              placeholder="Enter your Portfolio URL"
+            />
           </div>
-
-          {/* Button Section with Back and Submit Buttons */}
-          <div className="flex justify-between space-x-4">
+          {/* <div>
+            {previewUrl ? (
+              <img
+                src={previewUrl}
+                alt="Profile Preview"
+                className="rounded-full border w-24 h-24"
+              />
+            ) : (
+              <div>No picture selected</div>
+            )}
+            <input
+              type="file"
+              onChange={handleImageChange}
+              className="mt-2 block w-full"
+              accept="image/*"
+            />
+          </div> */}
+          <div className="flex justify-between">
             <button
               type="button"
               onClick={() => navigate(-1)}
-              className="w-full py-2 px-4 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500"
+              className="w-full py-2 px-4 rounded-md text-gray-700 bg-gray-100 hover:bg-gray-200"
             >
               Back
             </button>
             <button
               type="button"
               onClick={handleSubmit}
-              disabled={!isFormValid()}
-              className={`w-full py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white ${
-                isFormValid() ? "bg-purple-600 hover:bg-purple-700" : "bg-purple-300 cursor-not-allowed"
-              } focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500`}
+              disabled={!isFormValid() || isSubmitting}
+              className={`w-full py-2 px-4 rounded-md ${
+                isSubmitting || !isFormValid()
+                  ? "bg-purple-300 text-gray-600 cursor-not-allowed"
+                  : "bg-purple-600 hover:bg-purple-700 text-white"
+              }`}
             >
-              Submit
+              {isSubmitting ? "Submitting..." : "Submit"}
             </button>
           </div>
         </div>

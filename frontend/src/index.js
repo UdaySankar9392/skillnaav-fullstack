@@ -3,8 +3,8 @@ import ReactDOM from "react-dom/client";
 import "./index.css";
 import App from "./App";
 import reportWebVitals from "./reportWebVitals";
-import firebase from "firebase/compat/app";
-import "firebase/compat/storage"; // Ensure Firebase Storage is imported
+import { initializeApp, getApp, getApps } from "firebase/app"; // Import modular SDK methods
+import { getStorage } from "firebase/storage"; // Import getStorage for Firebase Storage
 import store from "./redux/store";
 import { Provider } from "react-redux";
 
@@ -19,8 +19,12 @@ const firebaseConfig = {
   measurementId: "G-78JJ8PRQSR",
 };
 
-// Initialize Firebase
-firebase.initializeApp(firebaseConfig);
+// Initialize Firebase only once
+if (!getApps().length) {  // Check if Firebase apps have been initialized
+  initializeApp(firebaseConfig); // Initialize Firebase if not yet initialized
+} else {
+  getApp(); // Use the existing app if already initialized
+}
 
 const root = ReactDOM.createRoot(document.getElementById("root"));
 root.render(

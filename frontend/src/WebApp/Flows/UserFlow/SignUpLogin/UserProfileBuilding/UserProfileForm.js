@@ -2,42 +2,51 @@ import React, { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
+import { GoogleAuthProvider, signInWithPopup, getAuth } from "firebase/auth"; // Firebase imports
+import { firebaseApp } from "../../../../../config/firebase"; // Import the Firebase app from your Firebase configuration
 
 const UserProfileForm = () => {
   const location = useLocation();
   const navigate = useNavigate();
-  const userData = location.state?.userData || {}; // Access user data
 
+  // Identify if user is coming from Google signup
+  const isGoogleSignup = location.state?.isGoogleSignup || false;
 
-  // Initialize form data with empty values (to ensure empty fields on initial load)
+  // Access user data from location state or localStorage
+  const userData =
+    location.state?.userData || JSON.parse(localStorage.getItem("googleUser"));
+  console.log("page 2===", userData.googleSignUp);
+  console.log("userData", userData);
+  // Initialize form data with user data and additional fields
   const [formData, setFormData] = useState({
+    ...userData, // Initialize with existing user data (e.g., name, email, etc.)
     universityName: "",
     dob: null,
     educationLevel: "",
     fieldOfStudy: "",
-    ...userData, // Initialize formData with userData if available
   });
 
   const [filteredSuggestions, setFilteredSuggestions] = useState([]);
   const [isFormValid, setIsFormValid] = useState(false);
+  const [isLoading, setIsLoading] = useState(false); // For Google sign-in feedback
 
-  // Effect to handle loading form data from location state or localStorage
+  // Effect to load saved data from localStorage if available
   useEffect(() => {
     const savedData = localStorage.getItem("userFormData");
-
+    console.log("saved data from page 2", savedData);
     if (savedData) {
-      // Load saved data from localStorage
       setFormData(JSON.parse(savedData));
     }
-  }, []); // Empty dependency array ensures this runs only once on component mount
+  }, []);
 
-  // Update validation for form
+  // Effect to check form validity (all required fields filled)
   useEffect(() => {
     const { universityName, dob, educationLevel, fieldOfStudy } = formData;
     setIsFormValid(universityName && dob && educationLevel && fieldOfStudy);
   }, [formData]);
 
-  // Handle input changes
+  // Handle input changes with debounce for university suggestions
+  const debounceTimer = React.useRef(null);
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData((prevData) => ({
@@ -45,45 +54,98 @@ const UserProfileForm = () => {
       [name]: value,
     }));
 
-    // Filtering university suggestions as user types
     if (name === "universityName") {
-      const suggestions = universitySuggestions.filter((university) =>
-        university.toLowerCase().includes(value.toLowerCase())
-      );
-      setFilteredSuggestions(suggestions);
+      clearTimeout(debounceTimer.current);
+      debounceTimer.current = setTimeout(() => {
+        const suggestions = universitySuggestions.filter((university) =>
+          university.toLowerCase().includes(value.toLowerCase())
+        );
+        setFilteredSuggestions(suggestions);
+      }, 300);
     }
   };
 
   // Handle date picker change
   const handleDateChange = (date) => {
-    const updatedDate = new Date(date);
-    updatedDate.setHours(0, 0, 0, 0);
-    setFormData((prevData) => ({
-      ...prevData,
-      dob: updatedDate,
-    }));
+    if (date) {
+      const updatedDate = new Date(date);
+      updatedDate.setHours(0, 0, 0, 0);
+      setFormData((prevData) => ({
+        ...prevData,
+        dob: updatedDate,
+      }));
+    }
   };
 
+  // Handle form submission
   const handleSubmit = () => {
-    // Log formData to console
-    console.log("Form Data Submitted:", formData);
-  
-    // Save data to localStorage
-    localStorage.setItem("userFormData", JSON.stringify(formData));
-  
-    // Navigate to user profile picture page
-    navigate("/user-profile-picture", { state: { formData } });
-  };
-  
+    try {
+      // Create a merged object
+      const updatedFormData = {
+        ...formData, // Include all existing fields from formData
+        ...(userData.googleSignUp ? userData : {}), // Append userData fields only if googleSignUp is true
+      };
 
-  // Example university suggestions (this could come from an API or a more extensive list)
+      console.log("Updated formData", updatedFormData);
+
+      // Update the state with the merged object
+      setFormData(updatedFormData);
+
+      // Save the updated formData in localStorage
+      localStorage.setItem("userFormData", JSON.stringify(updatedFormData));
+     
+      navigate("/user-profile-picture", { state: { formData } });
+    } catch (error) {
+      console.error("Error saving form data:", error.message);
+    }
+  };
+
+  // Google sign-in logic
+  const handleGoogleSignIn = async () => {
+    const auth = getAuth(firebaseApp);
+    const provider = new GoogleAuthProvider();
+    setIsLoading(true);
+    try {
+      const result = await signInWithPopup(auth, provider);
+      const user = result.user;
+
+      // Get the user data from Google sign-in
+      const googleUserData = {
+        email: user.email,
+        name: user.displayName,
+        photoURL: user.photoURL,
+      };
+
+      // Set form data with Google user data
+      setFormData((prevData) => ({
+        ...prevData,
+        ...googleUserData,
+      }));
+
+      // Save Google user data to localStorage
+      localStorage.setItem("googleUser", JSON.stringify(googleUserData));
+
+      // Redirect to profile form
+      navigate("/user-profile-form", {
+        state: {
+          isGoogleSignup: true, // Mark as Google Signup
+          userData: googleUserData,
+        },
+      });
+    } catch (error) {
+      console.error("Google sign-in error:", error.message);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Example university suggestions
   const universitySuggestions = [
     "Harvard University",
     "Stanford University",
     "University of California",
     "Massachusetts Institute of Technology",
     "Oxford University",
-    // Add more universities as needed
   ];
 
   // Handle suggestion selection
@@ -92,7 +154,7 @@ const UserProfileForm = () => {
       ...prevData,
       universityName: suggestion,
     }));
-    setFilteredSuggestions([]); // Clear suggestions after selection
+    setFilteredSuggestions([]);
   };
 
   return (
@@ -100,10 +162,90 @@ const UserProfileForm = () => {
       <div className="w-full max-w-xl p-8 space-y-6 bg-white shadow-md rounded-lg">
         <div className="space-y-4">
           <div className="w-full h-12 p-3 bg-[#F9F0FF] border-b border-[#E6C4FB]">
-            <h2 className="text-16px font-bold text-gray-700">BASIC INFORMATION</h2>
+            <h2 className="text-16px font-bold text-gray-700">
+              BASIC INFORMATION
+            </h2>
           </div>
+
+          {/* Skip Email and Password for Google Sign-in */}
+          {!isGoogleSignup && (
+            <>
+              <div>
+                <label
+                  htmlFor="email"
+                  className="block text-sm font-medium text-gray-700"
+                >
+                  Email
+                </label>
+                <input
+                  id="email"
+                  type="email"
+                  name="email"
+                  value={formData.email || ""}
+                  onChange={handleChange}
+                  className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-purple-500 focus:border-purple-500"
+                  placeholder="Enter your email"
+                />
+              </div>
+              <div>
+                <label
+                  htmlFor="username"
+                  className="block text-sm font-medium text-gray-700"
+                >
+                  Username
+                </label>
+                <input
+                  id="username"
+                  type="text"
+                  name="username"
+                  value={formData.username || ""}
+                  onChange={handleChange}
+                  className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-purple-500 focus:border-purple-500"
+                  placeholder="Enter your username"
+                />
+              </div>
+              <div>
+                <label
+                  htmlFor="password"
+                  className="block text-sm font-medium text-gray-700"
+                >
+                  Password
+                </label>
+                <input
+                  id="password"
+                  type="password"
+                  name="password"
+                  value={formData.password || ""}
+                  onChange={handleChange}
+                  className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-purple-500 focus:border-purple-500"
+                  placeholder="Enter your password"
+                />
+              </div>
+              <div>
+                <label
+                  htmlFor="confirmPassword"
+                  className="block text-sm font-medium text-gray-700"
+                >
+                  Confirm Password
+                </label>
+                <input
+                  id="confirmPassword"
+                  type="password"
+                  name="confirmPassword"
+                  value={formData.confirmPassword || ""}
+                  onChange={handleChange}
+                  className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-purple-500 focus:border-purple-500"
+                  placeholder="Confirm your password"
+                />
+              </div>
+            </>
+          )}
+
           <div className="relative">
-            <label htmlFor="universityName" className="block text-sm font-medium text-gray-700">
+            <label
+              htmlFor="universityName"
+              className="block text-sm font-medium text-gray-700"
+            >
               University Name
             </label>
             <input
@@ -114,107 +256,110 @@ const UserProfileForm = () => {
               onChange={handleChange}
               className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-purple-500 focus:border-purple-500"
               placeholder="Enter your University Name"
+              aria-label="University Name"
               autoComplete="off"
             />
             {filteredSuggestions.length > 0 && (
-              <ul className="absolute z-10 w-full bg-white border border-gray-300 rounded-md shadow-lg mt-1 max-h-40 overflow-y-auto">
+              <ul
+                className="absolute z-10 w-full bg-white border border-gray-300 rounded-md shadow-lg mt-1 max-h-40 overflow-y-auto"
+                role="listbox"
+              >
                 {filteredSuggestions.map((suggestion, index) => (
-                  <li key={index} onClick={() => handleSuggestionClick(suggestion)} className="cursor-pointer px-4 py-2 hover:bg-purple-100">
+                  <li
+                    key={index}
+                    className="p-2 cursor-pointer hover:bg-purple-100"
+                    onClick={() => handleSuggestionClick(suggestion)}
+                  >
                     {suggestion}
                   </li>
                 ))}
               </ul>
             )}
           </div>
+
+          {/* Select education level */}
           <div>
-            <label htmlFor="dob" className="block text-sm font-medium text-gray-700">Date of Birth</label>
+            <label
+              htmlFor="educationLevel"
+              className="block text-sm font-medium text-gray-700"
+            >
+              Education Level
+            </label>
+            <select
+              id="educationLevel"
+              name="educationLevel"
+              value={formData.educationLevel}
+              onChange={handleChange}
+              className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-purple-500 focus:border-purple-500"
+            >
+              <option value="">Select your education level</option>
+              <option value="highschool">High School</option>
+              <option value="undergraduate">Undergraduate</option>
+              <option value="postgraduate">Postgraduate</option>
+            </select>
+          </div>
+
+          {/* Field of Study */}
+          <div>
+            <label
+              htmlFor="fieldOfStudy"
+              className="block text-sm font-medium text-gray-700"
+            >
+              Field of Study
+            </label>
+            <input
+              id="fieldOfStudy"
+              type="text"
+              name="fieldOfStudy"
+              value={formData.fieldOfStudy || ""}
+              onChange={handleChange}
+              className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-purple-500 focus:border-purple-500"
+              placeholder="Enter your field of study"
+            />
+          </div>
+
+          {/* Date of Birth */}
+          <div>
+            <label
+              htmlFor="dob"
+              className="block text-sm font-medium text-gray-700"
+            >
+              Date of Birth
+            </label>
             <DatePicker
               selected={formData.dob}
               onChange={handleDateChange}
-              dateFormat="dd/MM/yyyy"
-              maxDate={new Date()}
-              showYearDropdown
-              showMonthDropdown
-              dropdownMode="select"
-              placeholderText="DD/MM/YYYY"
+              dateFormat="yyyy/MM/dd"
               className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-purple-500 focus:border-purple-500"
             />
           </div>
         </div>
-        <div className="space-y-4">
-          <div className="w-full h-12 p-3 bg-[#F9F0FF] border-b border-[#E6C4FB]">
-            <h2 className="text-16px font-bold text-gray-700">EDUCATIONAL INFORMATION</h2>
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700">Current level of education</label>
-            <div className="mt-2 space-y-2">
-              <div className="flex items-center">
-                <input
-                  type="radio"
-                  id="highschool"
-                  name="educationLevel"
-                  value="highschool"
-                  checked={formData.educationLevel === "highschool"}
-                  onChange={handleChange}
-                  className="h-4 w-4 text-purple-600 border-gray-300 focus:ring-purple-500"
-                />
-                <label htmlFor="highschool" className="ml-3 mt-4 block text-sm text-gray-700">Highschool</label>
-              </div>
-              <div className="flex items-center">
-                <input
-                  type="radio"
-                  id="undergraduate"
-                  name="educationLevel"
-                  value="undergraduate"
-                  checked={formData.educationLevel === "undergraduate"}
-                  onChange={handleChange}
-                  className="h-4 w-4 text-purple-600 border-gray-300 focus:ring-purple-500"
-                />
-                <label htmlFor="undergraduate" className="ml-3 mt-4 block text-sm text-gray-700">Undergraduate</label>
-              </div>
-              <div className="flex items-center">
-                <input
-                  type="radio"
-                  id="graduate"
-                  name="educationLevel"
-                  value="graduate"
-                  checked={formData.educationLevel === "graduate"}
-                  onChange={handleChange}
-                  className="h-4 w-4 text-purple-600 border-gray-300 focus:ring-purple-500"
-                />
-                <label htmlFor="graduate" className="ml-3 mt-4 block text-sm text-gray-700">Graduate</label>
-              </div>
-            </div>
-          </div>
 
-          <div>
-            <label htmlFor="fieldOfStudy" className="block text-sm font-medium text-gray-700">Field of Study</label>
-            <select
-              name="fieldOfStudy"
-              value={formData.fieldOfStudy}
-              onChange={handleChange}
-              className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-purple-500 focus:border-purple-500"
+        {/* Google Sign-In Button */}
+        <div className="mt-4">
+          {!isGoogleSignup && (
+            <button
+              type="button"
+              onClick={handleGoogleSignIn}
+              className="w-full bg-blue-500 text-white py-2 px-4 rounded-md"
             >
-               <option value="">Select Your Field</option>
-              <option value="space">Space Internships</option>
-              <option value="aero">Aeronautical Internships</option>
-              <option value="tech">Tech Internships</option>
-              <option value="research">Research Internships</option>
-              <option value="education">Education Internships</option>
-            </select>
-          </div>
+              {isLoading ? "Signing in..." : "Sign Up with Google"}
+            </button>
+          )}
         </div>
 
-        <div className="flex justify-end mt-6">
-          <button
-            type="button"
-            disabled={!isFormValid}
-            onClick={handleSubmit}
-            className="bg-purple-500 text-white w-full px-6 py-3 rounded-md hover:bg-purple-600 disabled:bg-gray-400"
-          >
-            Continue
-          </button>
-        </div>
+        {/* Submit Button */}
+        {isFormValid && (
+          <div className="mt-4">
+            <button
+              type="button"
+              onClick={handleSubmit}
+              className="w-full bg-purple-500 text-white py-2 px-4 rounded-md"
+            >
+              Submit
+            </button>
+          </div>
+        )}
       </div>
     </div>
   );

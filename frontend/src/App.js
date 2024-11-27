@@ -1,11 +1,10 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import "@fontsource/inter/400.css";
 import "@fontsource/inter/600.css";
 import "@fontsource/inter/700.css";
 import Home from "./pages/Home";
 import axios from "axios";
-import { useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { HideLoading, SetSkillNaavData } from "./redux/rootSlice";
 import Admin from "./pages/Admin";
@@ -24,13 +23,17 @@ import PartnerProfileForm from "./WebApp/Flows/PartnerFlow/SignUpLogin/UserProfi
 import PartnerProfilePicture from "./WebApp/Flows/PartnerFlow/SignUpLogin/UserProfileBuilding/PartnerProfilePicture";
 import PartnerMainPage from "./WebApp/Flows/PartnerFlow/MainPage/PartnerMainPage";
 import PartnerforgotPassword from "./WebApp/Flows/PartnerFlow/SignUpLogin/PartnerforgotPassword";
-// import AdminFlow from "./WebApp/Flows/AdminFlow/AdminFlow";
 import AdminCreateAccount from "./WebApp/Flows/AdminFlow/SignUpLogin/AdminCreateAccount";
 import AdminLogin from "./WebApp/Flows/AdminFlow/SignUpLogin/AdminLogin";
 import AdminProfileForm from "./WebApp/Flows/AdminFlow/SignUpLogin/AdminProfileBuilding/AdminProfileForm";
 import AdminProfilePicture from "./WebApp/Flows/AdminFlow/SignUpLogin/AdminProfileBuilding/AdminProfilePicture";
 import AdminMainPage from "./WebApp/Flows/AdminFlow/MainPage/AdminMainPage";
 import TryforFree from "./WebApp/TryforFree";
+
+// Add the new route component
+const RegistrationComplete = () => {
+  return <div>Registration Complete! Redirecting you to your dashboard...</div>;
+};
 
 function App() {
   const { skillnaavData, reloadData } = useSelector((state) => state.root);
@@ -72,33 +75,27 @@ function App() {
         <Route path="/user-main-page" element={<UserMainPage />} />
         <Route path="/user-forgot-password" element={<UserforgotPassword />} />
 
-
         {/* Partner Flow */}
         <Route path="/partner" element={<PartnerFlow />} />
-        <Route path="/partner-create-account"
-          element={<PartnerCreateAccount />}
-        />
+        <Route path="/partner-create-account" element={<PartnerCreateAccount />} />
         <Route path="/partner/login" element={<PartnerLogin />} />
         <Route path="/partner-profile-form" element={<PartnerProfileForm />} />
-        <Route path="/partner-profile-picture" element={<PartnerProfilePicture />}
-        />
+        <Route path="/partner-profile-picture" element={<PartnerProfilePicture />} />
         <Route path="/partner-main-page" element={<PartnerMainPage />} />
-        
         <Route path="/partner-forgot-password" element={<PartnerforgotPassword />} />
 
         {/* Admin Flow */}
-        {/* <Route path="/admin-account" element={<AdminFlow />} /> */}
         <Route path="/admin-create-account" element={<AdminCreateAccount />} />
         <Route path="/admin/login" element={<AdminLogin />} />
         <Route path="/admin-profile-form" element={<AdminProfileForm />} />
-        <Route
-          path="/admin-profile-picture"
-          element={<AdminProfilePicture />}
-        />
+        <Route path="/admin-profile-picture" element={<AdminProfilePicture />} />
         <Route path="/admin-main-page" element={<AdminMainPage />} />
 
         {/* Try for free */}
         <Route path="/choose-role" element={<TryforFree />} />
+
+        {/* Additional Route for Registration Complete */}
+        <Route path="/registration-complete" element={<RegistrationComplete />} />
       </Routes>
     </BrowserRouter>
   );

@@ -1,12 +1,12 @@
 import React, { useState } from "react";
 import { Formik, Form, Field, ErrorMessage } from "formik";
 import { useNavigate } from "react-router-dom";
-import { account, googleOAuth } from "../../../../config";
+import { signInWithPopup, GoogleAuthProvider } from "firebase/auth";
+import { auth } from "../../../../config/firebase"; // Ensure correct import of Firebase auth
 import * as Yup from "yup";
-import { EyeIcon, EyeSlashIcon } from "@heroicons/react/24/solid";
 import { Link } from "react-router-dom";
-import createAccountImage from "../../../../assets-webapp/login-image.png"; // Adjust the path if needed
-import GoogleIcon from "../../../../assets-webapp/Google-icon.png";
+import { EyeIcon, EyeSlashIcon } from "@heroicons/react/24/solid";
+import createAccountImage from "../../../../assets-webapp/login-image.png";
 import { FcGoogle } from "react-icons/fc";
 import axios from "axios";
 
@@ -31,35 +31,72 @@ const UserCreateAccount = () => {
   const [errorMessage, setErrorMessage] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  let [googleSignup, setGoogleSignup] = useState(false);
 
   const handleSubmit = async (values, { setSubmitting }) => {
     try {
-      // Check if the email already exists before proceeding.
-      const response = await axios.get(`/api/users/check-email?email=${values.email}`);
-      if (response.data.exists) {
-        setErrorMessage("Email already registered.");
-        setSubmitting(false);
-        return;
+      // Check if the user is signing up via Google (skip password validation)
+      if (values.email && !values.password) {
+        // Handle case where user is signing up via Google, checking for existing email
+        const response = await axios.get(`/api/users/check-email?email=${values.email}`);
+        if (response.data.exists) {
+          setErrorMessage("Email already registered.");
+          setSubmitting(false);
+          return;
+        }
+
+        // Skip password validation for Google users
+        navigate("/user-profile-form", {
+          state: { userData: { email: values.email, name: values.name, isGoogleSignup } } // Passing only email and name
+        });
+      } else {
+        // Regular form submission with password validation
+        const response = await axios.get(`/api/users/check-email?email=${values.email}`);
+        if (response.data.exists) {
+          setErrorMessage("Email already registered.");
+          setSubmitting(false);
+          return;
+        }
+
+        // Clear any previous data in localStorage
+        localStorage.removeItem("userFormData");
+
+        // Navigate to UserProfileForm with user data
+        navigate("/user-profile-form", {
+          state: { userData: { ...values, name: values.name } } // Add name from the form values if available
+        });
       }
-  
-      // Clear any previous data in localStorage
-      localStorage.removeItem("userFormData");
-  
-      // Navigate to UserProfileForm with user data
-      navigate("/user-profile-form", { state: { userData: values } });
     } catch (error) {
       setErrorMessage("Error checking email.");
       setSubmitting(false);
     }
   };
-  
 
-  const handleGoogleSignIn = () => {
-    account.createOAuth2Session(
-      "google",
-      "http://localhost:3000/user-main-page",
-      "http://localhost:3000"
-    );
+  const handleGoogleSignIn = async () => {
+    const provider = new GoogleAuthProvider();
+    try {
+      const result = await signInWithPopup(auth, provider);
+      const user = result.user;
+      const displayName = user.displayName || 'No name available'; // fallback if no displayName is found
+      const email = user.email;
+
+      // Check if the email already exists in your database
+      const response = await axios.get(`/api/users/check-email?email=${email}`);
+      if (response.data.exists) {
+        setErrorMessage("Email already registered.");
+        return;
+      }
+      setGoogleSignup(!googleSignup);
+
+      console.log("isgoogleSignup",!googleSignup)
+      // Directly pass the user data to the profile form without calling the API
+      navigate("/user-profile-form", {
+        state: { userData: { email, name: displayName, googleSignUp: !googleSignup } } // Pass email, name, and isGoogleSignup to profile form
+      });
+    } catch (error) {
+      setErrorMessage("Error during Google sign-in.");
+      console.error("Google Sign-In Error:", error.message);
+    }
   };
 
   return (
@@ -83,6 +120,7 @@ const UserCreateAccount = () => {
             </div>
           )}
 
+          {/* Formik form for user registration */}
           <Formik
             initialValues={{
               name: "",
@@ -146,6 +184,9 @@ const UserCreateAccount = () => {
                     component="div"
                     className="text-red-500 text-sm mt-1"
                   />
+                  <p className="text-sm text-gray-500 mt-1">
+                    Password must be at least 6 characters, contain uppercase and lowercase letters, a number, and a special character.
+                  </p>
                 </div>
 
                 <div className="mb-4 relative">
@@ -176,11 +217,7 @@ const UserCreateAccount = () => {
                 <button
                   type="submit"
                   disabled={isSubmitting}
-                  className={`w-full bg-purple-${
-                    isSubmitting ? "300" : "500"
-                  } text-white p-3 rounded-lg hover:bg-purple-${
-                    isSubmitting ? "300" : "600"
-                  } mb-4`}
+                  className={`w-full bg-purple-${isSubmitting ? "300" : "500"} text-white p-3 rounded-lg hover:bg-purple-${isSubmitting ? "300" : "600"} mb-4`}
                 >
                   Register
                 </button>
@@ -188,17 +225,26 @@ const UserCreateAccount = () => {
             )}
           </Formik>
 
+          <div className="flex justify-center items-center my-4">
+            <span className="text-sm">or sign up with</span>
+          </div>
+
+          {/* Google sign-in button */}
           <button
             onClick={handleGoogleSignIn}
-            className="w-full bg-red-500 text-white p-3 rounded-lg hover:bg-red-600 mb-4 flex items-center justify-center space-x-2"
+            className="flex items-center justify-center bg-white py-2 px-6 border border-gray-300 rounded-lg"
           >
-            <FcGoogle className="h-5 w-5" /> {/* Google Icon */}
-            <span>Sign up with Google</span>
+            <FcGoogle className="text-xl mr-2" />
+            Google
           </button>
+
           <p className="text-center text-gray-500 font-poppins font-medium text-base leading-6">
             Already have an account?{" "}
-            <Link to="/user/login" className="text-blue-500 hover:underline">
-              Login
+            <Link
+              to="/login"
+              className="font-poppins font-semibold text-blue-500 hover:text-blue-600"
+            >
+              Log in
             </Link>
           </p>
         </div>
