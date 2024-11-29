@@ -247,28 +247,74 @@
 
 // controllers/adminController.js
 
-const Admin = require('../models/webapp-models/adminModel');
-const bcrypt = require('bcrypt'); // for password hashing
+// const Admin = require('../models/webapp-models/adminModel');
+// const bcrypt = require('bcrypt'); // for password hashing
 
-// Dummy predefined credentials for illustration (in a real application, you would fetch this from the database)
-const predefinedAdminCredentials = {
-  username: 'admin',
-  password: 'password123', // Make sure to hash passwords in production
-};
+// // Dummy predefined credentials for illustration (in a real application, you would fetch this from the database)
+// const predefinedAdminCredentials = {
+//   username: 'admin',
+//   password: 'password123', // Make sure to hash passwords in production
+// };
 
-const loginAdmin = async (req, res) => {
-  const { username, password } = req.body;
+// const loginAdmin = async (req, res) => {
+//   const { username, password } = req.body;
 
-  // Check if credentials match predefined ones
-  if (
-    username === predefinedAdminCredentials.username &&
-    password === predefinedAdminCredentials.password
-  ) {
-    // Optionally, you could return a JWT token here
-    return res.status(200).json({ message: 'Login successful' });
+//   // Check if credentials match predefined ones
+//   if (
+//     username === predefinedAdminCredentials.username &&
+//     password === predefinedAdminCredentials.password
+//   ) {
+//     // Optionally, you could return a JWT token here
+//     return res.status(200).json({ message: 'Login successful' });
+//   }
+
+//   return res.status(401).json({ message: 'Invalid credentials' });
+// };
+
+// module.exports = { loginAdmin };
+const User = require('../models/webapp-models/adminModel');
+const jwt = require('jsonwebtoken');
+const bcrypt = require('bcryptjs');
+
+// Login Controller
+const loginUser = async (req, res) => {
+  const { email, password } = req.body;
+
+  try {
+    // Find user by email
+    const user = await User.findOne({ email });
+    if (!user) {
+      return res.status(401).json({ message: 'Invalid email or password' });
+    }
+
+    // Check if password matches
+    const isMatch = await user.matchPassword(password);
+    if (!isMatch) {
+      return res.status(401).json({ message: 'Invalid email or password' });
+    }
+
+    // Generate JWT Token
+    const token = jwt.sign(
+      { id: user._id, isAdmin: user.isAdmin },
+      process.env.JWT_SECRET || 'yoursecretkey',
+      { expiresIn: '1h' }
+    );
+
+    // Send response
+    res.json({
+      id: user._id,
+      name: user.name,
+      email: user.email,
+      isAdmin: user.isAdmin,
+      pic: user.pic,
+      token,
+    });
+
+  } catch (error) {
+    res.status(500).json({ message: 'Server error' });
   }
-
-  return res.status(401).json({ message: 'Invalid credentials' });
 };
 
-module.exports = { loginAdmin };
+module.exports = {
+  loginUser
+};

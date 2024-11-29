@@ -9,9 +9,17 @@ const {
   rejectPartner,
   checkEmailExists,
   requestPasswordReset,
-  verifyOTPAndResetPassword, 
+  verifyOTPAndResetPassword,
+  getPartnerProfile, 
 } = require("../../controllers/partnerController");
 const { protect } = require("../../middlewares/authMiddleware");
+
+
+// Middleware to set req.isPartner for all partner routes
+router.use((req, res, next) => {
+  req.isPartner = true; // Mark as partner
+  next();
+});
 
 router.post("/register", registerPartner); 
 router.post("/login", authPartner); 
@@ -23,7 +31,8 @@ router.post("/check-email", checkEmailExists);
 
 router.post('/request-password-reset', requestPasswordReset); // Request password reset with OTP
 router.post('/verify-otp-reset-password', verifyOTPAndResetPassword); // Verify OTP and reset password
+router.get("/profile", protect, getPartnerProfile);
 
 
 
-module.exports = router;
+module.exports = router;
