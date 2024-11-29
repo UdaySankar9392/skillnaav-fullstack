@@ -46,7 +46,7 @@ const PartnerMainPage = () => {
   
         console.log("Token:", token); // Log the token
   
-        const response = await fetch("http://localhost:5000/api/partners/profile", {
+        const response = await fetch("http://3.110.114.26:5000/api/partners/profile", {
           method: "GET",
           headers: {
             Authorization: `Bearer ${token}`, // Include the token in the header
