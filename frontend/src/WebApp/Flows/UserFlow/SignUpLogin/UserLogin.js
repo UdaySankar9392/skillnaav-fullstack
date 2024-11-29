@@ -42,11 +42,14 @@ const UserLogin = () => {
       };
       const { data } = await axios.post("/api/users/login", values, config);
       
-      // Store token in localStorage
+      // Store token in localStorage with the name 'userToken'
       const token = data.token;
-      localStorage.setItem("token", JSON.stringify(token)); // Ensure it's stored correctly
+      localStorage.setItem("userToken", JSON.stringify(token)); // Store token as 'userToken'
       localStorage.setItem("userInfo", JSON.stringify(data)); // Store user info if needed
       
+      // Log the token to the console
+      console.log("User token stored in localStorage:", token);
+  
       setLoading(false);
       navigate("/user-main-page");
     } catch (err) {
@@ -55,7 +58,7 @@ const UserLogin = () => {
       setSubmitting(false);
     }
   };
-
+  
   // const login = useGoogleLogin({
   //   onSuccess: async (tokenResponse) => {
   //     try {
