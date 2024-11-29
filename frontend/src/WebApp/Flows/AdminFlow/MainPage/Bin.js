@@ -114,41 +114,42 @@ const BinManagement = () => {
       </table>
 
       {showModal && (
-        <div className="fixed inset-0 flex items-center justify-center bg-gray-800 bg-opacity-50">
-          <div className="bg-white p-6 rounded-md shadow-lg max-w-sm w-full">
-            <h3 className="text-xl font-semibold mb-4">
-              {modalType === "restore"
-                ? "Restore Internship"
-                : "Permanently Delete Internship"}
-            </h3>
-            <p className="mb-4">
-              Are you sure you want to{" "}
-              {modalType === "restore" ? "restore" : "permanently delete"}{" "}
-              this internship?
-            </p>
-            <div className="flex justify-end space-x-4">
-              <button
-                className="px-4 py-2 bg-gray-300 rounded-md hover:bg-gray-400"
-                onClick={closeModal}
-              >
-                Cancel
-              </button>
-              <button
-                className={`px-4 py-2 ${
-                  modalType === "restore"
-                    ? "bg-green-500 hover:bg-green-700"
-                    : "bg-red-500 hover:bg-red-700"
-                } text-white rounded-md`}
-                onClick={
-                  modalType === "restore" ? handleRestore : handlePermanentDelete
-                }
-              >
-                Confirm
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+  <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-[999]">
+    <div className="bg-white p-6 rounded-lg shadow-lg w-96 z-[1000]">
+      <h3 className="text-xl font-semibold mb-4">
+        {modalType === "restore"
+          ? "Restore Internship"
+          : "Permanently Delete Internship"}
+      </h3>
+      <p className="mb-4">
+        Are you sure you want to{" "}
+        {modalType === "restore" ? "restore" : "permanently delete"}{" "}
+        this internship?
+      </p>
+      <div className="flex justify-end space-x-4">
+        <button
+          className="px-4 py-2 bg-gray-300 rounded-md hover:bg-gray-400"
+          onClick={closeModal}
+        >
+          Cancel
+        </button>
+        <button
+          className={`px-4 py-2 ${
+            modalType === "restore"
+              ? "bg-green-500 hover:bg-green-700"
+              : "bg-red-500 hover:bg-red-700"
+          } text-white rounded-md`}
+          onClick={
+            modalType === "restore" ? handleRestore : handlePermanentDelete
+          }
+        >
+          Confirm
+        </button>
+      </div>
+    </div>
+  </div>
+)}
+
     </div>
   );
 };

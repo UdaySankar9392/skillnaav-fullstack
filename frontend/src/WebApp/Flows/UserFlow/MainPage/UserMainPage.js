@@ -4,6 +4,7 @@ import Navbar from "./Navbar";
 import Sidebar from "./Sidebar";
 import BodyContent from "./BodyContent"; // Main content component
 import { TabProvider } from "./UserHomePageContext/HomePageContext";
+import axios from "axios"; // Import axios
 
 const UserMainPage = () => {
   const [userInfo, setUserInfo] = useState(null);
@@ -13,32 +14,32 @@ const UserMainPage = () => {
   useEffect(() => {
     const fetchUserInfo = async () => {
       try {
-        const token = JSON.parse(localStorage.getItem("token")); // Retrieve and parse the token
-        console.log("Token:", token); // Log the token
+        const token = JSON.parse(localStorage.getItem("userToken")); // Retrieve and parse the 'userToken'
+        console.log("Token from localStorage:", token); // Log the token
+        
+        if (token) {
+          // Use axios to make the API request
+          const response = await axios.get("/api/users/profile", {
+            headers: {
+              Authorization: `Bearer ${token}`, // Include the token in the header
+            },
+          });
   
-        const response = await fetch("http://3.110.114.26:5000/api/users/profile", {
-          method: "GET",
-          headers: {
-            Authorization: `Bearer ${token}`, // Include the token in the header
-          },
-        });
-  
-        if (!response.ok) {
-          throw new Error("Failed to fetch user info");
+          // Handle the response data
+          setUserInfo(response.data);
+          setIsApproved(response.data.adminApproved); // Set approval status based on the response
+        } else {
+          console.log("No token found in localStorage.");
         }
-  
-        const data = await response.json();
-        setUserInfo(data);
-        setIsApproved(data.adminApproved); // Set approval status based on the response
       } catch (error) {
         console.error("Failed to fetch user info:", error);
       } finally {
         setLoading(false); // Stop loading once the data is fetched
       }
     };
-  
+
     fetchUserInfo();
-  }, []);
+  }, []); // Empty dependency array ensures this runs once when the component mounts
 
   return (
     <TabProvider>
@@ -80,6 +81,7 @@ const UserMainPage = () => {
 };
 
 export default UserMainPage;
+
 
 
 // import React from "react";
