@@ -16,7 +16,7 @@ const UserMainPage = () => {
         const token = JSON.parse(localStorage.getItem("token")); // Retrieve and parse the token
         console.log("Token:", token); // Log the token
   
-        const response = await fetch("http://localhost:5000/api/users/profile", {
+        const response = await fetch("http://3.110.114.26:5000/api/users/profile", {
           method: "GET",
           headers: {
             Authorization: `Bearer ${token}`, // Include the token in the header
