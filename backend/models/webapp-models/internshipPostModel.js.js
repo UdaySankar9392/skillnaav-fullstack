@@ -20,6 +20,7 @@ const internshipPostingSchema = mongoose.Schema(
     imgUrl: { type: String, default: "https://default-image-url.com/image.png" },
     studentApplied: { type: Boolean, default: false },
     adminApproved: { type: Boolean, default: false },
+    adminReviewed: { type: Boolean, default: false },
     deleted: { type: Boolean, default: false },
     
     

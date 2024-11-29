@@ -93,7 +93,7 @@ const PartnerManagement = () => {
 
   const handleSendMessage = async () => {
     if (!newMessage.trim()) return; // Prevent sending empty messages
-
+  
     try {
       // Retrieve the admin ID from localStorage
       const adminInfo = JSON.parse(localStorage.getItem("adminInfo"));
@@ -102,7 +102,7 @@ const PartnerManagement = () => {
         return;
       }
       const adminId = adminInfo.id; // Use the dynamically fetched admin ID
-
+  
       // Send message to backend
       const response = await axios.post(`/api/chats`, {
         internshipId: selectedInternship._id, // Include selected internship ID
@@ -110,18 +110,34 @@ const PartnerManagement = () => {
         receiverId: selectedInternship.partnerId, // Assuming you have submitterId in internship data
         message: newMessage,
       });
-
+  
       // Update chat history with new message
       setChatMessages((prev) => [
         ...prev,
         { sender: adminId, message: newMessage, timestamp: new Date() },
       ]);
-
+  
       setNewMessage(""); // Clear input field
+  
+      // Update internship's AdminReviewed status to true after sending the message
+      const updateResponse = await axios.patch(`/api/interns/${selectedInternship._id}/update`, {
+        AdminReviewed: true,  // Mark as reviewed
+      });
+  
+      // If the update is successful, update local state
+      if (updateResponse.status === 200) {
+        // Update local state to reflect that the internship is reviewed
+        setSelectedInternship((prevInternship) => ({
+          ...prevInternship,
+          AdminReviewed: true,
+        }));
+      }
+  
     } catch (error) {
-      console.error("Error sending message:", error.response.data); // Log detailed error response
+      console.error("Error sending message:", error.response?.data || error.message); // Log detailed error response
     }
   };
+  
   const closeDeleteModal = () => {
     setIsDeleteModalOpen(false);
     setInternshipToDelete(null); // Reset selected internship to delete
@@ -277,7 +293,7 @@ const PartnerManagement = () => {
                     onClick={() => !internship.isAdminReviewed && handleReview(internship)}
                     disabled={internship.isAdminReviewed}
                   >
-                    {internship.isAdminReviewed ? "Reviewed" : "Review"}
+                    {internship.AdminReviewed ? "Reviewed" : "Review"}
                   </button>
 
                   <button
@@ -355,62 +371,66 @@ const PartnerManagement = () => {
         )}
       </Modal>
       {/* Review Modal */}
-      <Modal
-  isOpen={isModalOpen}
-  onRequestClose={closeModal}
-  overlayClassName="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-[999]" // Ensure overlay has a lower z-index
-  className="bg-white p-6 rounded-lg shadow-lg w-96 z-[1000]" 
->
-  <h2 className="text-lg font-semibold mb-4">Chat with Submitter</h2>
-
-  {selectedInternship && (
-    <div>
-      <div className="h-64 border border-gray-300 rounded-md overflow-y-auto mb-4 p-3">
-        {chatMessages.map((msg, index) => (
+      {isModalOpen && (
+  <Modal
+    isOpen={isModalOpen}
+    onRequestClose={closeModal}
+    contentLabel="Chat Modal"
+   overlayClassName="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-[999]" // Ensure overlay has a lower z-index
+        className="bg-white p-6 rounded-lg shadow-lg w-96 z-[1000]"
+  >
+    <h2 className="text-xl font-semibold text-gray-800 mb-4">
+      Review Internship - {selectedInternship?.jobTitle}
+    </h2>
+    <div className="flex flex-col h-96 overflow-hidden">
+      {/* Chat Messages */}
+      <div className="flex-grow overflow-y-auto p-4 bg-gray-100 rounded-lg space-y-4">
+        {chatMessages.map((message, index) => (
           <div
             key={index}
-            className={`mb-2 ${msg.sender === "admin"
-                ? "text-right text-blue-600" // Admin messages on right
-                : msg.sender === "partner"
-                  ? "text-left text-green-600" // Partner messages on left
-                  : "text-left text-gray-800" // Default for other senders
-              }`}
+            className="flex items-center gap-2"
           >
-            <p className="bg-gray-200 inline-block px-3 py-1 rounded-md">
-              <strong>{msg.sender === "admin" ? "You" : msg.sender === "partner" ? "Submitter" : "partner"}:</strong> {msg.message}
-            </p>
-            <span className="text-xs text-gray-500 ml-2">
-              {new Date(msg.timestamp).toLocaleTimeString()}
-            </span>
+            <div
+              className={`max-w-xs px-4 py-2 rounded-lg shadow bg-gray-200 text-gray-800`}
+            >
+              <p className="text-sm">{message.message}</p>
+              <span className="text-xs text-gray-500 block mt-1">
+                {new Date(message.timestamp).toLocaleTimeString([], {
+                  hour: '2-digit',
+                  minute: '2-digit',
+                })}
+              </span>
+            </div>
           </div>
         ))}
       </div>
 
-      <textarea
-        placeholder="Type your message..."
-        value={newMessage}
-        onChange={(e) => setNewMessage(e.target.value)}
-        className="w-full border border-gray-300 p-3 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none mb-4"
-        rows="3"
-      />
-
-      <div className="flex space-x-2">
+      {/* Message Input */}
+      <div className="mt-4 flex items-center gap-2">
+        <input
+          type="text"
+          value={newMessage}
+          onChange={(e) => setNewMessage(e.target.value)}
+          placeholder="Type a message..."
+          className="flex-grow border border-gray-300 px-4 py-2 rounded-full focus:outline-none focus:ring focus:ring-blue-300"
+        />
         <button
           onClick={handleSendMessage}
-          className="w-full bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 focus:ring-2 focus:ring-blue-500"
+          className="px-4 py-2 bg-blue-500 text-white rounded-full shadow hover:bg-blue-600 focus:outline-none"
         >
-          Send Message
-        </button>
-        <button
-          onClick={closeModal}
-          className="w-full bg-gray-300 text-gray-700 px-4 py-2 rounded-md hover:bg-gray-400"
-        >
-          Close
+          Send
         </button>
       </div>
     </div>
-  )}
-</Modal>
+    <button
+      onClick={closeModal}
+      className="mt-4 text-sm text-red-500 hover:underline"
+    >
+      Close
+    </button>
+  </Modal>
+)}
+
 
       {/* Reject Modal */}
       <Modal
