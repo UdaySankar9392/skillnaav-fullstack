@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import axios from "axios";
 import Modal from "react-modal";
 
+
 Modal.setAppElement("#root");
 
 const PartnerManagement = () => {
@@ -15,7 +16,8 @@ const PartnerManagement = () => {
   const [comment, setComment] = useState("");
   const [showFullDescription, setShowFullDescription] = useState(false);
   const [deletedInternships, setDeletedInternships] = useState([]);
-
+  const [chatMessages, setChatMessages] = useState([]); // Chat messages for the review
+  const [newMessage, setNewMessage] = useState(""); // New message input
 
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
@@ -75,10 +77,9 @@ const PartnerManagement = () => {
   };
 
   const handleReview = (internship) => {
-    setSelectedInternship(internship);
-    setIsModalOpen(true);
+    setSelectedInternship(internship); // Set the selected internship
+    setIsModalOpen(true); // Open chat modal
   };
-
   const closeModal = () => {
     setIsModalOpen(false);
     setSelectedInternship(null);
@@ -89,23 +90,54 @@ const PartnerManagement = () => {
     setIsRejectModalOpen(false);
   };
 
-  const handleCommentSubmit = async () => {
+
+  const handleSendMessage = async () => {
+    if (!newMessage.trim()) return; // Prevent sending empty messages
+  
     try {
-      await axios.post(`/api/interns/${selectedInternship._id}/review`, { reviewText: comment });
-      setInternships((prevInternships) =>
-        prevInternships.map((internship) =>
-          internship._id === selectedInternship._id
-            ? { ...internship, isAdminReviewed: true, adminReviewText: comment }
-            : internship
-        )
-      );
-      closeModal(); // Close modal after successful submission
+      // Retrieve the admin ID from localStorage
+      const adminInfo = JSON.parse(localStorage.getItem("adminInfo"));
+      if (!adminInfo || !adminInfo.id) {
+        console.error("Admin ID not found");
+        return;
+      }
+      const adminId = adminInfo.id; // Use the dynamically fetched admin ID
+  
+      // Send message to backend
+      const response = await axios.post(`/api/chats`, {
+        internshipId: selectedInternship._id, // Include selected internship ID
+        senderId: adminId,
+        receiverId: selectedInternship.partnerId, // Assuming you have submitterId in internship data
+        message: newMessage,
+      });
+  
+      // Update chat history with new message
+      setChatMessages((prev) => [
+        ...prev,
+        { sender: adminId, message: newMessage, timestamp: new Date() },
+      ]);
+  
+      setNewMessage(""); // Clear input field
+  
+      // Update internship's AdminReviewed status to true after sending the message
+      const updateResponse = await axios.patch(`/api/interns/${selectedInternship._id}/update`, {
+        AdminReviewed: true,  // Mark as reviewed
+      });
+  
+      // If the update is successful, update local state
+      if (updateResponse.status === 200) {
+        // Update local state to reflect that the internship is reviewed
+        setSelectedInternship((prevInternship) => ({
+          ...prevInternship,
+          AdminReviewed: true,
+        }));
+      }
+  
     } catch (error) {
-      console.error("Error submitting review:", error);
+      console.error("Error sending message:", error.response?.data || error.message); // Log detailed error response
     }
   };
-
-
+  
   const closeDeleteModal = () => {
     setIsDeleteModalOpen(false);
     setInternshipToDelete(null); // Reset selected internship to delete
@@ -146,6 +178,19 @@ const PartnerManagement = () => {
     }
   };
 
+  useEffect(() => {
+    const fetchMessages = async () => {
+      if (!selectedInternship) return; // Avoid fetching if no internship is selected
+      console.log("Fetching messages for internshipId:", selectedInternship._id); // Log the internshipId
+      try {
+        const response = await axios.get(`/api/chats/${selectedInternship._id}`);
+        setChatMessages(response.data); // Set messages to state
+      } catch (error) {
+        console.error("Error fetching messages:", error);
+      }
+    };
+    fetchMessages();
+  }, [selectedInternship]); // Trigger on selectedInternship change
 
   const sortInternships = (internships) => {
     return internships.sort((a, b) => {
@@ -248,7 +293,7 @@ const PartnerManagement = () => {
                     onClick={() => !internship.isAdminReviewed && handleReview(internship)}
                     disabled={internship.isAdminReviewed}
                   >
-                    {internship.isAdminReviewed ? "Reviewed" : "Review"}
+                    {internship.AdminReviewed ? "Reviewed" : "Review"}
                   </button>
 
                   <button
@@ -269,27 +314,29 @@ const PartnerManagement = () => {
           </tbody>
         </table>
       </div>
-      {/* Pagination */}
-      <div className="flex justify-between mt-4">
-        <button
-          className="bg-gray-300 text-gray-700 rounded-md px-4 py-2 disabled:opacity-50"
-          onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
-          disabled={currentPage === 1}
-        >
-          Previous
-        </button>
-        <span className="text-gray-700">
-          Page {currentPage} of {totalPages}
-        </span>
-        <button
-          className="bg-gray-300 text-gray-700 rounded-md px-4 py-2 disabled:opacity-50"
-          onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
-          disabled={currentPage === totalPages}
-        >
-          Next
-        </button>
-      </div>
 
+      {/* Pagination */}
+      <div className="overflow-x-auto">
+        <div className="flex justify-between mt-4 whitespace-nowrap">
+          <button
+            className="bg-gray-300 text-gray-700 rounded-md px-4 py-2 disabled:opacity-50"
+            onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+            disabled={currentPage === 1}
+          >
+            Previous
+          </button>
+          <span className="text-gray-700">
+            Page {currentPage} of {totalPages}
+          </span>
+          <button
+            className="bg-gray-300 text-gray-700 rounded-md px-4 py-2 disabled:opacity-50"
+            onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
+            disabled={currentPage === totalPages}
+          >
+            Next
+          </button>
+        </div>
+      </div>
 
       {/* Delete Confirmation Modal */}
       <Modal
@@ -323,68 +370,66 @@ const PartnerManagement = () => {
           </div>
         )}
       </Modal>
-      {/* Review Modal (Continuation) */}
-      <Modal
-        isOpen={isModalOpen}
-        onRequestClose={closeModal}
-        overlayClassName="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-[999]" // Ensure overlay has a lower z-index
-        className="bg-white p-6 rounded-lg shadow-lg w-96 z-[1000]" // Ensure modal has a higher z-index
-      >
-        <h2 className="text-lg font-semibold mb-4">Review Internship</h2>
-        {selectedInternship && (
-          <div className="bg-white shadow-md rounded-lg p-4 max-w-md mx-auto">
-            <h3 className="font-medium text-lg text-gray-800 mb-2">{selectedInternship.jobTitle}</h3>
-            <p className="text-sm text-gray-500 mb-1">
-              Start Date: <span className="text-gray-700 font-semibold">{selectedInternship.startDate}</span>
-            </p>
-            <p className="text-sm text-gray-500 mb-1">
-              End Date: <span className="text-gray-700 font-semibold">{selectedInternship.endDateOrDuration}</span>
-            </p>
-
-            {/* Description with Read More */}
-            <div className="relative">
-              <p className={`text-gray-600 text-sm leading-relaxed ${showFullDescription ? 'overflow-auto' : 'line-clamp-3'}`} style={{ maxHeight: showFullDescription ? 'none' : '4.5em' }}>
-                {selectedInternship.jobDescription}
-              </p>
-              {!showFullDescription && (
-                <button
-                  onClick={() => setShowFullDescription(true)}
-                  className="text-blue-500 text-xs mt-2"
-                >
-                  Read More
-                </button>
-              )}
+      {/* Review Modal */}
+      {isModalOpen && (
+  <Modal
+    isOpen={isModalOpen}
+    onRequestClose={closeModal}
+    contentLabel="Chat Modal"
+   overlayClassName="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-[999]" // Ensure overlay has a lower z-index
+        className="bg-white p-6 rounded-lg shadow-lg w-96 z-[1000]"
+  >
+    <h2 className="text-xl font-semibold text-gray-800 mb-4">
+      Review Internship - {selectedInternship?.jobTitle}
+    </h2>
+    <div className="flex flex-col h-96 overflow-hidden">
+      {/* Chat Messages */}
+      <div className="flex-grow overflow-y-auto p-4 bg-gray-100 rounded-lg space-y-4">
+        {chatMessages.map((message, index) => (
+          <div
+            key={index}
+            className="flex items-center gap-2"
+          >
+            <div
+              className={`max-w-xs px-4 py-2 rounded-lg shadow bg-gray-200 text-gray-800`}
+            >
+              <p className="text-sm">{message.message}</p>
+              <span className="text-xs text-gray-500 block mt-1">
+                {new Date(message.timestamp).toLocaleTimeString([], {
+                  hour: '2-digit',
+                  minute: '2-digit',
+                })}
+              </span>
             </div>
-
-            {/* Comment Section */}
-            <textarea
-              placeholder="Leave a comment..."
-              value={comment}
-              onChange={(e) => setComment(e.target.value)}
-              className="w-full border border-gray-300 p-3 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none mb-4"
-              rows="4"
-            />
-
-            {/* Submit Button */}
-            <button
-              onClick={handleCommentSubmit}
-              className="w-full bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition duration-200 ease-in-out focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:outline-none shadow-lg"
-            >
-              Submit Comment
-            </button>
-
-            {/* Close Button */}
-            <button
-              onClick={closeModal}
-              className="w-full bg-gray-300 text-gray-700 px-4 py-2 rounded-md hover:bg-gray-400 mt-2"
-            >
-              Close
-            </button>
           </div>
-        )}
-      </Modal>
+        ))}
+      </div>
 
-
+      {/* Message Input */}
+      <div className="mt-4 flex items-center gap-2">
+        <input
+          type="text"
+          value={newMessage}
+          onChange={(e) => setNewMessage(e.target.value)}
+          placeholder="Type a message..."
+          className="flex-grow border border-gray-300 px-4 py-2 rounded-full focus:outline-none focus:ring focus:ring-blue-300"
+        />
+        <button
+          onClick={handleSendMessage}
+          className="px-4 py-2 bg-blue-500 text-white rounded-full shadow hover:bg-blue-600 focus:outline-none"
+        >
+          Send
+        </button>
+      </div>
+    </div>
+    <button
+      onClick={closeModal}
+      className="mt-4 text-sm text-red-500 hover:underline"
+    >
+      Close
+    </button>
+  </Modal>
+)}
 
 
       {/* Reject Modal */}

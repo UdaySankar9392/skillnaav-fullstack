@@ -41,18 +41,17 @@ const UserLogin = () => {
         },
       };
       const { data } = await axios.post("/api/users/login", values, config);
+      
+      // Store token in localStorage
       const token = data.token;
-      localStorage.setItem("token", JSON.stringify(token));
-      localStorage.setItem("userInfo", JSON.stringify(data));
+      localStorage.setItem("token", JSON.stringify(token)); // Ensure it's stored correctly
+      localStorage.setItem("userInfo", JSON.stringify(data)); // Store user info if needed
+      
       setLoading(false);
       navigate("/user-main-page");
     } catch (err) {
       setLoading(false);
-      setError(
-        err.response && err.response.data.message
-          ? err.response.data.message
-          : "Something went wrong"
-      );
+      setError(err.response && err.response.data.message ? err.response.data.message : "Something went wrong");
       setSubmitting(false);
     }
   };

@@ -8,8 +8,6 @@ const YourJobPosts = () => {
   const [internships, setInternships] = useState([]);
   const [selectedInternship, setSelectedInternship] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [isRejectModalOpen, setIsRejectModalOpen] = useState(false);
-  const [internshipToReject, setInternshipToReject] = useState(null);
 
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
@@ -35,51 +33,7 @@ const YourJobPosts = () => {
     fetchInternships();
   }, []);
 
-  const handleApprove = async (internId) => {
-    try {
-      console.log("Approving internship ID:", internId);
-      const response = await axios.patch(`/api/interns/${internId}/approve`, {
-        status: "approved",
-      });
 
-      console.log("Intern approved:", response.data);
-      setInternships((prevInternships) =>
-        prevInternships.map((internship) =>
-          internship._id === internId
-            ? { ...internship, isApproved: true }
-            : internship
-        )
-      );
-    } catch (error) {
-      console.error("Error approving internship:", error);
-    }
-  };
-
-  const handleRejectClick = (internship) => {
-    setInternshipToReject(internship);
-    setIsRejectModalOpen(true);
-  };
-
-  const confirmReject = async () => {
-    if (!internshipToReject) return;
-
-    try {
-      console.log("Rejecting internship ID:", internshipToReject._id);
-      await axios.delete(`/api/interns/${internshipToReject._id}`);
-
-      // Remove internship from state
-      setInternships((prevInternships) =>
-        prevInternships.filter(
-          (internship) => internship._id !== internshipToReject._id
-        )
-      );
-
-      console.log("Internship rejected and deleted successfully");
-      setIsRejectModalOpen(false);
-    } catch (error) {
-      console.error("Error rejecting internship:", error);
-    }
-  };
 
   const handleReadMore = (internship) => {
     setSelectedInternship(internship);
@@ -90,16 +44,31 @@ const YourJobPosts = () => {
     setIsModalOpen(false);
   };
 
-  const closeRejectModal = () => {
-    setIsRejectModalOpen(false);
-  };
+
 
   const updateField = (field, value) => {
-    setSelectedInternship((prev) => ({
-      ...prev,
-      [field]: value,
-    }));
+    setSelectedInternship((prev) => {
+      const fields = field.split('.'); // Split the field into an array (e.g., "contactInfo.name" -> ["contactInfo", "name"])
+
+      // Create a copy of the previous state to modify
+      let updatedInternship = { ...prev };
+
+      let current = updatedInternship; // Start with the top level of the object
+
+      // Traverse through the fields to reach the nested property
+      fields.forEach((key, index) => {
+        if (index === fields.length - 1) {
+          current[key] = value; // Set the final field to the value
+        } else {
+          if (!current[key]) current[key] = {}; // If the key doesn't exist, create it as an empty object
+          current = current[key]; // Move to the next nested level
+        }
+      });
+
+      return updatedInternship;
+    });
   };
+
 
   const handleUpdateJob = async (e) => {
     e.preventDefault();
@@ -208,14 +177,22 @@ const YourJobPosts = () => {
             <div className="mt-4">
               <strong>Status:</strong>{" "}
               <span
-                className={`inline-block px-2 py-1 rounded-full font-bold ${internship.adminApproved
-                  ? "bg-green-200 text-green-800"
-                  : "bg-red-200 text-red-800"
+                className={`inline-block px-2 py-1 rounded-full font-bold ${internship.adminReviewed
+                    ? "bg-yellow-200 text-yellow-800"  // In review status
+                    : internship.adminApproved
+                      ? "bg-green-200 text-green-800"   // Approved status
+                      : "bg-red-200 text-red-800"       // Not approved status
                   }`}
               >
-                {internship.adminApproved ? "Accepted" : "Not Approved"}
+                {internship.adminReviewed
+                  ? "In Review"                      // Show 'In Review' when adminReviewed is true
+                  : internship.adminApproved
+                    ? "Approved"                       // Show 'Approved' when adminApproved is true
+                    : "Not Approved"                   // Show 'Not Approved' otherwise
+                }
               </span>
             </div>
+
             <div className="flex space-x-2 mt-4">
               <button
                 className="px-4 py-2 bg-indigo-500 text-white rounded-md hover:bg-indigo-600"
@@ -375,38 +352,26 @@ const YourJobPosts = () => {
               {/* Contact Info Fields */}
               <h3 className="text-lg font-semibold mt-6 mb-2">Contact Info</h3>
 
-              {/* Name Field */}
-              <div className="mb-4">
-                <label className="block font-medium mb-1">Contact Name</label>
-                <input
-                  type="text"
-                  value={selectedInternship.contactInfo?.name || ""}
-                  onChange={(e) => updateField("contactInfo.name", e.target.value)} // Update nested field
-                  className="p-2 border rounded w-full"
-                />
-              </div>
+              <input
+                type="text"
+                value={selectedInternship.contactInfo?.name || ""}
+                onChange={(e) => updateField("contactInfo.name", e.target.value)} // Update nested field
+                className="p-2 border rounded w-full"
+              />
 
-              {/* Email Field */}
-              <div className="mb-4">
-                <label className="block font-medium mb-1">Email</label>
-                <input
-                  type="email"
-                  value={selectedInternship.contactInfo?.email || ""}
-                  onChange={(e) => updateField("contactInfo.email", e.target.value)} // Update nested field
-                  className="p-2 border rounded w-full"
-                />
-              </div>
+              <input
+                type="email"
+                value={selectedInternship.contactInfo?.email || ""}
+                onChange={(e) => updateField("contactInfo.email", e.target.value)} // Update nested field
+                className="p-2 border rounded w-full"
+              />
 
-              {/* Phone Field */}
-              <div className="mb-4">
-                <label className="block font-medium mb-1">Phone</label>
-                <input
-                  type="text"
-                  value={selectedInternship.contactInfo?.phone || ""}
-                  onChange={(e) => updateField("contactInfo.phone", e.target.value)} // Update nested field
-                  className="p-2 border rounded w-full"
-                />
-              </div>
+              <input
+                type="text"
+                value={selectedInternship.contactInfo?.phone || ""}
+                onChange={(e) => updateField("contactInfo.phone", e.target.value)} // Update nested field
+                className="p-2 border rounded w-full"
+              />
 
               {/* Action Buttons */}
               <div className="flex justify-end space-x-4">

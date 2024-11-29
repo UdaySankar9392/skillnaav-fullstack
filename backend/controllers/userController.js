@@ -3,6 +3,30 @@ const Userwebapp = require("../models/webapp-models/userModel");
 const generateToken = require("../utils/generateToken");
 const notifyUser = require("../utils/notifyUser"); // Import the notifyUser function
 
+
+// In your controller file (e.g., userController.js)
+const getUserProfile = asyncHandler(async (req, res) => {
+  const user = await Userwebapp.findById(req.user._id); // Assuming req.user is set by authentication middleware
+
+  if (!user) {
+    res.status(404);
+    throw new Error("User not found");
+  }
+
+  res.json({
+    _id: user._id,
+    name: user.name,
+    email: user.email,
+    universityName: user.universityName,
+    dob: user.dob,
+    educationLevel: user.educationLevel,
+    fieldOfStudy: user.fieldOfStudy,
+    desiredField: user.desiredField,
+    linkedin: user.linkedin,
+    portfolio: user.portfolio,
+    adminApproved: user.adminApproved // Include admin approval status
+  });
+});
 // Helper function to check required fields
 const areFieldsFilled = (fields) => fields.every((field) => field);
 
@@ -152,26 +176,23 @@ const authUser = asyncHandler(async (req, res) => {
   const user = await Userwebapp.findOne({ email });
 
   if (user && await user.matchPassword(password)) {
-    // Check if the user is approved by an admin
-    if (user.adminApproved) {
-      res.json({
-        _id: user._id,
-        name: user.name,
-        email: user.email,
-        universityName: user.universityName,
-        dob: user.dob,
-        educationLevel: user.educationLevel,
-        fieldOfStudy: user.fieldOfStudy,
-        desiredField: user.desiredField,
-        linkedin: user.linkedin,
-        portfolio: user.portfolio,
-        token: generateToken(user._id), // Generate token here
-      });
-    } else {
-      // User is not approved by admin
-      res.status(403);
-      throw new Error("User account is not approved by an admin.");
-    }
+    // Generate token regardless of admin approval
+    const token = generateToken(user._id);
+
+    res.json({
+      _id: user._id,
+      name: user.name,
+      email: user.email,
+      universityName: user.universityName,
+      dob: user.dob,
+      educationLevel: user.educationLevel,
+      fieldOfStudy: user.fieldOfStudy,
+      desiredField: user.desiredField,
+      linkedin: user.linkedin,
+      portfolio: user.portfolio,
+      token, // Generate token here
+      adminApproved: user.adminApproved // Include admin approval status
+    });
   } else {
     res.status(400);
     throw new Error("Invalid email or password.");
@@ -292,4 +313,5 @@ module.exports = {
    checkIfUserExists, // Exporting the new function to check for existing users.
    requestPasswordReset,
    verifyOTPAndResetPassword,
+   getUserProfile,
 };

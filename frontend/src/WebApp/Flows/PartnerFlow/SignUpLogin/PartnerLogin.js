@@ -7,7 +7,7 @@ import Loading from "../../../Warnings/Loading/Loading";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faEye, faEyeSlash } from "@fortawesome/free-solid-svg-icons";
 import partner2Image from "../../../../assets-webapp/partner2_img.jpg";
-import ForgotPasswordModal from "../SignUpLogin/PartnerforgotPassword"; // Import the ForgotPasswordModal component
+import ForgotPasswordModal from "../SignUpLogin/PartnerforgotPassword";
 
 const validationSchema = Yup.object({
   email: Yup.string().email("Invalid email address").required("Required"),
@@ -19,7 +19,7 @@ const PartnerLogin = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-  const [isModalOpen, setIsModalOpen] = useState(false); // State to control modal visibility
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   const handleSubmit = async (values, { setSubmitting }) => {
     setError("");
@@ -31,7 +31,14 @@ const PartnerLogin = () => {
         },
       };
       const { data } = await axios.post("/api/partners/login", values, config);
-      localStorage.setItem("userInfo", JSON.stringify(data));
+  
+      // Save token and adminApproved status to localStorage
+      localStorage.setItem("token", data.token);
+      localStorage.setItem("adminApproved", data.adminApproved); // Save adminApproved status
+      localStorage.setItem("partnerId", data._id);
+      console.log("Partner ID:", data._id);
+      
+  
       setLoading(false);
       navigate("/partner-main-page");
     } catch (err) {
@@ -44,10 +51,13 @@ const PartnerLogin = () => {
       setSubmitting(false);
     }
   };
+  
+  
+  
 
   return (
     <div className="flex flex-col lg:flex-row min-h-screen font-poppins">
-      {/* Left Section (Colorful Background) */}
+      {/* Left Section */}
       <div className="hidden md:flex md:w-full lg:w-1/2 items-center justify-center">
         <img
           src={partner2Image}
@@ -56,7 +66,7 @@ const PartnerLogin = () => {
         />
       </div>
 
-      {/* Right Section (Form) */}
+      {/* Right Section */}
       <div className="flex flex-col items-center justify-center p-8 w-full lg:w-1/2 rounded-lg">
         <div className="w-full max-w-md flex flex-col justify-center min-h-screen lg:min-h-full">
           <h1 className="text-2xl font-extrabold mb-6 text-center text-gray-800">
@@ -73,7 +83,7 @@ const PartnerLogin = () => {
             </div>
           )}
 
-          {/* Loading */}
+          {/* Loading State */}
           {loading ? (
             <Loading />
           ) : (
@@ -124,11 +134,11 @@ const PartnerLogin = () => {
                     />
                   </div>
 
-                  {/* Forgot Password Button */}
+                  {/* Forgot Password */}
                   <div className="flex justify-end mb-6">
                     <button
                       type="button"
-                      onClick={() => setIsModalOpen(true)} // Open the modal when clicked
+                      onClick={() => setIsModalOpen(true)}
                       className="text-sm font-medium text-teal-500 hover:text-teal-700 transition duration-150 ease-in-out"
                     >
                       Forgot password?
@@ -151,7 +161,7 @@ const PartnerLogin = () => {
                     </label>
                   </div>
 
-                  {/* Sign In Button */}
+                  {/* Submit Button */}
                   <button
                     type="submit"
                     disabled={isSubmitting}

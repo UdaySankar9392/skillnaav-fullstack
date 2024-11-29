@@ -31,6 +31,7 @@ const skillnaavRoute = require("./routes/skillnaavRoute");
 const applicationRoutes = require("./routes/webapp-routes/applicationRoutes");
 const partnerRoutes = require("./routes/webapp-routes/partnerRoutes"); // Import Partner routes
 const adminRoutes = require("./routes/webapp-routes/adminRoutes"); // Import Admin routes
+const chatRoutes = require("./routes/webapp-routes/ChatRoutes");
 
 // Define routes
 app.use("/api/users", userRoutes); // User Web App routes
@@ -40,6 +41,7 @@ app.use("/api/skillnaav", skillnaavRoute); // Skillnaav routes
 app.use("/api/contact", skillnaavRoute); // Contact route (Verify if this is correct)
 app.use("/api/partners", partnerRoutes); // Partner routes for registration and login
 app.use("/api/admin", adminRoutes); // Admin Web app Routes
+app.use("/api/chats", chatRoutes); 
 
 // Serve static assets if in production
 if (process.env.NODE_ENV === "production") {
