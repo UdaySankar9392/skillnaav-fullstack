@@ -74,24 +74,34 @@ const ChatInterface = () => {
   const handleSend = async () => {
     if (input.trim() && adminId && partnerId && selectedInternshipId) {
       const newMessage = {
-        internshipId: selectedInternshipId,  // Use selectedInternshipId for the message
-        senderId: partnerId,  // Assuming partner sends the message
-        receiverId: adminId,   // Admin receives the message
+        internshipId: selectedInternshipId,
+        senderId: partnerId,
+        receiverId: adminId,
         message: input,
       };
-
+  
+      console.log('Message being sent:', newMessage); // Log before sending the message
+  
       try {
         const response = await axios.post(`/api/chats/send`, newMessage, {
           headers: {
             "Content-Type": "application/json",
           },
         });
-
-        if (response.status === 200) {
-          setMessages((prevMessages) => [...prevMessages, response.data]); // Add new message to existing ones
+  
+        console.log('Response from backend:', response.data); // Log response data
+  
+        if (response.status === 201) { // Change from 200 to 201
+          console.log('Current messages:', messages);
+  
+          setMessages((prevMessages) => {
+            console.log('Updating messages with:', response.data);
+            return [...prevMessages, response.data];
+          });
+  
           setInput(""); // Clear input after sending
         } else {
-          console.error("Failed to send message");
+          console.error("Failed to send message due to unexpected response status:", response.status);
         }
       } catch (error) {
         console.error("Error sending message:", error);
@@ -100,6 +110,7 @@ const ChatInterface = () => {
       console.error("Input, adminId, partnerId, or internshipId is missing");
     }
   };
+  
 
   // Show internship cards before opening chat
   if (!showChat) {
