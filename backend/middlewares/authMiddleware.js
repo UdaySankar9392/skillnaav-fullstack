@@ -20,18 +20,27 @@ const protect = asyncHandler(async (req, res, next) => {
       const decoded = jwt.verify(token, process.env.JWT_SECRET); // Use your secret key
       let user;
 
+      // Check if the request is for a partner route
       if (req.isPartner) {
+        // Lookup partner by decoded ID
         user = await Partnerwebapp.findById(decoded.id).select("-password");
+
+        // Log if the partner is found
         console.log("Partner user found:", user);
       } else {
+        // Lookup user by decoded ID
         user = await Userwebapp.findById(decoded.id).select("-password");
+
+        // Log if the user is found
+        console.log("User found:", user);
       }
 
-      // Check if user exists
+      // If user or partner is not found, return error
       if (!user) {
         return res.status(401).json({ message: "Not authorized, user not found" });
       }
 
+      // Attach the user or partner object to the request
       req.user = user; // Attach user to the request object
       next(); // Proceed to the next middleware or route handler
     } catch (error) {
@@ -45,6 +54,7 @@ const protect = asyncHandler(async (req, res, next) => {
         message = "Not authorized, token expired";
       }
 
+      // Send a response with the appropriate message
       res.status(401).json({ message });
     }
   } else {
@@ -53,4 +63,4 @@ const protect = asyncHandler(async (req, res, next) => {
   }
 });
 
-module.exports = { protect }; // Export the middleware for use in routes
+module.exports = { protect }; // Export the middleware for use in routes
