@@ -373,62 +373,62 @@ const PartnerManagement = () => {
       {/* Review Modal */}
       {/* Chat Modal */}
       <Modal
-      isOpen={isModalOpen}
-      onRequestClose={closeModal}
-      overlayClassName="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-[999]"
-      className="bg-white p-6 rounded-lg shadow-lg w-full max-w-2xl z-[1000] overflow-hidden"
-    >
-      <div className="flex flex-col space-y-4">
-        <h2 className="text-2xl font-semibold text-gray-800">
-          Review Internship - <span className="text-blue-600">{selectedInternship?.jobTitle}</span>
-        </h2>
+        isOpen={isModalOpen}
+        onRequestClose={closeModal}
+        overlayClassName="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-[999]"
+        className="bg-white p-6 rounded-lg shadow-lg w-full max-w-2xl z-[1000] overflow-hidden"
+      >
+        <div className="flex flex-col space-y-4">
+          <h2 className="text-2xl font-semibold text-gray-800">
+            Review Internship - <span className="text-blue-600">{selectedInternship?.jobTitle}</span>
+          </h2>
 
-        {/* Chat Messages */}
-        <div className="overflow-y-auto max-h-[300px] bg-gray-50 p-4 rounded-lg shadow-sm space-y-4">
-          {chatMessages.map((message, index) => (
-            <div
-              key={index}
-              className={`flex ${message.sender === JSON.parse(localStorage.getItem("adminInfo")).id ? "justify-end" : "justify-start"}`}
-            >
+          {/* Chat Messages */}
+          <div className="overflow-y-auto max-h-[300px] bg-gray-50 p-4 rounded-lg shadow-sm space-y-4">
+            {chatMessages.map((message, index) => (
               <div
-                className={`rounded-lg px-4 py-3 max-w-[70%] ${message.sender === JSON.parse(localStorage.getItem("adminInfo")).id
-                  ? "bg-blue-500 text-white"
-                  : "bg-gray-200 text-gray-700"}`}
+                key={index}
+                className={`flex ${message.sender === JSON.parse(localStorage.getItem("adminInfo")).id ? "justify-end" : "justify-start"}`}
               >
-                <p className="text-sm">{message.message}</p>
+                <div
+                  className={`rounded-lg px-4 py-3 max-w-[70%] ${message.sender === JSON.parse(localStorage.getItem("adminInfo")).id
+                    ? "bg-blue-500 text-white"
+                    : "bg-gray-200 text-gray-700"}`}
+                >
+                  <p className="text-sm">{message.message}</p>
+                </div>
               </div>
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
 
-        {/* Message Input */}
-        <div className="flex items-center space-x-3">
-          <input
-            type="text"
-            placeholder="Type a message..."
-            value={newMessage}
-            onChange={(e) => setNewMessage(e.target.value)}
-            className="flex-1 p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 text-base"
-          />
-          <button
-            onClick={handleSendMessage}
-            className="bg-blue-600 text-white p-3 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-400 text-base"
-          >
-            Send
-          </button>
-        </div>
+          {/* Message Input */}
+          <div className="flex items-center space-x-3">
+            <input
+              type="text"
+              placeholder="Type a message..."
+              value={newMessage}
+              onChange={(e) => setNewMessage(e.target.value)}
+              className="flex-1 p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 text-base"
+            />
+            <button
+              onClick={handleSendMessage}
+              className="bg-blue-600 text-white p-3 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-400 text-base"
+            >
+              Send
+            </button>
+          </div>
 
-        {/* Close Button */}
-        <div className="text-center mt-4">
-          <button
-            onClick={closeModal}
-            className="text-sm text-blue-600 hover:underline"
-          >
-            Close
-          </button>
+          {/* Close Button */}
+          <div className="text-center mt-4">
+            <button
+              onClick={closeModal}
+              className="text-sm text-blue-600 hover:underline"
+            >
+              Close
+            </button>
+          </div>
         </div>
-      </div>
-    </Modal>
+      </Modal>
 
       {/* Reject Modal */}
       <Modal
