@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import axios from "axios";
 
 // Component for Internship Card
-const InternshipCard = ({ internshipId, jobTitle , onClick }) => (
+const InternshipCard = ({ internshipId, jobTitle, onClick }) => (
   <div
     className="p-4 mb-4 bg-white shadow-lg rounded-lg cursor-pointer hover:bg-gray-100 transition duration-200"
     onClick={() => onClick(internshipId, jobTitle)}  // Pass both ID and Title
@@ -10,10 +10,7 @@ const InternshipCard = ({ internshipId, jobTitle , onClick }) => (
     <h3 className="text-lg font-bold text-gray-700">{jobTitle}</h3>
     <p className="text-sm text-gray-500">Internship ID: {internshipId}</p>
   </div>
-  );
-
- 
-
+);
 
 // Main Chat Interface
 const ChatInterface = () => {
@@ -35,8 +32,6 @@ const ChatInterface = () => {
     if (storedPartnerId) setPartnerId(storedPartnerId);
     if (adminInfo) setAdminId(JSON.parse(adminInfo)?.id);
   }, []);
-
-
 
   // Fetch internships on component mount
   useEffect(() => {
@@ -84,19 +79,16 @@ const ChatInterface = () => {
         receiverId: adminId,   // Admin receives the message
         message: input,
       };
-  
+
       try {
-        const response = await fetch(`http://localhost:5000/api/chats/send`, {
-          method: "POST",
+        const response = await axios.post(`/api/chats/send`, newMessage, {
           headers: {
             "Content-Type": "application/json",
           },
-          body: JSON.stringify(newMessage),
         });
-        
-        if (response.ok) {
-          const messageData = await response.json();
-          setMessages((prevMessages) => [...prevMessages, messageData]); // Add new message to existing ones
+
+        if (response.status === 200) {
+          setMessages((prevMessages) => [...prevMessages, response.data]); // Add new message to existing ones
           setInput(""); // Clear input after sending
         } else {
           console.error("Failed to send message");
@@ -108,7 +100,7 @@ const ChatInterface = () => {
       console.error("Input, adminId, partnerId, or internshipId is missing");
     }
   };
-  
+
   // Show internship cards before opening chat
   if (!showChat) {
     return (
@@ -126,58 +118,57 @@ const ChatInterface = () => {
   }
 
   // Chat UI
-return (
-  <div className="flex flex-col font-poppins h-screen bg-gray-100">
-    {/* Chat Header */}
-    <div className="p-4 bg-white shadow-md flex items-center justify-between">
-      <button
-        className="text-blue-500 hover:text-blue-700 font-medium"
-        onClick={() => setShowChat(false)} // Toggle showChat to false
-      >
-        ← Back
-      </button>
-      <h2 className="text-lg font-semibold">
-        Chat - (Title:{selectedInternshipTitle}) (ID: {selectedInternshipId})
-      </h2>
-    </div>
+  return (
+    <div className="flex flex-col font-poppins h-screen bg-gray-100">
+      {/* Chat Header */}
+      <div className="p-4 bg-white shadow-md flex items-center justify-between">
+        <button
+          className="text-blue-500 hover:text-blue-700 font-medium"
+          onClick={() => setShowChat(false)} // Toggle showChat to false
+        >
+          ← Back
+        </button>
+        <h2 className="text-lg font-semibold">
+          Chat - (Title: {selectedInternshipTitle}) (ID: {selectedInternshipId})
+        </h2>
+      </div>
 
-    {/* Messages Display */}
-    <div className="flex-grow overflow-y-auto p-4">
-      {loading ? (
-        <div className="text-center text-gray-500">Loading messages...</div>
-      ) : (
-        messages.map((msg, index) => (
-          <div
-            key={index}
-            className={`mb-4 p-3 rounded-lg shadow-md ${
-              msg.senderId === partnerId ? "bg-blue-100 self-end" : "bg-gray-200"
-            }`}
-          >
-            <div className="text-sm text-gray-700">{msg.message}</div>
-          </div>
-        ))
-      )}
-    </div>
+      {/* Messages Display */}
+      <div className="flex-grow overflow-y-auto p-4">
+        {loading ? (
+          <div className="text-center text-gray-500">Loading messages...</div>
+        ) : (
+          messages.map((msg, index) => (
+            <div
+              key={index}
+              className={`mb-4 p-3 rounded-lg shadow-md ${
+                msg.senderId === partnerId ? "bg-blue-100 self-end" : "bg-gray-200"
+              }`}
+            >
+              <div className="text-sm text-gray-700">{msg.message}</div>
+            </div>
+          ))
+        )}
+      </div>
 
-    {/* Message Input */}
-    <div className="p-4 bg-white border-t flex items-center">
-      <input
-        type="text"
-        className="flex-grow p-2 border rounded-lg focus:outline-none"
-        placeholder="Type a message..."
-        value={input}
-        onChange={(e) => setInput(e.target.value)}
-      />
-      <button
-        className="ml-2 bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600"
-        onClick={handleSend}
-      >
-        Send
-      </button>
+      {/* Message Input */}
+      <div className="p-4 bg-white border-t flex items-center">
+        <input
+          type="text"
+          className="flex-grow p-2 border rounded-lg focus:outline-none"
+          placeholder="Type a message..."
+          value={input}
+          onChange={(e) => setInput(e.target.value)}
+        />
+        <button
+          className="ml-2 bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600"
+          onClick={handleSend}
+        >
+          Send
+        </button>
+      </div>
     </div>
-  </div>
-);
-
+  );
 };
 
 export default ChatInterface;
