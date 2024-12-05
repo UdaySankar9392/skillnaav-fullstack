@@ -79,26 +79,26 @@ const ChatInterface = () => {
         receiverId: adminId,
         message: input,
       };
-  
+
       console.log('Message being sent:', newMessage); // Log before sending the message
-  
+
       try {
         const response = await axios.post(`/api/chats/send`, newMessage, {
           headers: {
             "Content-Type": "application/json",
           },
         });
-  
+
         console.log('Response from backend:', response.data); // Log response data
-  
+
         if (response.status === 201) { // Change from 200 to 201
           console.log('Current messages:', messages);
-  
+
           setMessages((prevMessages) => {
             console.log('Updating messages with:', response.data);
             return [...prevMessages, response.data];
           });
-  
+
           setInput(""); // Clear input after sending
         } else {
           console.error("Failed to send message due to unexpected response status:", response.status);
@@ -110,7 +110,7 @@ const ChatInterface = () => {
       console.error("Input, adminId, partnerId, or internshipId is missing");
     }
   };
-  
+
 
   // Show internship cards before opening chat
   if (!showChat) {
@@ -152,15 +152,20 @@ const ChatInterface = () => {
           messages.map((msg, index) => (
             <div
               key={index}
-              className={`mb-4 p-3 rounded-lg shadow-md ${
-                msg.senderId === partnerId ? "bg-blue-100 self-end" : "bg-gray-200"
-              }`}
+              className={`flex mb-4 ${msg.sender === partnerId ? "justify-end" : "justify-start"
+                }`}
             >
-              <div className="text-sm text-gray-700">{msg.message}</div>
+              <div
+                className={`max-w-sm p-3 rounded-lg shadow-md ${msg.sender === partnerId ? "bg-blue-100 text-right" : "bg-gray-200 text-left"
+                  }`}
+              >
+                <div className="text-sm text-gray-700">{msg.message}</div>
+              </div>
             </div>
           ))
         )}
       </div>
+
 
       {/* Message Input */}
       <div className="p-4 bg-white border-t flex items-center">
