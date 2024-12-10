@@ -17,6 +17,9 @@ import UserMainPage from "./WebApp/Flows/UserFlow/MainPage/UserMainPage";
 import UserProfileForm from "./WebApp/Flows/UserFlow/SignUpLogin/UserProfileBuilding/UserProfileForm";
 import UserProfilePicture from "./WebApp/Flows/UserFlow/SignUpLogin/UserProfileBuilding/UserProfilePicture";
 import UserforgotPassword from "./WebApp/Flows/UserFlow/SignUpLogin/UserforgotPassword";
+import GoogleUserProfileForm from "./WebApp/Flows/UserFlow/SignUpLogin/UserProfileBuilding/GoogleUserProfileForm";
+import GoogleUserProfilePicture from "./WebApp/Flows/UserFlow/SignUpLogin/UserProfileBuilding/GoogleUserProfilePicture";
+
 import PartnerFlow from "./WebApp/Flows/PartnerFlow/PartnerFlow";
 import PartnerCreateAccount from "./WebApp/Flows/PartnerFlow/SignUpLogin/PartnerCreateAccount";
 import PartnerLogin from "./WebApp/Flows/PartnerFlow/SignUpLogin/PartnerLogin";
@@ -71,6 +74,8 @@ function App() {
         <Route path="/user-profile-picture" element={<UserProfilePicture />} />
         <Route path="/user-main-page" element={<UserMainPage />} />
         <Route path="/user-forgot-password" element={<UserforgotPassword />} />
+        <Route path="/google-user-profileform" element={<GoogleUserProfileForm />} />
+        <Route path="/google-user-profilepicture" element={<GoogleUserProfilePicture />} />
 
 
         {/* Partner Flow */}
