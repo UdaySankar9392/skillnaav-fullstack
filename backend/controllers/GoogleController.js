@@ -1,6 +1,7 @@
 const GoogleUserWebApp = require("../models/webapp-models/GoogleUserModel");
 const admin = require("../config/firebase-admin"); // Import Firebase Admin SDK
 
+// Register Google User
 const registerGoogleUser = async (req, res) => {
   try {
     const {
@@ -107,6 +108,69 @@ const registerGoogleUser = async (req, res) => {
   }
 };
 
+// Sign-In Google User
+const signInGoogleUser = async (req, res) => {
+  try {
+    const { idToken, googleId } = req.body; // ID token and googleId are required
+
+    if (!idToken || !googleId) {
+      return res.status(400).json({ message: "Google ID and ID token are required." });
+    }
+
+    // Verify the Firebase ID token
+    let decodedToken;
+    try {
+      decodedToken = await admin.auth().verifyIdToken(idToken);  // Verifying the ID token
+    } catch (error) {
+      return res.status(401).json({ message: "Invalid or expired ID token." });
+    }
+
+    // Ensure the token's UID matches the googleId
+    if (decodedToken.uid !== googleId) { 
+      return res.status(401).json({ message: "Google ID does not match the token." });
+    }
+
+    // Find user by googleId
+    let user = await GoogleUserWebApp.findOne({ googleId });
+
+    if (!user) {
+      return res.status(404).json({ message: "User not found." });
+    }
+
+    // Check if the user's account is approved
+    if (!user.adminApproved) {
+      return res.status(403).json({
+        message: "Your account is awaiting admin approval. Please try again later."
+      });
+    }
+
+    // Proceed with successful sign-in (e.g., generate a session, issue a JWT, etc.)
+    return res.status(200).json({
+      message: "Sign-in successful.",
+      user: {
+        name: user.name,
+        email: user.email,
+        googleId: user.googleId,
+        universityName: user.universityName,
+        dob: user.dob,
+        educationLevel: user.educationLevel,
+        fieldOfStudy: user.fieldOfStudy,
+        desiredField: user.desiredField,
+        linkedin: user.linkedin,
+        portfolio: user.portfolio,
+        isActive: user.isActive,
+      },
+    });
+  } catch (error) {
+    console.error("Error during user sign-in:", error);
+    return res.status(500).json({
+      message: "Server error. Please try again later.",
+      error: error.message,
+    });
+  }
+};
+
 module.exports = {
   registerGoogleUser,
+  signInGoogleUser,
 };

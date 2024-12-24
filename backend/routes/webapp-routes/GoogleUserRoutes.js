@@ -1,9 +1,12 @@
 const express = require('express');
-const { registerGoogleUser } = require('../../controllers/GoogleController'); // Adjust path if needed
+const { registerGoogleUser, signInGoogleUser } = require('../../controllers/GoogleController'); // Adjust path if needed
 
 const router = express.Router();
 
 // POST route for Google User registration or profile update
 router.post('/register', registerGoogleUser);
+
+// POST route for Google User sign-ina
+router.post('/signin', signInGoogleUser);
 
 module.exports = router;

@@ -78,7 +78,7 @@ userwebappSchema.pre("save", async function (next) {
 
 // Compare hashed password with entered password
 userwebappSchema.methods.matchPassword = async function (enteredPassword) {
-  return await bcrypt.compare(enteredPassword, this.pasxsword);
+  return await bcrypt.compare(enteredPassword, this.password);
 };
 
 const Userwebapp = mongoose.model("Userwebapp", userwebappSchema);

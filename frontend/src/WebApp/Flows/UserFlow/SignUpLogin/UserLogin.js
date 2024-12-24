@@ -3,21 +3,14 @@ import { Formik, Form, Field, ErrorMessage } from "formik";
 import * as Yup from "yup";
 import { useNavigate, Link } from "react-router-dom";
 import loginImage from "../../../../assets-webapp/login-image.png";
-import axios from "axios";
 import Loading from "../../../Warnings/Loading/Loading";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faEye, faEyeSlash } from "@fortawesome/free-solid-svg-icons";
-import { Client, Account } from "appwrite";
 import { FcGoogle } from "react-icons/fc";
-import { useGoogleLogin } from "@react-oauth/google";
-import ForgotPasswordModal from "../SignUpLogin/UserforgotPassword"; // Import the modal
-
-const client = new Client();
-client
-  .setEndpoint("https://cloud.appwrite.io/v1") // Replace with your Appwrite endpoint
-  .setProject("6715ee9b0034e652fb17"); // Replace with your actual project ID
-
-const account = new Account(client);
+import ForgotPasswordModal from "../SignUpLogin/UserforgotPassword"; 
+import { auth, googleAuthProvider } from "../../../../config/Firebase"; // Firebase setup
+import { signInWithPopup } from "firebase/auth";
+import axios from "axios";
 
 const validationSchema = Yup.object({
   email: Yup.string().email("Invalid email address").required("Required"),
@@ -29,7 +22,38 @@ const UserLogin = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-  const [isModalOpen, setIsModalOpen] = useState(false); // State to control modal visibility
+  const [isModalOpen, setIsModalOpen] = useState(false);
+
+  const handleGoogleSignIn = async () => {
+    setLoading(true);
+    setError("");
+    try {
+      // Ensure account selection by setting `prompt`
+      googleAuthProvider.setCustomParameters({ prompt: "select_account" });
+  
+      // Open the Google sign-in popup
+      const result = await signInWithPopup(auth, googleAuthProvider);
+      const user = result.user;
+  
+      // Obtain user token
+      const token = await user.getIdToken();
+  
+      // Store token and user info in localStorage
+      localStorage.setItem("userToken", JSON.stringify(token));
+      localStorage.setItem("userInfo", JSON.stringify(user));
+  
+      console.log("Google user:", user);
+  
+      // Navigate to the main page
+      navigate("/user-main-page");
+    } catch (err) {
+      console.error("Google sign-in error:", err);
+      setError("Google sign-in failed. Please try again.");
+    } finally {
+      setLoading(false);
+    }
+  };
+  
 
   const handleSubmit = async (values, { setSubmitting }) => {
     setError("");
@@ -40,53 +64,32 @@ const UserLogin = () => {
           "Content-type": "application/json",
         },
       };
+      console.log("Sending login request with values:", values); // Debug
       const { data } = await axios.post("/api/users/login", values, config);
-      
-      // Store token in localStorage with the name 'userToken'
-      const token = data.token;
-      localStorage.setItem("userToken", JSON.stringify(token)); // Store token as 'userToken'
-      localStorage.setItem("userInfo", JSON.stringify(data)); // Store user info if needed
-      
-      // Log the token to the console
-      console.log("User token stored in localStorage:", token);
   
+      if (!data || !data.token) {
+        throw new Error("Invalid response from server");
+      }
+  
+      localStorage.clear(); // Clear existing tokens
+      localStorage.setItem("userToken", JSON.stringify(data.token));
+      localStorage.setItem("userInfo", JSON.stringify(data));
+  
+      console.log("User token stored in localStorage:", data.token);
       setLoading(false);
       navigate("/user-main-page");
     } catch (err) {
+      console.error("Login error:", err.response || err.message); // Debug
+      setError(
+        err.response && err.response.data && err.response.data.message
+          ? err.response.data.message
+          : "Something went wrong"
+      );
       setLoading(false);
-      setError(err.response && err.response.data.message ? err.response.data.message : "Something went wrong");
       setSubmitting(false);
     }
   };
   
-  // const login = useGoogleLogin({
-  //   onSuccess: async (tokenResponse) => {
-  //     try {
-  //       // Make a request to get user information from Google
-  //       const response = await axios.get(
-  //         "https://www.googleapis.com/oauth2/v3/userinfo",
-  //         {
-  //           headers: {
-  //             Authorization: `Bearer ${tokenResponse.access_token}`,
-  //           },
-  //         }
-  //       );
-
-  //       // Log or use the user information
-  //       console.log(response.data);
-
-  //       // Navigate to 'user-main-page' after successful authentication
-  //       navigate("/user-main-page");
-  //     } catch (error) {
-  //       console.error("Error fetching user info:", error);
-  //     }
-  //   },
-  //   onError: (error) => {
-  //     console.error("Login failed:", error);
-  //   },
-  // });
-
-  const login = () => {};
 
   return (
     <div className="flex flex-col lg:flex-row min-h-screen font-poppins">
@@ -108,6 +111,7 @@ const UserLogin = () => {
           <h2 className="text-lg font-medium mb-6 text-center text-gray-600">
             Please sign in to your account
           </h2>
+
           {/* Error Message */}
           {error && (
             <div className="bg-red-200 text-red-600 p-3 mb-4 text-center rounded-lg">
@@ -125,7 +129,6 @@ const UserLogin = () => {
             >
               {({ isSubmitting }) => (
                 <Form className="space-y-4">
-                  {/* Email Field */}
                   <div className="relative">
                     <Field
                       type="email"
@@ -140,7 +143,6 @@ const UserLogin = () => {
                     />
                   </div>
 
-                  {/* Password Field */}
                   <div className="relative">
                     <Field
                       type={showPassword ? "text" : "password"}
@@ -148,7 +150,6 @@ const UserLogin = () => {
                       placeholder="Enter your password"
                       className="w-full p-4 pr-16 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-400"
                     />
-
                     <button
                       type="button"
                       className="absolute inset-y-0 right-4 mt-3 flex items-center justify-center h-full text-gray-600"
@@ -159,7 +160,6 @@ const UserLogin = () => {
                         size="lg"
                       />
                     </button>
-
                     <ErrorMessage
                       name="password"
                       component="div"
@@ -167,11 +167,10 @@ const UserLogin = () => {
                     />
                   </div>
 
-                  {/* Forgot Password Button */}
                   <div className="flex justify-end mb-6">
                     <button
                       type="button"
-                      onClick={() => setIsModalOpen(true)} // Open the modal
+                      onClick={() => setIsModalOpen(true)}
                       className="text-sm font-medium text-teal-500 hover:text-teal-700 transition duration-150 ease-in-out"
                     >
                       Forgot password?
@@ -194,9 +193,10 @@ const UserLogin = () => {
             <span className="px-3 text-gray-500">OR</span>
             <hr className="w-full border-gray-300" />
           </div>
+
           {/* Google Sign-In Button */}
           <button
-            onClick={() => login()}
+            onClick={handleGoogleSignIn}
             className="w-full bg-red-500 text-white p-3 rounded-lg hover:bg-red-600 mb-4 flex items-center justify-center space-x-2"
           >
             <FcGoogle className="text-xl" />

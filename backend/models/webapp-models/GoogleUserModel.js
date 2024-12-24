@@ -23,8 +23,15 @@ const googleUserWebAppSchema = new mongoose.Schema(
     },
     dob: {
       type: Date,
-      required: true, // Date of birth entered by the user
+      required: true,
+      validate: {
+        validator: function(value) {
+          return value instanceof Date && !isNaN(value);
+        },
+        message: 'Invalid date of birth',
+      },
     },
+    
     educationLevel: {
       type: String,
       required: true, // Education level selected by user

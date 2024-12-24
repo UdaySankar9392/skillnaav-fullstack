@@ -54,25 +54,30 @@ const UserCreateAccount = () => {
 
   const handleGoogleSignIn = async () => {
     try {
-      // Force the account picker popup
+      // Enforce the account picker popup by adding a custom parameter
+      googleAuthProvider.setCustomParameters({
+        prompt: "select_account", // Forces the account picker to appear
+      });
+  
+      // Trigger the Google sign-in popup
       const result = await signInWithPopup(auth, googleAuthProvider);
   
       const user = result.user;
-      // This checks if the user was successfully signed in with a Google account
+  
       if (user) {
-        console.log("User Info:", user); // You can log user info here for debugging
+        console.log("User Info:", user); // Debug user info
   
-        // Get the ID token from the authenticated user
-        const idToken = await user.getIdToken(); // This is the token you can use for auth
+        // Get the ID token for further use
+        const idToken = await user.getIdToken();
   
-        // Proceed to the profile form with the user data, including the token
+        // Proceed to the profile form with the user data
         navigate("/google-user-profileform", {
           state: {
             userData: {
               name: user.displayName,
               email: user.email,
               googleId: user.uid, // Rename 'uid' to 'googleId' explicitly
-              token: idToken, // Pass the token here
+              token: idToken, // Pass the token
             },
           },
         });
@@ -82,6 +87,7 @@ const UserCreateAccount = () => {
       setErrorMessage("Failed to sign in with Google. Please try again.");
     }
   };
+  
   
   
   

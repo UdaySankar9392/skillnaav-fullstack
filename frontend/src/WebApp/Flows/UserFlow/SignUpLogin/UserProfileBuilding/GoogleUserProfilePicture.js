@@ -18,7 +18,7 @@ const UserProfilePicture = () => {
     dob: location.state?.formData?.dob || "",
     educationLevel: location.state?.formData?.educationLevel || "", // Add educationLevel here
     googleId: location.state?.formData?.googleId || "", // Use googleId instead of uid
-    token: location.state?.formData?.token || localStorage.getItem("authToken") || "", // Retrieve token from formData or localStorage
+    idToken: location.state?.formData?.token || localStorage.getItem("authToken") || "", // Use idToken instead of token
   });
 
   // Handle form field changes
@@ -26,16 +26,11 @@ const UserProfilePicture = () => {
     const { name, value } = e.target;
     setFormData({ ...formData, [name]: value });
   };
-
+  
   const handleSubmit = async () => {
-    const completeProfileData = {
-      ...formData, // Complete form data including the data passed from Google profile
-    };
-    console.log("Form Data before submit: ", formData);
-
-    const token = formData.token; // Access token here
-
-    // Validate required fields
+    const completeProfileData = { ...formData };
+    const idToken = formData.idToken;
+  
     if (
       !completeProfileData.name ||
       !completeProfileData.email ||
@@ -50,27 +45,36 @@ const UserProfilePicture = () => {
       alert("Please fill all required fields.");
       return;
     }
-
+  
     try {
-      // Submit data to backend using Axios
+      console.log("Submitting data:", completeProfileData);
+  
       const response = await axios.post(
         "/api/google-users/register",
         completeProfileData,
         {
           headers: {
-            Authorization: `Bearer ${token}`, // Include the token in the request headers
+            Authorization: `Bearer ${idToken}`,
           },
         }
       );
-
-      if (response.status === 201) {
+  
+      console.log("API Response:", response);
+  
+      // Handle both 200 and 201 as success
+      if (response.status === 200 || response.status === 201) {
+        console.log("Navigating to user main page");
         navigate("/user-main-page");
+      } else {
+        console.warn("Unexpected response status:", response.status);
       }
     } catch (error) {
-      console.error("Error submitting form:", error);
+      console.error("Error submitting form:", error.response || error.message);
       alert("Registration failed. Please try again.");
     }
   };
+  
+  
 
   const isFormValid = () => {
     return formData.desiredField && formData.linkedin; // Ensure desiredField and linkedin are filled
