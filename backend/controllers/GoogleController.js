@@ -34,7 +34,7 @@ const registerGoogleUser = async (req, res) => {
       return res.status(400).json({ message: "All required fields must be filled." });
     }
 
-    // Verify the Firebase ID token
+    // // Verify the Firebase ID token
     let decodedToken;
     try {
       decodedToken = await admin.auth().verifyIdToken(idToken);  // Verifying the ID token
@@ -58,6 +58,7 @@ const registerGoogleUser = async (req, res) => {
 
     if (user) {
       // Update existing user profile
+      user.uid = googleId;
       user.name = name;
       user.email = email;
       user.universityName = universityName;
@@ -78,6 +79,7 @@ const registerGoogleUser = async (req, res) => {
     } else {
       // Create a new user if it doesn't exist
       const newUser = new GoogleUserWebApp({
+        uid: googleId,
         googleId,
         name,
         email,
@@ -117,14 +119,16 @@ const signInGoogleUser = async (req, res) => {
       return res.status(400).json({ message: "Google ID and ID token are required." });
     }
 
-    // Verify the Firebase ID token
-    let decodedToken;
-    try {
-      decodedToken = await admin.auth().verifyIdToken(idToken);  // Verifying the ID token
-    } catch (error) {
-      return res.status(401).json({ message: "Invalid or expired ID token." });
-    }
+    // // Verify the Firebase ID token
+    // let decodedToken;
+    // try {
+    //   decodedToken = await admin.auth().verifyIdToken(idToken);  // Verifying the ID token
+    // } catch (error) {
+    //   return res.status(401).json({ message: "Invalid or expired ID token." });
+    // }
 
+
+    const decodedToken = await verifyToken(idToken);
     // Ensure the token's UID matches the googleId
     if (decodedToken.uid !== googleId) { 
       return res.status(401).json({ message: "Google ID does not match the token." });

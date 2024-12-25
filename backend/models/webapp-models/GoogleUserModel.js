@@ -2,10 +2,18 @@ const mongoose = require("mongoose");
 
 const googleUserWebAppSchema = new mongoose.Schema(
   {
+
+    uid: {
+      type: String,
+      unique: true, // Make sure 'uid' is unique
+      required: true, // 'uid' should be required
+      trim: true,
+    },
     googleId: {
       type: String,
-      unique: true,
-      sparse: true, // Allows null googleId if the user logs in via email only
+      unique: true,  // Ensures unique values in the database
+      required: [true, "Google ID is required"],  // Makes the field mandatory
+      trim: true,   // Removes leading/trailing spaces
     },
     name: {
       type: String,
