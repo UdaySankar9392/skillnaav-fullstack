@@ -153,14 +153,29 @@ router.delete("/:id/permanent", async (req, res) => {
 });
 
 // GET a single internship posting by ID
-router.get("/:id", async (req, res) => {
-  try {
-    const internship = await InternshipPosting.findById(req.params.id);
+// router.get("/:id", async (req, res) => {
+//   try {
+//     const internship = await InternshipPosting.findById(req.params.id);
 
-    if (internship) {
-      res.json(internship);
+//     if (internship) {
+//       res.json(internship);
+//     } else {
+//       res.status(404).json({ message: "Internship not found" });
+//     }
+//   } catch (error) {
+//     res.status(500).json({ message: "Server Error" });
+//   }
+// });
+
+router.get("/partner/:partnerId", async (req, res) => {
+  try {
+    const { partnerId } = req.params;
+    const internships = await InternshipPosting.find({ partnerId });
+
+    if (internships.length > 0) {
+      res.json(internships);
     } else {
-      res.status(404).json({ message: "Internship not found" });
+      res.status(404).json({ message: "No internships found for this partner ID" });
     }
   } catch (error) {
     res.status(500).json({ message: "Server Error" });

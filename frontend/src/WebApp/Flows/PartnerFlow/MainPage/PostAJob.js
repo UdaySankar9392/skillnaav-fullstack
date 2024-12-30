@@ -3,6 +3,8 @@ import axios from "axios";
 import firebase from "firebase/compat/app";
 import "firebase/compat/storage";
 import { useTabContext } from "./UserHomePageContext/HomePageContext";
+import { ref, uploadBytesResumable, getDownloadURL } from "firebase/storage";
+import { storage } from "./../../../../config/Firebase";
 
 // API Keys and URL for API Calls (for example purposes)
 const COUNTRY_API_URL = 'https://restcountries.com/v3.1/all';  // Fetch all countries
@@ -237,18 +239,30 @@ const handleCitySelect = (cityName) => {
   const handleFileUpload = async (event) => {
     const selectedFile = event.target.files[0];
     if (!selectedFile) return;
-
+  
     setUploading(true);
     const reader = new FileReader();
     reader.onloadend = () => setPreviewUrl(reader.result);
     reader.readAsDataURL(selectedFile);
-
+  
     try {
-      const storageRef = firebase.storage().ref();
-      const fileRef = storageRef.child(selectedFile.name);
-      const snapshot = await fileRef.put(selectedFile);
-      const downloadURL = await snapshot.ref.getDownloadURL();
-      setFormData((prev) => ({ ...prev, imgUrl: downloadURL }));
+      const fileRef = ref(storage, `uploads/${selectedFile.name}`);
+      const uploadTask = uploadBytesResumable(fileRef, selectedFile);
+  
+      uploadTask.on(
+        "state_changed",
+        (snapshot) => {
+          // You can add progress monitoring here if needed
+        },
+        (error) => {
+          console.error("Error uploading file:", error);
+        },
+        () => {
+          getDownloadURL(uploadTask.snapshot.ref).then((downloadURL) => {
+            setFormData((prev) => ({ ...prev, imgUrl: downloadURL }));
+          });
+        }
+      );
     } catch (error) {
       console.error("Error uploading file:", error);
     } finally {

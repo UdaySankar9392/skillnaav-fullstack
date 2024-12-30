@@ -26,19 +26,30 @@ const ApplyCards = ({ job, onBack }) => {
       alert("Please upload your resume before applying!");
       return;
     }
-
+  
     const formData = new FormData();
     formData.append("resume", resume); // Add file to FormData
-    formData.append("studentApplied", true);
-
+    formData.append("internshipId", job._id); // Ensure job._id exists in the job object
+    
+    // Get student ID from localStorage by parsing the userInfo object
+    const userInfo = JSON.parse(localStorage.getItem("userInfo"));
+    const studentId = userInfo ? userInfo._id : null; // Get the _id from the stored userInfo
+  
+    if (!studentId) {
+      alert("Student ID not found. Please log in.");
+      return;
+    }
+  
+    formData.append("studentId", studentId); // Use the actual student ID
+  
     try {
-      const response = await axios.put(`/api/interns/${job._id}`, formData, {
+      const response = await axios.post("/apply", formData, {
         headers: {
           "Content-Type": "multipart/form-data",
         },
       });
-
-      if (response.status === 200) {
+  
+      if (response.status === 201) {
         setIsApplied(true);
         alert("Application submitted successfully!");
       }
@@ -47,7 +58,8 @@ const ApplyCards = ({ job, onBack }) => {
       alert("Failed to submit your application. Please try again.");
     }
   };
-
+  
+  
   const toggleSaveJob = () => {
     if (savedJobs.some((savedJob) => savedJob.jobTitle === job.jobTitle)) {
       removeJob(job);
@@ -73,20 +85,21 @@ const ApplyCards = ({ job, onBack }) => {
           )}
           <div>
             <h2 className="text-xl md:text-2xl font-semibold text-gray-800">
-              {job.jobTitle}
+              {job.jobTitle || "Job title not available"} {/* Fallback */}
             </h2>
-            <p className="text-gray-500">{job.companyName}</p>
+            <p className="text-gray-500">{job.companyName || "Company name not available"}</p>
             <div className="flex items-center text-gray-500 mt-2 text-sm md:text-base">
               <FaMapMarkerAlt className="mr-2" />
               <p>
-                {job.location} • {job.jobType || "Not specified"}
+                {job.location || "Location not specified"} {/* Fallback */}
+                • {job.jobType || "Not specified"} {/* Fallback */}
               </p>
             </div>
             <div className="flex items-center text-gray-500 mt-2 text-sm md:text-base">
               <FaBriefcase className="mr-2" />
               <p>
-                From {new Date(job.startDate).toLocaleDateString()} to{" "}
-                {job.endDateOrDuration || "Not specified"}
+                From {new Date(job.startDate).toLocaleDateString() || "Not specified"} to{" "}
+                {job.endDateOrDuration || "Not specified"} {/* Fallback */}
               </p>
             </div>
             <div className="flex items-center text-gray-500 mt-2 text-sm md:text-base">
@@ -137,7 +150,7 @@ const ApplyCards = ({ job, onBack }) => {
           About the job
         </h3>
         <p className="text-gray-600 leading-relaxed">
-          {job.jobDescription || "No description available"}
+          {job.jobDescription || "No description available"} {/* Fallback */}
         </p>
       </div>
 
@@ -162,8 +175,8 @@ const ApplyCards = ({ job, onBack }) => {
           Contact Information
         </h3>
         <p className="text-gray-600">
-          {job.contactInfo?.name || "Not provided"},{" "}
-          {job.contactInfo?.email || "Not provided"},{" "}
+          {job.contactInfo?.name || "Not provided"},
+          {job.contactInfo?.email || "Not provided"},
           {job.contactInfo?.phone || "Not provided"}
         </p>
       </div>

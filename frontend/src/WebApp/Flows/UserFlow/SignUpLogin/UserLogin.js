@@ -75,7 +75,9 @@ const UserLogin = () => {
       localStorage.setItem("userToken", JSON.stringify(data.token));
       localStorage.setItem("userInfo", JSON.stringify(data));
   
-      console.log("User token stored in localStorage:", data.token);
+      console.log("User token stored in localStorage:", data.token); // Log the token here
+      console.log("User info:", data); // Log the user info here
+  
       setLoading(false);
       navigate("/user-main-page");
     } catch (err) {
@@ -89,6 +91,7 @@ const UserLogin = () => {
       setSubmitting(false);
     }
   };
+  
   
 
   return (

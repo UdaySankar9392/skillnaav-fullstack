@@ -30,6 +30,27 @@ const Home = () => {
     fetchJobData();
   }, []);
 
+  const calculatePostedTime = (date) => {
+    const postedDate = new Date(date);
+    const currentDate = new Date();
+
+    const differenceInTime = currentDate - postedDate; // Difference in milliseconds
+    const differenceInHours = Math.floor(differenceInTime / (1000 * 60 * 60)); // Convert to hours
+    const differenceInDays = Math.floor(differenceInTime / (1000 * 60 * 60 * 24)); // Convert to days
+
+    if (differenceInDays === 0) {
+      return differenceInHours === 0
+        ? "Just now"
+        : differenceInHours === 1
+        ? "1 hour ago"
+        : `${differenceInHours} hours ago`;
+    } else if (differenceInDays === 1) {
+      return "Yesterday";
+    } else {
+      return `${differenceInDays}d ago`;
+    }
+  };
+
   const handleViewDetails = (job) => {
     setSelectedJob(job);
   };
@@ -99,7 +120,7 @@ const Home = () => {
                     <div>
                       <h3 className="text-xl font-semibold">{job.jobTitle}</h3>
                       <p className="text-gray-600">
-                        {job.companyName} • {index + 1}d ago
+                        {job.companyName} • {calculatePostedTime(job.createdAt)}
                       </p>
                     </div>
                   </div>

@@ -34,18 +34,23 @@ const ChatInterface = () => {
   }, []);
 
   // Fetch internships on component mount
-  useEffect(() => {
+   useEffect(() => {
     const fetchInternships = async () => {
       try {
-        const response = await axios.get("/api/interns");
-        setInternships(response.data);  // Store the fetched internships
+        if (partnerId) {
+          const response = await axios.get(`/api/interns/partner/${partnerId}`);
+          console.log("Fetched internships:", response.data);
+          setInternships(response.data);
+        } else {
+          console.error("Partner ID not found");
+        }
       } catch (error) {
         console.error("Error fetching internships:", error);
       }
     };
-
+  
     fetchInternships();
-  }, []);
+  }, [partnerId])
 
   // Fetch messages for the selected internship
   const fetchMessages = async (internshipId) => {
