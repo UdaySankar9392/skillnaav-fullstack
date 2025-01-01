@@ -25,11 +25,25 @@ const firebaseStorageConfig = {
   measurementId: "G-78JJ8PRQSR",
 };
 
+// Firebase configuration for Resume Uploads
+const firebaseResumeConfig = {
+  apiKey: "AIzaSyDz-_d-VRXrdwF-lMcglCMeQxFP7tAXhdc",
+  authDomain: "skillnaav-res.firebaseapp.com",
+  projectId: "skillnaav-res",
+  storageBucket: "skillnaav-res.appspot.com",
+  messagingSenderId: "932905658316",
+  appId: "1:932905658316:web:432d22ba31f6e26ab11f69",
+  measurementId: "G-6Q71S6P03M",
+};
+
 // Initialize Firebase app for Google Auth
 const firebaseAuthApp = initializeApp(firebaseAuthConfig, "googleAuthApp");
 
-// Initialize Firebase app for Storage
+// Initialize Firebase app for Photo Storage
 const firebaseStorageApp = initializeApp(firebaseStorageConfig, "photoStorageApp");
+
+// Initialize Firebase app for Resume Uploads
+const firebaseResumeApp = initializeApp(firebaseResumeConfig, "resumeApp");
 
 // Get Firebase services for Google Auth
 const auth = getAuth(firebaseAuthApp);
@@ -39,5 +53,8 @@ const db = getFirestore(firebaseAuthApp);
 // Get Firebase services for Photo Storage
 const storage = getStorage(firebaseStorageApp);
 
+// Get Firebase services for Resume Uploads
+const resumeStorage = getStorage(firebaseResumeApp); // Storage instance for resumes
+
 // Export services
-export { auth, googleAuthProvider, signInWithPopup, storage, db };
+export { auth, googleAuthProvider, signInWithPopup, storage, resumeStorage, db };

@@ -8,6 +8,11 @@ import {
   FaDollarSign,
 } from "react-icons/fa";
 import { useTabContext } from "./UserHomePageContext/HomePageContext";
+import { getStorage, ref, uploadBytes, getDownloadURL } from "firebase/storage";
+import { getFirestore, doc, setDoc } from "firebase/firestore";
+import { storage, db } from "../../../../config/Firebase";
+
+ // Ensure you have a firebaseConfig.js file exporting the initialized app
 
 const ApplyCards = ({ job, onBack }) => {
   const { savedJobs, applications, saveJob, removeJob } = useTabContext();
@@ -15,6 +20,7 @@ const ApplyCards = ({ job, onBack }) => {
     applications.some((appJob) => appJob.jobTitle === job.jobTitle)
   );
   const [resume, setResume] = useState(null);
+  const [isUploading, setIsUploading] = useState(false);
 
   const handleFileChange = (event) => {
     setResume(event.target.files[0]); // Save the selected file to state
@@ -27,39 +33,45 @@ const ApplyCards = ({ job, onBack }) => {
       return;
     }
   
-    const formData = new FormData();
-    formData.append("resume", resume); // Add file to FormData
-    formData.append("internshipId", job._id); // Ensure job._id exists in the job object
-    
-    // Get student ID from localStorage by parsing the userInfo object
+    // Get student ID from localStorage
     const userInfo = JSON.parse(localStorage.getItem("userInfo"));
-    const studentId = userInfo ? userInfo._id : null; // Get the _id from the stored userInfo
+    const studentId = userInfo ? userInfo._id : null;
   
     if (!studentId) {
       alert("Student ID not found. Please log in.");
       return;
     }
   
-    formData.append("studentId", studentId); // Use the actual student ID
+    setIsUploading(true);
   
     try {
-      const response = await axios.post("/apply", formData, {
-        headers: {
-          "Content-Type": "multipart/form-data",
-        },
+      // Firebase storage reference
+      const storageRef = ref(storage, `resumes/${studentId}_${resume.name}`);
+      await uploadBytes(storageRef, resume); // Upload resume
+      const resumeUrl = await getDownloadURL(storageRef); // Get download URL
+  
+      // Save application data to Firestore
+      const applicationDocRef = doc(db, "applications", `${studentId}_${job._id}`);
+      await setDoc(applicationDocRef, {
+        internshipId: job._id,
+        studentId: studentId,
+        resumeUrl: resumeUrl,
+        jobTitle: job.jobTitle,
+        companyName: job.companyName,
+        appliedAt: new Date(),
       });
   
-      if (response.status === 201) {
-        setIsApplied(true);
-        alert("Application submitted successfully!");
-      }
+      setIsApplied(true);
+      alert("Application submitted successfully!");
     } catch (error) {
       console.error("Error applying for the job:", error);
       alert("Failed to submit your application. Please try again.");
+    } finally {
+      setIsUploading(false);
     }
   };
   
-  
+
   const toggleSaveJob = () => {
     if (savedJobs.some((savedJob) => savedJob.jobTitle === job.jobTitle)) {
       removeJob(job);
@@ -85,21 +97,20 @@ const ApplyCards = ({ job, onBack }) => {
           )}
           <div>
             <h2 className="text-xl md:text-2xl font-semibold text-gray-800">
-              {job.jobTitle || "Job title not available"} {/* Fallback */}
+              {job.jobTitle || "Job title not available"}
             </h2>
             <p className="text-gray-500">{job.companyName || "Company name not available"}</p>
             <div className="flex items-center text-gray-500 mt-2 text-sm md:text-base">
               <FaMapMarkerAlt className="mr-2" />
               <p>
-                {job.location || "Location not specified"} {/* Fallback */}
-                • {job.jobType || "Not specified"} {/* Fallback */}
+                {job.location || "Location not specified"} • {job.jobType || "Not specified"}
               </p>
             </div>
             <div className="flex items-center text-gray-500 mt-2 text-sm md:text-base">
               <FaBriefcase className="mr-2" />
               <p>
                 From {new Date(job.startDate).toLocaleDateString() || "Not specified"} to{" "}
-                {job.endDateOrDuration || "Not specified"} {/* Fallback */}
+                {job.endDateOrDuration || "Not specified"}
               </p>
             </div>
             <div className="flex items-center text-gray-500 mt-2 text-sm md:text-base">
@@ -124,9 +135,9 @@ const ApplyCards = ({ job, onBack }) => {
               className={`text-white mt-4 ${
                 isApplied ? "bg-green-500" : "bg-purple-500 hover:bg-purple-600"
               } px-4 py-2 rounded-full font-semibold`}
-              disabled={isApplied}
+              disabled={isApplied || isUploading}
             >
-              {isApplied ? "Applied" : "Apply now"}
+              {isApplied ? "Applied" : isUploading ? "Uploading..." : "Apply now"}
             </button>
           </div>
         </div>
@@ -150,7 +161,7 @@ const ApplyCards = ({ job, onBack }) => {
           About the job
         </h3>
         <p className="text-gray-600 leading-relaxed">
-          {job.jobDescription || "No description available"} {/* Fallback */}
+          {job.jobDescription || "No description available"}
         </p>
       </div>
 
