@@ -1,16 +1,12 @@
 const mongoose = require("mongoose");
 
-const applicationSchema = mongoose.Schema(
-  {
-    studentId: { type: mongoose.Schema.Types.ObjectId, ref: "Student", required: true },
-    internshipId: { type: mongoose.Schema.Types.ObjectId, ref: "InternshipPosting", required: true },
-    resumeUrl: { type: String, required: true },
-    applicationStatus: { type: String, default: "pending" }, // e.g., pending, approved, rejected
-    applicationDate: { type: Date, default: Date.now }, // When the student applied
-    notes: { type: String }, // Optional field for admin or partner notes
-  },
-  { timestamps: true } // Automatically adds createdAt and updatedAt
-);
+const applicationSchema = new mongoose.Schema({
+  studentId: { type: mongoose.Schema.Types.ObjectId, ref: "Student", required: true },
+  internshipId: { type: mongoose.Schema.Types.ObjectId, ref: "Internship", required: true },
+  resumeUrl: { type: String, required: true }, // Store the URL of the resume stored in Firebase
+  status: { type: String, enum: ["Applied", "Under Review", "Accepted", "Rejected"], default: "Applied" },
+  appliedDate: { type: Date, default: Date.now },
+});
 
 const Application = mongoose.model("Application", applicationSchema);
 

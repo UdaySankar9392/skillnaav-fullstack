@@ -1,7 +1,12 @@
 const Application = require("../models/webapp-models/applicationModel"); // Import the Application model
+const multer = require("multer"); // Multer for file uploads
+const path = require("path");
+const fs = require("fs");
 
-// Controller to handle applying for an internship
-const applyForInternship = async (req, res) => {
+
+
+// Controller to handle applying for an internship (using multer for file uploads)
+const applyForInternship = (req, res) => {
   const { studentId, internshipId } = req.body;
   const resumeFile = req.file; // This will contain file info after multer processes it
 
@@ -12,25 +17,35 @@ const applyForInternship = async (req, res) => {
   }
 
   try {
-    // Create a URL for the file to be stored in the database
-    const resumeUrl = `/uploads/${resumeFile.filename}`; // Generate the file URL for storage
+    // Construct the file path to store in the database
+    const resumePath = path.join(__dirname, "..", "uploads", resumeFile.filename);
 
-    // Create a new application document with the studentId, internshipId, and resume URL
+    // Create a new application document with the studentId, internshipId, resume path, and application date
     const newApplication = new Application({
       studentId,
       internshipId,
-      resumeUrl, // Store the file URL in the database
+      resumeUrl: resumePath, // Store the local file path in the database
+      status: "Applied", // Default status when applied
+      appliedDate: new Date(), // Store the application date
     });
 
     // Save the application in the database
-    await newApplication.save();
-
-    res.status(201).json({
-      message: "Application submitted successfully!",
-      application: newApplication, // Include the new application data
-    });
+    newApplication.save()
+      .then(() => {
+        res.status(201).json({
+          message: "Application submitted successfully!",
+          application: newApplication, // Include the new application data
+        });
+      })
+      .catch((error) => {
+        console.error("Error saving application:", error.message);
+        res.status(500).json({
+          message: "Error applying for the internship.",
+          error: error.message, // Provide error details for debugging
+        });
+      });
   } catch (error) {
-    console.error(error);
+    console.error("Error during application submission:", error.message);
     res.status(500).json({
       message: "Error applying for the internship.",
       error: error.message, // Provide error details for debugging
@@ -48,11 +63,17 @@ const getApplicationsForInternship = async (req, res) => {
       .populate("studentId", "name email") // Populate student info (name, email)
       .populate("internshipId", "jobTitle companyName"); // Populate internship details (job title, company name)
 
+    if (!applications || applications.length === 0) {
+      return res.status(404).json({
+        message: "No applications found for this internship.",
+      });
+    }
+
     res.status(200).json({
       applications,
     });
   } catch (error) {
-    console.error(error);
+    console.error("Error fetching applications:", error.message);
     res.status(500).json({
       message: "Error fetching applications.",
       error: error.message,
@@ -78,7 +99,7 @@ const getApplicationStatus = async (req, res) => {
       applications,
     });
   } catch (error) {
-    console.error(error);
+    console.error("Error fetching application status:", error.message);
     res.status(500).json({
       message: "Error fetching application status.",
       error: error.message,
@@ -89,5 +110,5 @@ const getApplicationStatus = async (req, res) => {
 module.exports = {
   applyForInternship,
   getApplicationsForInternship,
-  getApplicationStatus,
+  getApplicationStatus, 
 };

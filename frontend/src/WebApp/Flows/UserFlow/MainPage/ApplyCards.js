@@ -8,11 +8,6 @@ import {
   FaDollarSign,
 } from "react-icons/fa";
 import { useTabContext } from "./UserHomePageContext/HomePageContext";
-import { getStorage, ref, uploadBytes, getDownloadURL } from "firebase/storage";
-import { getFirestore, doc, setDoc } from "firebase/firestore";
-import { storage, db } from "../../../../config/Firebase";
-
- // Ensure you have a firebaseConfig.js file exporting the initialized app
 
 const ApplyCards = ({ job, onBack }) => {
   const { savedJobs, applications, saveJob, removeJob } = useTabContext();
@@ -33,7 +28,7 @@ const ApplyCards = ({ job, onBack }) => {
       return;
     }
   
-    // Get student ID from localStorage
+    // Get student ID from localStorage or Firebase
     const userInfo = JSON.parse(localStorage.getItem("userInfo"));
     const studentId = userInfo ? userInfo._id : null;
   
@@ -45,24 +40,38 @@ const ApplyCards = ({ job, onBack }) => {
     setIsUploading(true);
   
     try {
-      // Firebase storage reference
-      const storageRef = ref(storage, `resumes/${studentId}_${resume.name}`);
-      await uploadBytes(storageRef, resume); // Upload resume
-      const resumeUrl = await getDownloadURL(storageRef); // Get download URL
+      // Prepare form data for the API request
+      const formData = new FormData();
+      formData.append("studentId", studentId);
+      formData.append("internshipId", job._id); // Assuming job._id is the internshipId
+      formData.append("resume", resume); // Ensure this matches the backend key 'resume'
   
-      // Save application data to Firestore
-      const applicationDocRef = doc(db, "applications", `${studentId}_${job._id}`);
-      await setDoc(applicationDocRef, {
+      // Log the form data
+      console.log("Submitting application with the following data:");
+      console.log({
+        studentId,
         internshipId: job._id,
-        studentId: studentId,
-        resumeUrl: resumeUrl,
-        jobTitle: job.jobTitle,
-        companyName: job.companyName,
-        appliedAt: new Date(),
+        resumeFile: resume.name,
       });
   
-      setIsApplied(true);
-      alert("Application submitted successfully!");
+      // Send the form data to the backend API
+      const apiResponse = await axios.post(
+        "http://localhost:5000/api/applications/apply",
+        formData,
+        {
+          headers: {
+            "Content-Type": "multipart/form-data", // Important for file uploads
+          },
+        }
+      );
+  
+      if (apiResponse.status === 201) {
+        // Mark as applied if the submission is successful
+        setIsApplied(true);
+        alert("Application submitted successfully!");
+      } else {
+        alert("Failed to submit application to the server.");
+      }
     } catch (error) {
       console.error("Error applying for the job:", error);
       alert("Failed to submit your application. Please try again.");
@@ -70,6 +79,8 @@ const ApplyCards = ({ job, onBack }) => {
       setIsUploading(false);
     }
   };
+  
+  
   
 
   const toggleSaveJob = () => {

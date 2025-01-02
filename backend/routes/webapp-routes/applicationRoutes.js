@@ -1,15 +1,24 @@
 const express = require("express");
 const router = express.Router();
-const ApplicationController = require("../../controllers/applicationController"); // Correct import
-const upload = require('../../utils/multer'); // Correct path to multer
+const applicationController = require("../../controllers/applicationController");
+const upload = require("../../utils/multer"); // Multer middleware for file uploads
 
-// Apply for an internship
-router.post("/apply", upload.single('resume'), ApplicationController.applyForInternship); // Ensure 'resume' matches the field name on the front-end form
+// Route to apply for an internship
+// Note: Make sure to use the upload middleware to handle file uploads
+router.post("/apply", upload.single('resume'), (req, res, next) => {
+  if (!req.file) {
+    return res.status(400).json({
+      message: "No file uploaded, please upload a resume.",
+    });
+  }
+  // Proceed with the controller logic if file is uploaded
+  applicationController.applyForInternship(req, res);
+});
 
-// Get all applications for a specific internship
-router.get("/internship/:internshipId/applications", ApplicationController.getApplicationsForInternship);
+// Route to get all students who applied for a specific internship
+router.get("/internship/:internshipId/applications", applicationController.getApplicationsForInternship);
 
-// Get application status for a student
-router.get("/student/:studentId/applications", ApplicationController.getApplicationStatus);
+// Route to get application status for a specific student
+router.get("/student/:studentId/application-status", applicationController.getApplicationStatus);
 
 module.exports = router;
