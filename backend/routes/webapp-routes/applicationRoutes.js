@@ -16,7 +16,7 @@ router.post("/apply", upload.single('resume'), (req, res, next) => {
 });
 
 // Route to get all students who applied for a specific internship
-router.get("/internship/:internshipId/applications", applicationController.getApplicationsForInternship);
+router.get("/internship/:internshipId", applicationController.getApplicationsForInternship);
 
 // Route to get application status for a specific student
 router.get("/student/:studentId/application-status", applicationController.getApplicationStatus);

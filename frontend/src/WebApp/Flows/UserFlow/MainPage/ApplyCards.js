@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import axios from "axios";
 import {
   FaHeart,
@@ -11,11 +11,15 @@ import { useTabContext } from "./UserHomePageContext/HomePageContext";
 
 const ApplyCards = ({ job, onBack }) => {
   const { savedJobs, applications, saveJob, removeJob } = useTabContext();
-  const [isApplied, setIsApplied] = useState(
-    applications.some((appJob) => appJob.jobTitle === job.jobTitle)
-  );
+  const [isApplied, setIsApplied] = useState(false);
   const [resume, setResume] = useState(null);
   const [isUploading, setIsUploading] = useState(false);
+
+  useEffect(() => {
+    // Check if the current job has already been applied by the user from localStorage
+    const appliedJobs = JSON.parse(localStorage.getItem("appliedJobs")) || [];
+    setIsApplied(appliedJobs.some((appJob) => appJob.jobTitle === job.jobTitle));
+  }, [job.jobTitle]);
 
   const handleFileChange = (event) => {
     setResume(event.target.files[0]); // Save the selected file to state
@@ -27,25 +31,25 @@ const ApplyCards = ({ job, onBack }) => {
       alert("Please upload your resume before applying!");
       return;
     }
-  
+
     // Get student ID from localStorage or Firebase
     const userInfo = JSON.parse(localStorage.getItem("userInfo"));
     const studentId = userInfo ? userInfo._id : null;
-  
+
     if (!studentId) {
       alert("Student ID not found. Please log in.");
       return;
     }
-  
+
     setIsUploading(true);
-  
+
     try {
       // Prepare form data for the API request
       const formData = new FormData();
       formData.append("studentId", studentId);
       formData.append("internshipId", job._id); // Assuming job._id is the internshipId
       formData.append("resume", resume); // Ensure this matches the backend key 'resume'
-  
+
       // Log the form data
       console.log("Submitting application with the following data:");
       console.log({
@@ -53,21 +57,25 @@ const ApplyCards = ({ job, onBack }) => {
         internshipId: job._id,
         resumeFile: resume.name,
       });
-  
+
       // Send the form data to the backend API
       const apiResponse = await axios.post(
         "http://localhost:5000/api/applications/apply",
-        formData,
+        formData, 
         {
           headers: {
             "Content-Type": "multipart/form-data", // Important for file uploads
           },
         }
       );
-  
+
       if (apiResponse.status === 201) {
         // Mark as applied if the submission is successful
         setIsApplied(true);
+        // Save applied job to localStorage
+        const appliedJobs = JSON.parse(localStorage.getItem("appliedJobs")) || [];
+        appliedJobs.push({ jobTitle: job.jobTitle, internshipId: job._id });
+        localStorage.setItem("appliedJobs", JSON.stringify(appliedJobs));
         alert("Application submitted successfully!");
       } else {
         alert("Failed to submit application to the server.");
@@ -79,9 +87,6 @@ const ApplyCards = ({ job, onBack }) => {
       setIsUploading(false);
     }
   };
-  
-  
-  
 
   const toggleSaveJob = () => {
     if (savedJobs.some((savedJob) => savedJob.jobTitle === job.jobTitle)) {
@@ -168,18 +173,14 @@ const ApplyCards = ({ job, onBack }) => {
       <hr className="my-4" />
 
       <div className="mb-6">
-        <h3 className="text-lg md:text-xl font-semibold text-gray-800 mb-2">
-          About the job
-        </h3>
+        <h3 className="text-lg md:text-xl font-semibold text-gray-800 mb-2">About the job</h3>
         <p className="text-gray-600 leading-relaxed">
           {job.jobDescription || "No description available"}
         </p>
       </div>
 
       <div>
-        <h3 className="text-lg md:text-xl font-semibold text-gray-800 mb-2">
-          Skills required
-        </h3>
+        <h3 className="text-lg md:text-xl font-semibold text-gray-800 mb-2">Skills required</h3>
         <div className="flex flex-wrap gap-2">
           {(job.qualifications || []).map((qualification, index) => (
             <span
@@ -193,9 +194,7 @@ const ApplyCards = ({ job, onBack }) => {
       </div>
 
       <div className="mt-6">
-        <h3 className="text-lg md:text-xl font-semibold text-gray-800 mb-2">
-          Contact Information
-        </h3>
+        <h3 className="text-lg md:text-xl font-semibold text-gray-800 mb-2">Contact Information</h3>
         <p className="text-gray-600">
           {job.contactInfo?.name || "Not provided"},
           {job.contactInfo?.email || "Not provided"},

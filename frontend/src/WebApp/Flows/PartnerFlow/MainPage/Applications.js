@@ -7,6 +7,7 @@ const InternshipList = () => {
   const [internships, setInternships] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [applications, setApplications] = useState({}); // State for applications
 
   const partnerId = localStorage.getItem("partnerId");
 
@@ -31,6 +32,19 @@ const InternshipList = () => {
 
     fetchInternships();
   }, [partnerId]);
+
+  // Fetch applications for a specific internship
+  const fetchApplications = async (internshipId) => {
+    try {
+      const response = await axios.get(`/api/applications/internship/${internshipId}`);
+      setApplications((prev) => ({
+        ...prev,
+        [internshipId]: response.data.applications,
+      }));
+    } catch (err) {
+      console.error("Error fetching applications:", err);
+    }
+  };
 
   // Function to calculate the posted time
   const calculateDaysAgo = (date) => {
@@ -96,22 +110,36 @@ const InternshipList = () => {
               </p>
             </div>
 
+            {/* Fetch Applications Button */}
+            <button
+              onClick={() => fetchApplications(internship._id)}
+              className="mt-4 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+            >
+              View Applications
+            </button>
+
             {/* Applied Students Section */}
             <div className="text-gray-700 mt-6">
-              <h4 className="text-xl font-semibold">Applied Students:</h4>
-              {internship.appliedStudents && internship.appliedStudents.length > 0 ? (
-                <ul className="list-disc pl-6">
-                  {internship.appliedStudents.map((student) => (
-                    <li key={student._id} className="mb-2">
-                      <p className="font-semibold">{student.name}</p>
-                      <p className="text-gray-600">{student.email}</p>
-                    </li>
-                  ))}
-                </ul>
-              ) : (
-                <p>No students have applied for this internship yet.</p>
-              )}
-            </div>
+  <h4 className="text-xl font-semibold">Applied Students:</h4>
+  {applications[internship._id] ? (
+    applications[internship._id].length > 0 ? (
+      <ul className="list-disc pl-6">
+        {applications[internship._id].map((student) => (
+          <li key={student._id} className="mb-2">
+            {/* Accessing name and email directly if student is populated */}
+            <p className="font-semibold">{student.name}</p>
+            <p className="text-gray-600">{student.email}</p>
+          </li>
+        ))}
+      </ul>
+    ) : (
+      <p>No students have applied for this internship yet.</p>
+    )
+  ) : (
+    <p>Click the button to fetch applications.</p>
+  )}
+</div>
+
           </div>
         ))
       ) : (

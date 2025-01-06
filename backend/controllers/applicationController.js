@@ -1,4 +1,7 @@
 const Application = require("../models/webapp-models/applicationModel"); // Import the Application model
+const mongoose = require("mongoose");
+const Userwebapp = require("../models/webapp-models/userModel");  // Ensure correct import path
+const InternshipPosting = require("../models/webapp-models/internshipPostModel.js"); 
 const multer = require("multer"); // Multer for file uploads
 const path = require("path");
 const fs = require("fs");
@@ -58,28 +61,33 @@ const getApplicationsForInternship = async (req, res) => {
   const { internshipId } = req.params;
 
   try {
-    // Find all applications for the given internship
-    const applications = await Application.find({ internshipId })
-      .populate("studentId", "name email") // Populate student info (name, email)
-      .populate("internshipId", "jobTitle companyName"); // Populate internship details (job title, company name)
-
-    if (!applications || applications.length === 0) {
-      return res.status(404).json({
-        message: "No applications found for this internship.",
-      });
+    // Validate internshipId
+    if (!mongoose.Types.ObjectId.isValid(internshipId)) {
+      return res.status(400).json({ message: "Invalid internship ID." });
     }
 
-    res.status(200).json({
-      applications,
-    });
+    // Fetch applications and populate references
+    const applications = await Application.find({ internshipId })
+      .populate("studentId", "name email") // Populate student details
+      .populate("internshipId", "jobTitle companyName") // Populate internship details
+      .exec();
+
+    // Check if applications exist
+    if (!applications || applications.length === 0) {
+      return res.status(404).json({ message: "No applications found for this internship." });
+    }
+
+    // Send success response
+    res.status(200).json({ applications });
   } catch (error) {
-    console.error("Error fetching applications:", error.message);
+    console.error("Error fetching applications:", error.message); // Log detailed error
     res.status(500).json({
       message: "Error fetching applications.",
       error: error.message,
     });
   }
-};
+};;
+
 
 // Controller to get application status for a student
 const getApplicationStatus = async (req, res) => {
