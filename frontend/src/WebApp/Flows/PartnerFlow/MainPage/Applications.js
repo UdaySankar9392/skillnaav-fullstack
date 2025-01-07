@@ -7,7 +7,7 @@ const InternshipList = () => {
   const [internships, setInternships] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [applications, setApplications] = useState({}); // State for applications
+  const [applications, setApplications] = useState({});
 
   const partnerId = localStorage.getItem("partnerId");
 
@@ -50,7 +50,6 @@ const InternshipList = () => {
   const calculateDaysAgo = (date) => {
     const postedDate = new Date(date);
     const currentDate = new Date();
-
     const differenceInTime = currentDate - postedDate; // Difference in milliseconds
     const differenceInHours = Math.floor(differenceInTime / (1000 * 60 * 60)); // Convert to hours
     const differenceInDays = Math.floor(differenceInTime / (1000 * 60 * 60 * 24)); // Convert to days
@@ -65,6 +64,24 @@ const InternshipList = () => {
       return "Yesterday";
     } else {
       return `${differenceInDays}d ago`;
+    }
+  };
+
+  // Update application status
+  const updateApplicationStatus = async (internshipId, studentId, status) => {
+    try {
+      const response = await axios.put(`/api/applications/${studentId}/status`, {
+        status,
+      });
+      setApplications((prev) => ({
+        ...prev,
+        [internshipId]: prev[internshipId].map((student) =>
+          student._id === studentId ? { ...student, status } : student
+        ),
+      }));
+      console.log("Application status updated:", response.data);
+    } catch (err) {
+      console.error("Error updating application status:", err);
     }
   };
 
@@ -120,26 +137,56 @@ const InternshipList = () => {
 
             {/* Applied Students Section */}
             <div className="text-gray-700 mt-6">
-  <h4 className="text-xl font-semibold">Applied Students:</h4>
-  {applications[internship._id] ? (
-    applications[internship._id].length > 0 ? (
-      <ul className="list-disc pl-6">
-        {applications[internship._id].map((student) => (
-          <li key={student._id} className="mb-2">
-            {/* Accessing name and email directly if student is populated */}
-            <p className="font-semibold">{student.name}</p>
-            <p className="text-gray-600">{student.email}</p>
-          </li>
-        ))}
-      </ul>
-    ) : (
-      <p>No students have applied for this internship yet.</p>
-    )
-  ) : (
-    <p>Click the button to fetch applications.</p>
-  )}
-</div>
-
+              <h4 className="text-xl font-semibold">Applied Students:</h4>
+              {applications[internship._id] ? (
+                applications[internship._id].length > 0 ? (
+                  <table className="min-w-full table-auto mt-4">
+                    <thead>
+                      <tr className="bg-gray-200">
+                        <th className="px-4 py-2 text-left">Username</th>
+                        <th className="px-4 py-2 text-left">Email</th>
+                        <th className="px-4 py-2 text-left">Applied Date</th>
+                        <th className="px-4 py-2 text-left">Resume</th>
+                        <th className="px-4 py-2 text-left">Status</th>
+                        <th className="px-4 py-2 text-left">Update Status</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {applications[internship._id].map((student) => (
+                        <tr key={student._id}>
+                          <td className="px-4 py-2">{student.userName}</td>
+                          <td className="px-4 py-2">{student.userEmail}</td>
+                          <td className="px-4 py-2">{new Date(student.appliedDate).toLocaleDateString()}</td>
+                          <td className="px-4 py-2">
+                            <a href={`/uploads/${student.resumeUrl}`} target="_blank" rel="noopener noreferrer">
+                              View Resume
+                            </a>
+                          </td>
+                          <td className="px-4 py-2">{student.status || "Pending"}</td>
+                          <td className="px-4 py-2">
+                            <select
+                              value={student.status || "Pending"}
+                              onChange={(e) =>
+                                updateApplicationStatus(internship._id, student._id, e.target.value)
+                              }
+                              className="border rounded px-2 py-1"
+                            >
+                              <option value="Pending">Pending</option>
+                              <option value="Approved">Approved</option>
+                              <option value="Rejected">Rejected</option>
+                            </select>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                ) : (
+                  <p>No students have applied for this internship yet.</p>
+                )
+              ) : (
+                <p>Click the button to fetch applications.</p>
+              )}
+            </div>
           </div>
         ))
       ) : (
@@ -150,6 +197,8 @@ const InternshipList = () => {
 };
 
 export default InternshipList;
+
+
 
 
 
