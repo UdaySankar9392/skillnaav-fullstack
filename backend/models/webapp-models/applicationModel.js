@@ -1,13 +1,16 @@
 const mongoose = require("mongoose");
 
 const applicationSchema = new mongoose.Schema({
-  studentId: { type: mongoose.Schema.Types.ObjectId, ref: "Userwebapp", required: true }, // Update the reference to Userwebapp
+  studentId: { type: mongoose.Schema.Types.ObjectId, ref: "Userwebapp", required: true },
   internshipId: { type: mongoose.Schema.Types.ObjectId, ref: "InternshipPostings", required: true },
   resumeUrl: { type: String, required: true },
-  status: { type: String, enum: ["Applied", "Under Review", "Accepted", "Rejected"], default: "Applied" },
+  status: { type: String, enum: ["Applied", "Under Review", "Accepted", "Rejected", "Viewed", "Pending"], default: "Applied" },
   appliedDate: { type: Date, default: Date.now },
+  userName: { type: String, required: true },
+  userEmail: { type: String, required: true },
+  jobTitle: { type: String, required: true },
 });
 
-const Application = mongoose.model("Application", applicationSchema);
+applicationSchema.index({ studentId: 1, internshipId: 1 }); // Index for optimized lookups
 
-module.exports = Application;
+module.exports = mongoose.model("Application", applicationSchema);

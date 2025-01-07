@@ -1,44 +1,37 @@
-const multer = require('multer');
-const path = require('path');
-const fs = require('fs');
+// multer.js
+const multer = require("multer");
+const path = require("path");
+const { CloudinaryStorage } = require("multer-storage-cloudinary");
+const cloudinary = require("../config/cloudinaryConfig");
 
-// Ensure the 'uploads' folder exists
-const uploadFolder = './uploads';
-if (!fs.existsSync(uploadFolder)) {
-  fs.mkdirSync(uploadFolder, { recursive: true });
-}
-
-// Configure multer storage
-const storage = multer.diskStorage({
-  destination: function (req, file, cb) {
-    cb(null, './uploads'); // Store files in the 'uploads' folder
-  },
-  filename: function (req, file, cb) {
-    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
-    cb(null, uniqueSuffix + path.extname(file.originalname)); // Generate unique filename
+// Set up Cloudinary storage
+const storage = new CloudinaryStorage({
+  cloudinary,
+  params: {
+    folder: "skillnaav_resumes",
+    allowed_formats: ["pdf", "doc", "docx"],
+    public_id: (req, file) => `${Date.now()}-${Math.round(Math.random() * 1e9)}`,
   },
 });
 
-// File type validation (allow only .pdf, .docx, .doc)
+// File filter function for multer
 const fileFilter = (req, file, cb) => {
   const allowedTypes = /pdf|docx|doc/;
-  const extname = allowedTypes.test(path.extname(file.originalname).toLowerCase());
-  const mimetype = allowedTypes.test(file.mimetype);
+  const isValid = allowedTypes.test(path.extname(file.originalname).toLowerCase()) &&
+allowedTypes.test(file.mimetype);
 
-  if (extname && mimetype) {
-    cb(null, true); // Accept file
+  if (isValid) {
+    return cb(null, true); // File is valid
   } else {
-    cb(new Error('Only .pdf, .doc, or .docx files are allowed.'));
+    return cb(new Error("Only .pdf, .doc, or .docx files are allowed.")); // Invalid file type
   }
 };
 
-// Create multer instance
+// Configure multer
 const upload = multer({
-  storage: storage,
-  fileFilter: fileFilter,
-  limits: {
-    fileSize: 5 * 1024 * 1024, // 5MB limit
-  },
+  storage,
+  fileFilter,
+  limits: { fileSize: 5 * 1024 * 1024 }, // 5 MB file size limit
 });
 
 module.exports = upload;

@@ -10,29 +10,30 @@ import {
 import { useTabContext } from "./UserHomePageContext/HomePageContext";
 
 const ApplyCards = ({ job, onBack }) => {
-  const { savedJobs, applications, saveJob, removeJob } = useTabContext();
+  const { savedJobs, saveJob, removeJob } = useTabContext();
   const [isApplied, setIsApplied] = useState(false);
   const [resume, setResume] = useState(null);
   const [isUploading, setIsUploading] = useState(false);
 
+  // Check if the job has already been applied
   useEffect(() => {
-    // Check if the current job has already been applied by the user from localStorage
     const appliedJobs = JSON.parse(localStorage.getItem("appliedJobs")) || [];
     setIsApplied(appliedJobs.some((appJob) => appJob.jobTitle === job.jobTitle));
   }, [job.jobTitle]);
 
+  // Handle file upload
   const handleFileChange = (event) => {
-    setResume(event.target.files[0]); // Save the selected file to state
+    setResume(event.target.files[0]);
   };
 
+  // Handle job application submission
   const handleApply = async () => {
-    if (isApplied) return; // Prevent multiple applications
+    if (isApplied) return;
     if (!resume) {
       alert("Please upload your resume before applying!");
       return;
     }
 
-    // Get student ID from localStorage or Firebase
     const userInfo = JSON.parse(localStorage.getItem("userInfo"));
     const studentId = userInfo ? userInfo._id : null;
 
@@ -44,50 +45,47 @@ const ApplyCards = ({ job, onBack }) => {
     setIsUploading(true);
 
     try {
-      // Prepare form data for the API request
       const formData = new FormData();
       formData.append("studentId", studentId);
-      formData.append("internshipId", job._id); // Assuming job._id is the internshipId
-      formData.append("resume", resume); // Ensure this matches the backend key 'resume'
+      formData.append("internshipId", job._id);
+      formData.append("resume", resume);
 
-      // Log the form data
-      console.log("Submitting application with the following data:");
-      console.log({
-        studentId,
-        internshipId: job._id,
-        resumeFile: resume.name,
-      });
-
-      // Send the form data to the backend API
       const apiResponse = await axios.post(
         "http://localhost:5000/api/applications/apply",
-        formData, 
+        formData,
         {
           headers: {
-            "Content-Type": "multipart/form-data", // Important for file uploads
+            "Content-Type": "multipart/form-data",
           },
         }
       );
 
       if (apiResponse.status === 201) {
-        // Mark as applied if the submission is successful
         setIsApplied(true);
-        // Save applied job to localStorage
         const appliedJobs = JSON.parse(localStorage.getItem("appliedJobs")) || [];
         appliedJobs.push({ jobTitle: job.jobTitle, internshipId: job._id });
         localStorage.setItem("appliedJobs", JSON.stringify(appliedJobs));
         alert("Application submitted successfully!");
       } else {
-        alert("Failed to submit application to the server.");
+        alert("Failed to submit application. Please try again later.");
       }
     } catch (error) {
-      console.error("Error applying for the job:", error);
-      alert("Failed to submit your application. Please try again.");
+      if (error.response) {
+        // Server response error
+        alert(error.response?.data?.message || "Failed to submit your application. Please try again.");
+      } else if (error.request) {
+        // No response from server
+        alert("No response from server. Please check your network connection.");
+      } else {
+        // Error in request setup
+        alert("Error during application submission. Please try again.");
+      }
     } finally {
       setIsUploading(false);
     }
   };
 
+  // Toggle save job
   const toggleSaveJob = () => {
     if (savedJobs.some((savedJob) => savedJob.jobTitle === job.jobTitle)) {
       removeJob(job);
@@ -148,9 +146,7 @@ const ApplyCards = ({ job, onBack }) => {
             </div>
             <button
               onClick={handleApply}
-              className={`text-white mt-4 ${
-                isApplied ? "bg-green-500" : "bg-purple-500 hover:bg-purple-600"
-              } px-4 py-2 rounded-full font-semibold`}
+              className={`text-white mt-4 ${isApplied ? "bg-green-500" : "bg-purple-500 hover:bg-purple-600"} px-4 py-2 rounded-full font-semibold`}
               disabled={isApplied || isUploading}
             >
               {isApplied ? "Applied" : isUploading ? "Uploading..." : "Apply now"}

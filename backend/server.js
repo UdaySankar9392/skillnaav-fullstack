@@ -58,7 +58,6 @@ if (process.env.NODE_ENV === "production") {
 // Error Handling Middleware
 app.use(notFound);
 app.use(errorHandler);
-
 // Start the server
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
