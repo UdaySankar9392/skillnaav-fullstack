@@ -11,7 +11,7 @@ const fs = require("fs");
 // Controller to handle applying for an internship (using multer for file uploads)
 const applyForInternship = async (req, res) => {
   const { studentId, internshipId } = req.body;
-  const resumeFile = req.file; // This will contain file info after multer processes it
+  const resumeFile = req.file;
 
   if (!resumeFile) {
     return res.status(400).json({
@@ -20,7 +20,6 @@ const applyForInternship = async (req, res) => {
   }
 
   try {
-    // Fetch the student and internship details to get user name, email, and internship job title
     const student = await Userwebapp.findById(studentId);
     const internship = await InternshipPosting.findById(internshipId);
 
@@ -30,36 +29,34 @@ const applyForInternship = async (req, res) => {
       });
     }
 
-    // Construct the file path to store in the database
-    const resumePath = path.join(__dirname, "..", "uploads", resumeFile.filename);
+    const resumeUrl = resumeFile.location; // S3 file URL
 
-    // Create a new application document with the studentId, internshipId, resume path, and application date
     const newApplication = new Application({
       studentId,
       internshipId,
-      resumeUrl: resumePath, // Store the local file path in the database
-      status: "Applied", // Default status when applied
-      appliedDate: new Date(), // Store the application date
-      userName: student.name, // Add the student's name
-      userEmail: student.email, // Add the student's email
-      jobTitle: internship.jobTitle, // Add the internship's job title
+      resumeUrl,
+      status: "Applied",
+      appliedDate: new Date(),
+      userName: student.name,
+      userEmail: student.email,
+      jobTitle: internship.jobTitle,
     });
 
-    // Save the application in the database
     await newApplication.save();
 
     res.status(201).json({
       message: "Application submitted successfully!",
-      application: newApplication, // Include the new application data
+      application: newApplication,
     });
   } catch (error) {
     console.error("Error during application submission:", error.message);
     res.status(500).json({
       message: "Error applying for the internship.",
-      error: error.message, // Provide error details for debugging
+      error: error.message,
     });
   }
 };
+
 
 
 // Controller to get all students who applied for a specific internship

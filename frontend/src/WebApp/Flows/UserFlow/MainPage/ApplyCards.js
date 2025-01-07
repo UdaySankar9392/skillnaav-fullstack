@@ -1,12 +1,6 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
-import {
-  FaHeart,
-  FaShareAlt,
-  FaMapMarkerAlt,
-  FaBriefcase,
-  FaDollarSign,
-} from "react-icons/fa";
+import { FaHeart, FaShareAlt, FaMapMarkerAlt, FaBriefcase, FaDollarSign } from "react-icons/fa";
 import { useTabContext } from "./UserHomePageContext/HomePageContext";
 
 const ApplyCards = ({ job, onBack }) => {
@@ -22,17 +16,21 @@ const ApplyCards = ({ job, onBack }) => {
   }, [job.jobTitle]);
 
   const handleFileChange = (event) => {
-    setResume(event.target.files[0]); // Save the selected file to state
+    const file = event.target.files[0];
+    if (file.size > 5 * 1024 * 1024) {
+      alert("File size should not exceed 5MB.");
+    } else {
+      setResume(file);
+    }
   };
 
   const handleApply = async () => {
-    if (isApplied) return; // Prevent multiple applications
+    if (isApplied) return;
     if (!resume) {
       alert("Please upload your resume before applying!");
       return;
     }
 
-    // Get student ID from localStorage or Firebase
     const userInfo = JSON.parse(localStorage.getItem("userInfo"));
     const studentId = userInfo ? userInfo._id : null;
 
@@ -44,35 +42,23 @@ const ApplyCards = ({ job, onBack }) => {
     setIsUploading(true);
 
     try {
-      // Prepare form data for the API request
       const formData = new FormData();
       formData.append("studentId", studentId);
-      formData.append("internshipId", job._id); // Assuming job._id is the internshipId
-      formData.append("resume", resume); // Ensure this matches the backend key 'resume'
+      formData.append("internshipId", job._id);
+      formData.append("resume", resume);
 
-      // Log the form data
-      console.log("Submitting application with the following data:");
-      console.log({
-        studentId,
-        internshipId: job._id,
-        resumeFile: resume.name,
-      });
-
-      // Send the form data to the backend API
       const apiResponse = await axios.post(
         "http://localhost:5000/api/applications/apply",
-        formData, 
+        formData,
         {
           headers: {
-            "Content-Type": "multipart/form-data", // Important for file uploads
+            "Content-Type": "multipart/form-data",
           },
         }
       );
 
       if (apiResponse.status === 201) {
-        // Mark as applied if the submission is successful
         setIsApplied(true);
-        // Save applied job to localStorage
         const appliedJobs = JSON.parse(localStorage.getItem("appliedJobs")) || [];
         appliedJobs.push({ jobTitle: job.jobTitle, internshipId: job._id });
         localStorage.setItem("appliedJobs", JSON.stringify(appliedJobs));
