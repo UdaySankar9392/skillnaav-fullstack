@@ -1,12 +1,19 @@
 import React, { useState } from "react";
 import { Formik, Form, Field, ErrorMessage } from "formik";
 import { useNavigate } from "react-router-dom";
+<<<<<<< HEAD
 import { account, googleOAuth } from "../../../../config";
+=======
+import { auth, googleAuthProvider, signInWithPopup } from "../../../../config/Firebase"; // Adjust the import path if needed
+>>>>>>> uday8-1-25
 import * as Yup from "yup";
 import { EyeIcon, EyeSlashIcon } from "@heroicons/react/24/solid";
 import { Link } from "react-router-dom";
 import createAccountImage from "../../../../assets-webapp/login-image.png"; // Adjust the path if needed
+<<<<<<< HEAD
 import GoogleIcon from "../../../../assets-webapp/Google-icon.png";
+=======
+>>>>>>> uday8-1-25
 import { FcGoogle } from "react-icons/fc";
 import axios from "axios";
 
@@ -41,16 +48,24 @@ const UserCreateAccount = () => {
         setSubmitting(false);
         return;
       }
+<<<<<<< HEAD
   
       // Clear any previous data in localStorage
       localStorage.removeItem("userFormData");
   
+=======
+
+      // Clear any previous data in localStorage
+      localStorage.removeItem("userFormData");
+
+>>>>>>> uday8-1-25
       // Navigate to UserProfileForm with user data
       navigate("/user-profile-form", { state: { userData: values } });
     } catch (error) {
       setErrorMessage("Error checking email.");
       setSubmitting(false);
     }
+<<<<<<< HEAD
   };
   
 
@@ -60,7 +75,49 @@ const UserCreateAccount = () => {
       "http://localhost:3000/user-main-page",
       "http://localhost:3000"
     );
+=======
+>>>>>>> uday8-1-25
   };
+
+  const handleGoogleSignIn = async () => {
+    try {
+      // Enforce the account picker popup by adding a custom parameter
+      googleAuthProvider.setCustomParameters({
+        prompt: "select_account", // Forces the account picker to appear
+      });
+  
+      // Trigger the Google sign-in popup
+      const result = await signInWithPopup(auth, googleAuthProvider);
+  
+      const user = result.user;
+  
+      if (user) {
+        console.log("User Info:", user); // Debug user info
+  
+        // Get the ID token for further use
+        const idToken = await user.getIdToken();
+  
+        // Proceed to the profile form with the user data
+        navigate("/google-user-profileform", {
+          state: {
+            userData: {
+              name: user.displayName,
+              email: user.email,
+              googleId: user.uid, // Rename 'uid' to 'googleId' explicitly
+              token: idToken, // Pass the token
+            },
+          },
+        });
+      }
+    } catch (error) {
+      console.error("Google Sign-In Error:", error.message);
+      setErrorMessage("Failed to sign in with Google. Please try again.");
+    }
+  };
+  
+  
+  
+  
 
   return (
     <div className="flex flex-col lg:flex-row min-h-screen font-poppins">

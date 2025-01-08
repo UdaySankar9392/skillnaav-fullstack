@@ -3,10 +3,10 @@ import { Formik, Form, Field, ErrorMessage } from "formik";
 import * as Yup from "yup";
 import { useNavigate, Link } from "react-router-dom";
 import loginImage from "../../../../assets-webapp/login-image.png";
-import axios from "axios";
 import Loading from "../../../Warnings/Loading/Loading";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faEye, faEyeSlash } from "@fortawesome/free-solid-svg-icons";
+<<<<<<< HEAD
 import { Client, Account } from "appwrite";
 import { FcGoogle } from "react-icons/fc";
 import { useGoogleLogin } from "@react-oauth/google";
@@ -18,6 +18,13 @@ client
   .setProject("6715ee9b0034e652fb17"); // Replace with your actual project ID
 
 const account = new Account(client);
+=======
+import { FcGoogle } from "react-icons/fc";
+import ForgotPasswordModal from "../SignUpLogin/UserforgotPassword"; 
+import { auth, googleAuthProvider } from "../../../../config/Firebase"; // Firebase setup
+import { signInWithPopup } from "firebase/auth";
+import axios from "axios";
+>>>>>>> uday8-1-25
 
 const validationSchema = Yup.object({
   email: Yup.string().email("Invalid email address").required("Required"),
@@ -29,7 +36,42 @@ const UserLogin = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+<<<<<<< HEAD
   const [isModalOpen, setIsModalOpen] = useState(false); // State to control modal visibility
+=======
+  const [isModalOpen, setIsModalOpen] = useState(false);
+
+  const handleGoogleSignIn = async () => {
+    setLoading(true);
+    setError("");
+    try {
+      // Ensure account selection by setting `prompt`
+      googleAuthProvider.setCustomParameters({ prompt: "select_account" });
+  
+      // Open the Google sign-in popup
+      const result = await signInWithPopup(auth, googleAuthProvider);
+      const user = result.user;
+  
+      // Obtain user token
+      const token = await user.getIdToken();
+  
+      // Store token and user info in localStorage
+      localStorage.setItem("userToken", JSON.stringify(token));
+      localStorage.setItem("userInfo", JSON.stringify(user));
+  
+      console.log("Google user:", user);
+  
+      // Navigate to the main page
+      navigate("/user-main-page");
+    } catch (err) {
+      console.error("Google sign-in error:", err);
+      setError("Google sign-in failed. Please try again.");
+    } finally {
+      setLoading(false);
+    }
+  };
+  
+>>>>>>> uday8-1-25
 
   const handleSubmit = async (values, { setSubmitting }) => {
     setError("");
@@ -40,6 +82,7 @@ const UserLogin = () => {
           "Content-type": "application/json",
         },
       };
+<<<<<<< HEAD
       const { data } = await axios.post("/api/users/login", values, config);
       
       // Store token in localStorage with the name 'userToken'
@@ -49,16 +92,42 @@ const UserLogin = () => {
       
       // Log the token to the console
       console.log("User token stored in localStorage:", token);
+=======
+      console.log("Sending login request with values:", values); // Debug
+      const { data } = await axios.post("/api/users/login", values, config);
+  
+      if (!data || !data.token) {
+        throw new Error("Invalid response from server");
+      }
+  
+      localStorage.clear(); // Clear existing tokens
+      localStorage.setItem("userToken", JSON.stringify(data.token));
+      localStorage.setItem("userInfo", JSON.stringify(data));
+  
+      console.log("User token stored in localStorage:", data.token); // Log the token here
+      console.log("User info:", data); // Log the user info here
+>>>>>>> uday8-1-25
   
       setLoading(false);
       navigate("/user-main-page");
     } catch (err) {
+<<<<<<< HEAD
       setLoading(false);
       setError(err.response && err.response.data.message ? err.response.data.message : "Something went wrong");
+=======
+      console.error("Login error:", err.response || err.message); // Debug
+      setError(
+        err.response && err.response.data && err.response.data.message
+          ? err.response.data.message
+          : "Something went wrong"
+      );
+      setLoading(false);
+>>>>>>> uday8-1-25
       setSubmitting(false);
     }
   };
   
+<<<<<<< HEAD
   // const login = useGoogleLogin({
   //   onSuccess: async (tokenResponse) => {
   //     try {
@@ -87,6 +156,9 @@ const UserLogin = () => {
   // });
 
   const login = () => {};
+=======
+  
+>>>>>>> uday8-1-25
 
   return (
     <div className="flex flex-col lg:flex-row min-h-screen font-poppins">
@@ -125,7 +197,6 @@ const UserLogin = () => {
             >
               {({ isSubmitting }) => (
                 <Form className="space-y-4">
-                  {/* Email Field */}
                   <div className="relative">
                     <Field
                       type="email"
@@ -140,7 +211,6 @@ const UserLogin = () => {
                     />
                   </div>
 
-                  {/* Password Field */}
                   <div className="relative">
                     <Field
                       type={showPassword ? "text" : "password"}
@@ -148,7 +218,10 @@ const UserLogin = () => {
                       placeholder="Enter your password"
                       className="w-full p-4 pr-16 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-400"
                     />
+<<<<<<< HEAD
 
+=======
+>>>>>>> uday8-1-25
                     <button
                       type="button"
                       className="absolute inset-y-0 right-4 mt-3 flex items-center justify-center h-full text-gray-600"
@@ -159,7 +232,10 @@ const UserLogin = () => {
                         size="lg"
                       />
                     </button>
+<<<<<<< HEAD
 
+=======
+>>>>>>> uday8-1-25
                     <ErrorMessage
                       name="password"
                       component="div"
@@ -167,11 +243,18 @@ const UserLogin = () => {
                     />
                   </div>
 
+<<<<<<< HEAD
                   {/* Forgot Password Button */}
                   <div className="flex justify-end mb-6">
                     <button
                       type="button"
                       onClick={() => setIsModalOpen(true)} // Open the modal
+=======
+                  <div className="flex justify-end mb-6">
+                    <button
+                      type="button"
+                      onClick={() => setIsModalOpen(true)}
+>>>>>>> uday8-1-25
                       className="text-sm font-medium text-teal-500 hover:text-teal-700 transition duration-150 ease-in-out"
                     >
                       Forgot password?
@@ -203,6 +286,18 @@ const UserLogin = () => {
             <span>Sign in with Google</span>
           </button>
 
+<<<<<<< HEAD
+=======
+          {/* Google Sign-In Button */}
+          <button
+            onClick={handleGoogleSignIn}
+            className="w-full bg-red-500 text-white p-3 rounded-lg hover:bg-red-600 mb-4 flex items-center justify-center space-x-2"
+          >
+            <FcGoogle className="text-xl" />
+            <span>Sign in with Google</span>
+          </button>
+
+>>>>>>> uday8-1-25
           {/* Sign Up Button */}
           <div className="flex justify-center mt-4">
             <p className="text-sm text-gray-600">
