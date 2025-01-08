@@ -24,12 +24,8 @@
     "appwrite": "^16.0.2",
     "axios": "^1.7.2",
     "date-fns": "^4.1.0",
-<<<<<<< HEAD
-    "firebase": "^10.12.2",
-=======
     "firebase": "^11.1.0",
     "firebase-admin": "^13.0.1",
->>>>>>> uday8-1-25
     "formik": "^2.4.6",
     "framer-motion": "^11.2.10",
     "hide-scrollbar": "^0.0.2",

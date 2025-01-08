@@ -1,29 +1,3 @@
-<<<<<<< HEAD
-import React, { useState } from "react";
-import axios from "axios";
-import {
-  FaHeart,
-  FaShareAlt,
-  FaMapMarkerAlt,
-  FaBriefcase,
-  FaDollarSign,
-} from "react-icons/fa";
-import { useTabContext } from "./UserHomePageContext/HomePageContext";
-
-const ApplyCards = ({ job, onBack }) => {
-  const { savedJobs, applications, saveJob, removeJob } = useTabContext();
-  const [isApplied, setIsApplied] = useState(
-    applications.some((appJob) => appJob.jobTitle === job.jobTitle)
-  );
-  const [resume, setResume] = useState(null);
-
-  const handleFileChange = (event) => {
-    setResume(event.target.files[0]); // Save the selected file to state
-  };
-
-  const handleApply = async () => {
-    if (isApplied) return; // Prevent multiple applications
-=======
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { FaHeart, FaShareAlt, FaMapMarkerAlt, FaBriefcase, FaDollarSign } from "react-icons/fa";
@@ -52,28 +26,11 @@ const ApplyCards = ({ job, onBack }) => {
 
   const handleApply = async () => {
     if (isApplied) return;
->>>>>>> uday8-1-25
     if (!resume) {
       alert("Please upload your resume before applying!");
       return;
     }
 
-<<<<<<< HEAD
-    const formData = new FormData();
-    formData.append("resume", resume); // Add file to FormData
-    formData.append("studentApplied", true);
-
-    try {
-      const response = await axios.put(`/api/interns/${job._id}`, formData, {
-        headers: {
-          "Content-Type": "multipart/form-data",
-        },
-      });
-
-      if (response.status === 200) {
-        setIsApplied(true);
-        alert("Application submitted successfully!");
-=======
     const userInfo = JSON.parse(localStorage.getItem("userInfo"));
     const studentId = userInfo ? userInfo._id : null;
 
@@ -108,16 +65,12 @@ const ApplyCards = ({ job, onBack }) => {
         alert("Application submitted successfully!");
       } else {
         alert("Failed to submit application to the server.");
->>>>>>> uday8-1-25
       }
     } catch (error) {
       console.error("Error applying for the job:", error);
       alert("Failed to submit your application. Please try again.");
-<<<<<<< HEAD
-=======
     } finally {
       setIsUploading(false);
->>>>>>> uday8-1-25
     }
   };
 
@@ -148,29 +101,17 @@ const ApplyCards = ({ job, onBack }) => {
             <h2 className="text-xl md:text-2xl font-semibold text-gray-800">
               {job.jobTitle || "Job title not available"}
             </h2>
-<<<<<<< HEAD
-            <p className="text-gray-500">{job.companyName}</p>
-            <div className="flex items-center text-gray-500 mt-2 text-sm md:text-base">
-              <FaMapMarkerAlt className="mr-2" />
-              <p>
-                {job.location} • {job.jobType || "Not specified"}
-=======
             <p className="text-gray-500">{job.companyName || "Company name not available"}</p>
             <div className="flex items-center text-gray-500 mt-2 text-sm md:text-base">
               <FaMapMarkerAlt className="mr-2" />
               <p>
                 {job.location || "Location not specified"} • {job.jobType || "Not specified"}
->>>>>>> uday8-1-25
               </p>
             </div>
             <div className="flex items-center text-gray-500 mt-2 text-sm md:text-base">
               <FaBriefcase className="mr-2" />
               <p>
-<<<<<<< HEAD
-                From {new Date(job.startDate).toLocaleDateString()} to{" "}
-=======
                 From {new Date(job.startDate).toLocaleDateString() || "Not specified"} to{" "}
->>>>>>> uday8-1-25
                 {job.endDateOrDuration || "Not specified"}
               </p>
             </div>
@@ -239,19 +180,10 @@ const ApplyCards = ({ job, onBack }) => {
       </div>
 
       <div className="mt-6">
-<<<<<<< HEAD
-        <h3 className="text-lg md:text-xl font-semibold text-gray-800 mb-2">
-          Contact Information
-        </h3>
-        <p className="text-gray-600">
-          {job.contactInfo?.name || "Not provided"},{" "}
-          {job.contactInfo?.email || "Not provided"},{" "}
-=======
         <h3 className="text-lg md:text-xl font-semibold text-gray-800 mb-2">Contact Information</h3>
         <p className="text-gray-600">
           {job.contactInfo?.name || "Not provided"},
           {job.contactInfo?.email || "Not provided"},
->>>>>>> uday8-1-25
           {job.contactInfo?.phone || "Not provided"}
         </p>
       </div>

@@ -29,8 +29,6 @@ const Home = () => {
 
     fetchJobData();
   }, []);
-<<<<<<< HEAD
-=======
 
   const calculatePostedTime = (date) => {
     const postedDate = new Date(date);
@@ -52,7 +50,6 @@ const Home = () => {
       return `${differenceInDays}d ago`;
     }
   };
->>>>>>> uday8-1-25
 
   const handleViewDetails = (job) => {
     setSelectedJob(job);
@@ -123,11 +120,7 @@ const Home = () => {
                     <div>
                       <h3 className="text-xl font-semibold">{job.jobTitle}</h3>
                       <p className="text-gray-600">
-<<<<<<< HEAD
-                        {job.companyName} • {index + 1}d ago
-=======
                         {job.companyName} • {calculatePostedTime(job.createdAt)}
->>>>>>> uday8-1-25
                       </p>
                     </div>
                   </div>
