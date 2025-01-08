@@ -20,14 +20,6 @@ const YourJobPosts = () => {
   // Search state
   const [searchQuery, setSearchQuery] = useState("");
 
-<<<<<<< HEAD
-  useEffect(() => {
-    const fetchInternships = async () => {
-      try {
-        const response = await axios.get("/api/interns");
-        console.log("Fetched internships:", response.data);
-        setInternships(response.data);
-=======
   const partnerId = localStorage.getItem("partnerId");
 
   useEffect(() => {
@@ -40,21 +32,14 @@ const YourJobPosts = () => {
         } else {
           console.error("Partner ID not found");
         }
->>>>>>> uday8-1-25
       } catch (error) {
         console.error("Error fetching internships:", error);
       }
     };
-<<<<<<< HEAD
-    fetchInternships();
-  }, []);
-
-=======
   
     fetchInternships();
   }, [partnerId]);
   
->>>>>>> uday8-1-25
 
 
   const handleReadMore = (internship) => {

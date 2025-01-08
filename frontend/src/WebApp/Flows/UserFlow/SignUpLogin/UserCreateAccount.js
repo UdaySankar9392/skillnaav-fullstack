@@ -1,19 +1,11 @@
 import React, { useState } from "react";
 import { Formik, Form, Field, ErrorMessage } from "formik";
 import { useNavigate } from "react-router-dom";
-<<<<<<< HEAD
-import { account, googleOAuth } from "../../../../config";
-=======
 import { auth, googleAuthProvider, signInWithPopup } from "../../../../config/Firebase"; // Adjust the import path if needed
->>>>>>> uday8-1-25
 import * as Yup from "yup";
 import { EyeIcon, EyeSlashIcon } from "@heroicons/react/24/solid";
 import { Link } from "react-router-dom";
 import createAccountImage from "../../../../assets-webapp/login-image.png"; // Adjust the path if needed
-<<<<<<< HEAD
-import GoogleIcon from "../../../../assets-webapp/Google-icon.png";
-=======
->>>>>>> uday8-1-25
 import { FcGoogle } from "react-icons/fc";
 import axios from "axios";
 
@@ -48,35 +40,16 @@ const UserCreateAccount = () => {
         setSubmitting(false);
         return;
       }
-<<<<<<< HEAD
-  
-      // Clear any previous data in localStorage
-      localStorage.removeItem("userFormData");
-  
-=======
 
       // Clear any previous data in localStorage
       localStorage.removeItem("userFormData");
 
->>>>>>> uday8-1-25
       // Navigate to UserProfileForm with user data
       navigate("/user-profile-form", { state: { userData: values } });
     } catch (error) {
       setErrorMessage("Error checking email.");
       setSubmitting(false);
     }
-<<<<<<< HEAD
-  };
-  
-
-  const handleGoogleSignIn = () => {
-    account.createOAuth2Session(
-      "google",
-      "http://localhost:3000/user-main-page",
-      "http://localhost:3000"
-    );
-=======
->>>>>>> uday8-1-25
   };
 
   const handleGoogleSignIn = async () => {

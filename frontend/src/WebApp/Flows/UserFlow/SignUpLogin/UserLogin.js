@@ -6,25 +6,11 @@ import loginImage from "../../../../assets-webapp/login-image.png";
 import Loading from "../../../Warnings/Loading/Loading";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faEye, faEyeSlash } from "@fortawesome/free-solid-svg-icons";
-<<<<<<< HEAD
-import { Client, Account } from "appwrite";
-import { FcGoogle } from "react-icons/fc";
-import { useGoogleLogin } from "@react-oauth/google";
-import ForgotPasswordModal from "../SignUpLogin/UserforgotPassword"; // Import the modal
-
-const client = new Client();
-client
-  .setEndpoint("https://cloud.appwrite.io/v1") // Replace with your Appwrite endpoint
-  .setProject("6715ee9b0034e652fb17"); // Replace with your actual project ID
-
-const account = new Account(client);
-=======
 import { FcGoogle } from "react-icons/fc";
 import ForgotPasswordModal from "../SignUpLogin/UserforgotPassword"; 
 import { auth, googleAuthProvider } from "../../../../config/Firebase"; // Firebase setup
 import { signInWithPopup } from "firebase/auth";
 import axios from "axios";
->>>>>>> uday8-1-25
 
 const validationSchema = Yup.object({
   email: Yup.string().email("Invalid email address").required("Required"),
@@ -36,9 +22,6 @@ const UserLogin = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-<<<<<<< HEAD
-  const [isModalOpen, setIsModalOpen] = useState(false); // State to control modal visibility
-=======
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   const handleGoogleSignIn = async () => {
@@ -71,7 +54,6 @@ const UserLogin = () => {
     }
   };
   
->>>>>>> uday8-1-25
 
   const handleSubmit = async (values, { setSubmitting }) => {
     setError("");
@@ -82,17 +64,6 @@ const UserLogin = () => {
           "Content-type": "application/json",
         },
       };
-<<<<<<< HEAD
-      const { data } = await axios.post("/api/users/login", values, config);
-      
-      // Store token in localStorage with the name 'userToken'
-      const token = data.token;
-      localStorage.setItem("userToken", JSON.stringify(token)); // Store token as 'userToken'
-      localStorage.setItem("userInfo", JSON.stringify(data)); // Store user info if needed
-      
-      // Log the token to the console
-      console.log("User token stored in localStorage:", token);
-=======
       console.log("Sending login request with values:", values); // Debug
       const { data } = await axios.post("/api/users/login", values, config);
   
@@ -106,15 +77,10 @@ const UserLogin = () => {
   
       console.log("User token stored in localStorage:", data.token); // Log the token here
       console.log("User info:", data); // Log the user info here
->>>>>>> uday8-1-25
   
       setLoading(false);
       navigate("/user-main-page");
     } catch (err) {
-<<<<<<< HEAD
-      setLoading(false);
-      setError(err.response && err.response.data.message ? err.response.data.message : "Something went wrong");
-=======
       console.error("Login error:", err.response || err.message); // Debug
       setError(
         err.response && err.response.data && err.response.data.message
@@ -122,43 +88,11 @@ const UserLogin = () => {
           : "Something went wrong"
       );
       setLoading(false);
->>>>>>> uday8-1-25
       setSubmitting(false);
     }
   };
   
-<<<<<<< HEAD
-  // const login = useGoogleLogin({
-  //   onSuccess: async (tokenResponse) => {
-  //     try {
-  //       // Make a request to get user information from Google
-  //       const response = await axios.get(
-  //         "https://www.googleapis.com/oauth2/v3/userinfo",
-  //         {
-  //           headers: {
-  //             Authorization: `Bearer ${tokenResponse.access_token}`,
-  //           },
-  //         }
-  //       );
-
-  //       // Log or use the user information
-  //       console.log(response.data);
-
-  //       // Navigate to 'user-main-page' after successful authentication
-  //       navigate("/user-main-page");
-  //     } catch (error) {
-  //       console.error("Error fetching user info:", error);
-  //     }
-  //   },
-  //   onError: (error) => {
-  //     console.error("Login failed:", error);
-  //   },
-  // });
-
-  const login = () => {};
-=======
   
->>>>>>> uday8-1-25
 
   return (
     <div className="flex flex-col lg:flex-row min-h-screen font-poppins">
@@ -218,10 +152,6 @@ const UserLogin = () => {
                       placeholder="Enter your password"
                       className="w-full p-4 pr-16 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-400"
                     />
-<<<<<<< HEAD
-
-=======
->>>>>>> uday8-1-25
                     <button
                       type="button"
                       className="absolute inset-y-0 right-4 mt-3 flex items-center justify-center h-full text-gray-600"
@@ -232,10 +162,6 @@ const UserLogin = () => {
                         size="lg"
                       />
                     </button>
-<<<<<<< HEAD
-
-=======
->>>>>>> uday8-1-25
                     <ErrorMessage
                       name="password"
                       component="div"
@@ -243,18 +169,10 @@ const UserLogin = () => {
                     />
                   </div>
 
-<<<<<<< HEAD
-                  {/* Forgot Password Button */}
-                  <div className="flex justify-end mb-6">
-                    <button
-                      type="button"
-                      onClick={() => setIsModalOpen(true)} // Open the modal
-=======
                   <div className="flex justify-end mb-6">
                     <button
                       type="button"
                       onClick={() => setIsModalOpen(true)}
->>>>>>> uday8-1-25
                       className="text-sm font-medium text-teal-500 hover:text-teal-700 transition duration-150 ease-in-out"
                     >
                       Forgot password?
@@ -277,17 +195,15 @@ const UserLogin = () => {
             <span className="px-3 text-gray-500">OR</span>
             <hr className="w-full border-gray-300" />
           </div>
-          {/* Google Sign-In Button */}
+          {/* Google Sign-In Button
           <button
             onClick={() => login()}
             className="w-full bg-red-500 text-white p-3 rounded-lg hover:bg-red-600 mb-4 flex items-center justify-center space-x-2"
           >
             <FcGoogle className="text-xl" />
             <span>Sign in with Google</span>
-          </button>
+          </button> */}
 
-<<<<<<< HEAD
-=======
           {/* Google Sign-In Button */}
           <button
             onClick={handleGoogleSignIn}
@@ -297,7 +213,6 @@ const UserLogin = () => {
             <span>Sign in with Google</span>
           </button>
 
->>>>>>> uday8-1-25
           {/* Sign Up Button */}
           <div className="flex justify-center mt-4">
             <p className="text-sm text-gray-600">
