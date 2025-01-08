@@ -158,10 +158,11 @@ const InternshipList = () => {
                           <td className="px-4 py-2">{student.userEmail}</td>
                           <td className="px-4 py-2">{new Date(student.appliedDate).toLocaleDateString()}</td>
                           <td className="px-4 py-2">
-                            <a href={`/uploads/${student.resumeUrl}`} target="_blank" rel="noopener noreferrer">
-                              View Resume
-                            </a>
-                          </td>
+  <a href={student.resumeUrl} target="_blank" rel="noopener noreferrer">
+    View Resume
+  </a>
+</td>
+
                           <td className="px-4 py-2">{student.status || "Pending"}</td>
                           <td className="px-4 py-2">
                             <select
