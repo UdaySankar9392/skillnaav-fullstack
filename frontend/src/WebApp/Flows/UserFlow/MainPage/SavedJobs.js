@@ -62,7 +62,7 @@ const SavedJobs = () => {
                   <FontAwesomeIcon icon={faClock} /> {job.duration}
                 </p>
                 <p>
-                  <FontAwesomeIcon icon={faDollarSign} /> {job.salary}
+                  <FontAwesomeIcon icon={faDollarSign} /> {job.salaryDetails}
                 </p>
               </div>
               <div className="flex items-center">

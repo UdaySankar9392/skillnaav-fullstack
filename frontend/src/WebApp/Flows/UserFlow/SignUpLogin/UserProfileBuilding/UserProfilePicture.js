@@ -47,7 +47,7 @@ const UserProfilePicture = () => {
       if (response.status === 201) {
         // Clear localStorage after successful submission
         localStorage.removeItem("userProfileData");
-        navigate("/user-main-page");
+        navigate("/user/login");
       }
     } catch (error) {
       console.error("Error submitting form:", error);

@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 import React, { useState } from "react";
 import axios from "axios";
 import {
@@ -22,11 +23,42 @@ const ApplyCards = ({ job, onBack }) => {
 
   const handleApply = async () => {
     if (isApplied) return; // Prevent multiple applications
+=======
+import React, { useState, useEffect } from "react";
+import axios from "axios";
+import { FaHeart, FaShareAlt, FaMapMarkerAlt, FaBriefcase, FaDollarSign } from "react-icons/fa";
+import { useTabContext } from "./UserHomePageContext/HomePageContext";
+
+const ApplyCards = ({ job, onBack }) => {
+  const { savedJobs, applications, saveJob, removeJob } = useTabContext();
+  const [isApplied, setIsApplied] = useState(false);
+  const [resume, setResume] = useState(null);
+  const [isUploading, setIsUploading] = useState(false);
+
+  useEffect(() => {
+    // Check if the current job has already been applied by the user from localStorage
+    const appliedJobs = JSON.parse(localStorage.getItem("appliedJobs")) || [];
+    setIsApplied(appliedJobs.some((appJob) => appJob.jobTitle === job.jobTitle));
+  }, [job.jobTitle]);
+
+  const handleFileChange = (event) => {
+    const file = event.target.files[0];
+    if (file.size > 5 * 1024 * 1024) {
+      alert("File size should not exceed 5MB.");
+    } else {
+      setResume(file);
+    }
+  };
+
+  const handleApply = async () => {
+    if (isApplied) return;
+>>>>>>> uday8-1-25
     if (!resume) {
       alert("Please upload your resume before applying!");
       return;
     }
 
+<<<<<<< HEAD
     const formData = new FormData();
     formData.append("resume", resume); // Add file to FormData
     formData.append("studentApplied", true);
@@ -41,10 +73,51 @@ const ApplyCards = ({ job, onBack }) => {
       if (response.status === 200) {
         setIsApplied(true);
         alert("Application submitted successfully!");
+=======
+    const userInfo = JSON.parse(localStorage.getItem("userInfo"));
+    const studentId = userInfo ? userInfo._id : null;
+
+    if (!studentId) {
+      alert("Student ID not found. Please log in.");
+      return;
+    }
+
+    setIsUploading(true);
+
+    try {
+      const formData = new FormData();
+      formData.append("studentId", studentId);
+      formData.append("internshipId", job._id);
+      formData.append("resume", resume);
+
+      const apiResponse = await axios.post(
+        "http://localhost:5000/api/applications/apply",
+        formData,
+        {
+          headers: {
+            "Content-Type": "multipart/form-data",
+          },
+        }
+      );
+
+      if (apiResponse.status === 201) {
+        setIsApplied(true);
+        const appliedJobs = JSON.parse(localStorage.getItem("appliedJobs")) || [];
+        appliedJobs.push({ jobTitle: job.jobTitle, internshipId: job._id });
+        localStorage.setItem("appliedJobs", JSON.stringify(appliedJobs));
+        alert("Application submitted successfully!");
+      } else {
+        alert("Failed to submit application to the server.");
+>>>>>>> uday8-1-25
       }
     } catch (error) {
       console.error("Error applying for the job:", error);
       alert("Failed to submit your application. Please try again.");
+<<<<<<< HEAD
+=======
+    } finally {
+      setIsUploading(false);
+>>>>>>> uday8-1-25
     }
   };
 
@@ -73,19 +146,31 @@ const ApplyCards = ({ job, onBack }) => {
           )}
           <div>
             <h2 className="text-xl md:text-2xl font-semibold text-gray-800">
-              {job.jobTitle}
+              {job.jobTitle || "Job title not available"}
             </h2>
+<<<<<<< HEAD
             <p className="text-gray-500">{job.companyName}</p>
             <div className="flex items-center text-gray-500 mt-2 text-sm md:text-base">
               <FaMapMarkerAlt className="mr-2" />
               <p>
                 {job.location} • {job.jobType || "Not specified"}
+=======
+            <p className="text-gray-500">{job.companyName || "Company name not available"}</p>
+            <div className="flex items-center text-gray-500 mt-2 text-sm md:text-base">
+              <FaMapMarkerAlt className="mr-2" />
+              <p>
+                {job.location || "Location not specified"} • {job.jobType || "Not specified"}
+>>>>>>> uday8-1-25
               </p>
             </div>
             <div className="flex items-center text-gray-500 mt-2 text-sm md:text-base">
               <FaBriefcase className="mr-2" />
               <p>
+<<<<<<< HEAD
                 From {new Date(job.startDate).toLocaleDateString()} to{" "}
+=======
+                From {new Date(job.startDate).toLocaleDateString() || "Not specified"} to{" "}
+>>>>>>> uday8-1-25
                 {job.endDateOrDuration || "Not specified"}
               </p>
             </div>
@@ -111,9 +196,9 @@ const ApplyCards = ({ job, onBack }) => {
               className={`text-white mt-4 ${
                 isApplied ? "bg-green-500" : "bg-purple-500 hover:bg-purple-600"
               } px-4 py-2 rounded-full font-semibold`}
-              disabled={isApplied}
+              disabled={isApplied || isUploading}
             >
-              {isApplied ? "Applied" : "Apply now"}
+              {isApplied ? "Applied" : isUploading ? "Uploading..." : "Apply now"}
             </button>
           </div>
         </div>
@@ -133,18 +218,14 @@ const ApplyCards = ({ job, onBack }) => {
       <hr className="my-4" />
 
       <div className="mb-6">
-        <h3 className="text-lg md:text-xl font-semibold text-gray-800 mb-2">
-          About the job
-        </h3>
+        <h3 className="text-lg md:text-xl font-semibold text-gray-800 mb-2">About the job</h3>
         <p className="text-gray-600 leading-relaxed">
           {job.jobDescription || "No description available"}
         </p>
       </div>
 
       <div>
-        <h3 className="text-lg md:text-xl font-semibold text-gray-800 mb-2">
-          Skills required
-        </h3>
+        <h3 className="text-lg md:text-xl font-semibold text-gray-800 mb-2">Skills required</h3>
         <div className="flex flex-wrap gap-2">
           {(job.qualifications || []).map((qualification, index) => (
             <span
@@ -158,12 +239,19 @@ const ApplyCards = ({ job, onBack }) => {
       </div>
 
       <div className="mt-6">
+<<<<<<< HEAD
         <h3 className="text-lg md:text-xl font-semibold text-gray-800 mb-2">
           Contact Information
         </h3>
         <p className="text-gray-600">
           {job.contactInfo?.name || "Not provided"},{" "}
           {job.contactInfo?.email || "Not provided"},{" "}
+=======
+        <h3 className="text-lg md:text-xl font-semibold text-gray-800 mb-2">Contact Information</h3>
+        <p className="text-gray-600">
+          {job.contactInfo?.name || "Not provided"},
+          {job.contactInfo?.email || "Not provided"},
+>>>>>>> uday8-1-25
           {job.contactInfo?.phone || "Not provided"}
         </p>
       </div>
