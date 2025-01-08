@@ -64,7 +64,7 @@ const UserProfilePicture = () => {
       // Handle both 200 and 201 as success
       if (response.status === 200 || response.status === 201) {
         console.log("Navigating to user main page");
-        navigate("/user-main-page");
+        navigate("/user/login");
       } else {
         console.warn("Unexpected response status:", response.status);
       }

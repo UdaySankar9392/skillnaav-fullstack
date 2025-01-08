@@ -72,7 +72,7 @@ const PartnerProfile = () => {
 
       if (response.status === 201) {
         setIsSubmitted(true);
-        navigate("/partner-main-page"); // Redirect after successful submission
+        navigate("/partner/login"); // Redirect after successful submission
       }
     } catch (error) {
       console.error("Error submitting form:", error);
