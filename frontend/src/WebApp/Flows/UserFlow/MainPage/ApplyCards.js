@@ -48,7 +48,7 @@ const ApplyCards = ({ job, onBack }) => {
       formData.append("resume", resume);
 
       const apiResponse = await axios.post(
-        "http://localhost:5000/api/applications/apply",
+        ("/api/applications/apply"),
         formData,
         {
           headers: {
