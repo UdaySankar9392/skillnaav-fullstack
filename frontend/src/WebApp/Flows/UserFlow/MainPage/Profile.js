@@ -9,7 +9,7 @@ const ProfileForm = () => {
     password: "",
     confirmPassword: "",
     universityName: "",
-    dob: "",  // Ensure this is in the correct date format
+    dob: "",
     educationLevel: "",
     fieldOfStudy: "",
     desiredField: "",
@@ -31,7 +31,7 @@ const ProfileForm = () => {
         password: "",
         confirmPassword: "",
         universityName: userInfo.universityName || "",
-        dob: userInfo.dob ? new Date(userInfo.dob).toISOString().split("T")[0] : "",  // Format date
+        dob: userInfo.dob ? new Date(userInfo.dob).toISOString().split("T")[0] : "",
         educationLevel: userInfo.educationLevel || "",
         fieldOfStudy: userInfo.fieldOfStudy || "",
         desiredField: userInfo.desiredField || "",
@@ -82,10 +82,7 @@ const ProfileForm = () => {
       const { data } = await axios.post("/api/users/profile", user, config);
 
       if (data) {
-        localStorage.setItem(
-          "userInfo",
-          JSON.stringify({ ...data, token })
-        );
+        localStorage.setItem("userInfo", JSON.stringify({ ...data, token }));
 
         setSuccessMessage("Profile updated successfully!");
         setUser((prevUser) => ({
@@ -105,7 +102,7 @@ const ProfileForm = () => {
     { label: "Full name", name: "name", type: "text", placeholder: "Enter your full name" },
     { label: "Email Address", name: "email", type: "email", placeholder: "Enter your email address" },
     { label: "University Name", name: "universityName", type: "text", placeholder: "Enter your university name" },
-    { label: "Date of Birth", name: "dob", type: "date" },  // Date field
+    { label: "Date of Birth", name: "dob", type: "date" },
     { label: "Education Level", name: "educationLevel", type: "text", placeholder: "Enter your education level" },
     { label: "Field of Study", name: "fieldOfStudy", type: "text", placeholder: "Enter your field of study" },
     { label: "Desired Field", name: "desiredField", type: "text", placeholder: "Enter your desired field" },
@@ -117,57 +114,72 @@ const ProfileForm = () => {
 
   return (
     <div className="min-h-screen mt-12 bg-white-50 flex items-center justify-center font-poppins">
-      <div className="relative w-full max-w-4xl bg-white p-8 rounded-lg">
-        <div className="absolute top-4 right-4 flex space-x-4">
-          <button
-            type="button"
-            className="px-6 py-2 border border-gray-300 text-gray-700 rounded-md hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-purple-500"
-            onClick={() => {
-              setUser((prevUser) => ({
-                ...prevUser,
-                password: "",
-                confirmPassword: "",
-              }));
-              setErrorMessage(null);
-              setSuccessMessage("");
-            }}
-          >
-            Cancel
-          </button>
-
-          <button
-            type="button"
-            className="px-6 py-2 bg-purple-600 text-white rounded-md hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-purple-500"
-            onClick={handleUpdateProfile}
-          >
-            Save
-          </button>
+      <div className="relative w-full max-w-4xl bg-white p-6 rounded-lg shadow-lg">
+        {/* Profile Heading */}
+        <div className="text-center md:text-left mb-6">
+          <h2 className="text-3xl font-bold text-gray-800">Your Profile</h2>
+          <p className="text-gray-500 mt-2">
+            Update your photo and personal details here.
+          </p>
         </div>
 
-        <form className="w-full">
-          <h2 className="text-2xl font-semibold mb-1 text-gray-800">Your profile</h2>
-          <p className="text-gray-500 mb-6">Update your photo and personal details here.</p>
+        {/* Form Section */}
+        <div>
+          <form className="w-full">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-6">
+              {fields.map(({ label, name, type, placeholder }) => (
+                <div className="flex flex-col" key={name}>
+                  <label htmlFor={name} className="text-gray-700 font-medium mb-2">
+                    {label}
+                  </label>
+                  <input
+                    type={type}
+                    id={name}
+                    name={name}
+                    value={user[name]}
+                    onChange={handleChange}
+                    className="px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 w-full"
+                    placeholder={placeholder}
+                  />
+                </div>
+              ))}
+            </div>
 
-          <div className="grid grid-cols-2 gap-6 mb-6">
-            {fields.map(({ label, name, type, placeholder }) => (
-              <div className="flex flex-col" key={name}>
-                <label htmlFor={name} className="text-gray-700 font-medium mb-2">{label}</label>
-                <input
-                  type={type}
-                  id={name}
-                  name={name}
-                  value={user[name]}
-                  onChange={handleChange}
-                  className="px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 w-full"
-                  placeholder={placeholder}
-                />
-              </div>
-            ))}
+            {errorMessage && (
+              <p className="text-red-600 mb-4">{errorMessage}</p>
+            )}
+            {successMessage && (
+              <p className="text-green-600 mb-4">{successMessage}</p>
+            )}
+          </form>
+
+          {/* Buttons */}
+          <div className="flex space-x-4 mt-4">
+            <button
+              type="button"
+              className="px-6 py-2 border border-gray-300 text-gray-700 rounded-md hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-purple-500"
+              onClick={() => {
+                setUser((prevUser) => ({
+                  ...prevUser,
+                  password: "",
+                  confirmPassword: "",
+                }));
+                setErrorMessage(null);
+                setSuccessMessage("");
+              }}
+            >
+              Cancel
+            </button>
+
+            <button
+              type="button"
+              className="px-6 py-2 bg-purple-600 text-white rounded-md hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-purple-500"
+              onClick={handleUpdateProfile}
+            >
+              Save
+            </button>
           </div>
-
-          {errorMessage && <p className="text-red-600 mb-4">{errorMessage}</p>}
-          {successMessage && <p className="text-green-600 mb-4">{successMessage}</p>}
-        </form>
+        </div>
       </div>
     </div>
   );

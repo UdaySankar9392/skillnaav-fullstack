@@ -30,19 +30,18 @@ const SavedJobs = () => {
                 >
                   <FontAwesomeIcon
                     icon={faHeart}
-                    className={`w-6 h-6 ${
-                      savedJobs.some(
-                        (savedJob) => savedJob.jobTitle === job.jobTitle
-                      )
+                    className={`w-6 h-6 ${savedJobs.some(
+                      (savedJob) => savedJob.jobTitle === job.jobTitle
+                    )
                         ? "text-red-500"
                         : "text-gray-500"
-                    }`}
+                      }`}
                   />
                 </button>
               </div>
               <div className="flex items-center mb-4">
                 <img
-                  src="/path-to-company-logo.png"
+                  src={job.imgUrl || '/path-to-default-image.png'} // Fallback if no image URL
                   alt="Company Logo"
                   className="w-12 h-12 rounded-full mr-4"
                 />
@@ -53,6 +52,7 @@ const SavedJobs = () => {
                   </p>
                 </div>
               </div>
+
               <div className="text-gray-600 mb-4">
                 <p>
                   <FontAwesomeIcon icon={faMapMarkerAlt} /> {job.location} •{" "}
@@ -65,10 +65,27 @@ const SavedJobs = () => {
                   <FontAwesomeIcon icon={faDollarSign} /> {job.salaryDetails}
                 </p>
               </div>
-              <div className="flex items-center">
-                <span className="bg-blue-100 text-blue-800 text-sm font-medium mr-2 px-2.5 py-0.5 rounded">
+
+              {/* Qualifications Section */}
+              <div className="flex items-center justify-between">
+                <div className="flex flex-wrap gap-2">
+                  {job.qualifications && job.qualifications.length > 0 ? (
+                    job.qualifications.map((qualification, index) => (
+                      <span
+                        key={index}
+                        className="text-sm bg-gray-200 text-gray-800 py-1 px-3 rounded-full"
+                      >
+                        {qualification}
+                      </span>
+                    ))
+                  ) : (
+                    <span className="text-sm text-gray-500">No qualifications listed</span>
+                  )}
+                </div>
+                <div className="flex ">
+                {/* <span className="bg-blue-100 text-blue-800 text-sm font-medium mr-2 px-2.5 py-0.5 rounded">
                   {job.field}
-                </span>
+                </span> */}
                 <button
                   className="text-purple-600 hover:underline"
                   onClick={() => alert("View details coming soon!")}
@@ -76,7 +93,8 @@ const SavedJobs = () => {
                   View details
                 </button>
               </div>
-            </div>
+              </div>
+            </div> 
           ))}
         </div>
       )}

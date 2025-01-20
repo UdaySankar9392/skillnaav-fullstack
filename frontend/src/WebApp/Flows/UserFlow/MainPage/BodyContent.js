@@ -52,9 +52,16 @@ const BodyContent = () => {
   }
 
   return (
-    <div className="flex-1 p-4">
-      {content}
-      <button onClick={() => handleSelectTab("searchbar")}></button>
+    <div className="flex flex-col lg:flex-row  p-4 flex-1">
+      {/* Desktop View - Flex layout */}
+      <div className="lg:flex-1 hidden lg:block">
+        {content}
+      </div>
+
+      {/* Mobile View - Full screen layout */}
+      <div className="lg:hidden flex-1">
+        {content}
+      </div>
     </div>
   );
 };
