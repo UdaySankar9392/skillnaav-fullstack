@@ -48,7 +48,7 @@ const Navbar = () => {
   return (
     <div className="bg-white font-poppins text-gray-800 p-4 border-b border-gray-300 sticky top-0 z-50 flex justify-between items-center">
       {/* Left side: Skillnaav logo */}
-      <div className="flex items-center lg:hidden">
+      <div className="flex items-center lg:hidden md:hidden">
         <img
           src={logo}
           alt="Skillnaav Logo"
