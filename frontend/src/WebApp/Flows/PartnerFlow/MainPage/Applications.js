@@ -100,18 +100,19 @@ const InternshipList = () => {
           >
             {/* Job Image and Company Info */}
             <div className="flex items-center mb-4">
-              <img
-                src={internship.imgUrl || "https://via.placeholder.com/150"}
-                alt={internship.companyName}
-                className="w-12 h-12 rounded-full mr-4"
-              />
-              <div>
-                <h3 className="text-xl font-semibold">{internship.jobTitle}</h3>
-                <p className="text-gray-600">
-                  {internship.companyName} • {calculateDaysAgo(internship.createdAt)}
-                </p>
-              </div>
-            </div>
+  <img
+    src={internship.imgUrl || "https://via.placeholder.com/150"}
+    alt={internship.companyName}
+    className="w-16 h-16 rounded-full mr-4"
+  />
+  <div>
+    <h3 className="text-xl font-semibold">{internship.jobTitle}</h3>
+    <p className="text-gray-600">
+      {internship.companyName} • {calculateDaysAgo(internship.createdAt)}
+    </p>
+  </div>
+</div>
+
 
             {/* Job Details */}
             <div className="text-gray-600 mb-4">
@@ -140,52 +141,54 @@ const InternshipList = () => {
               <h4 className="text-xl font-semibold">Applied Students:</h4>
               {applications[internship._id] ? (
                 applications[internship._id].length > 0 ? (
-                  <table className="min-w-full table-auto mt-4">
-                    <thead>
-                      <tr className="bg-gray-200">
-                        <th className="px-4 py-2 text-left">Username</th>
-                        <th className="px-4 py-2 text-left">Email</th>
-                        <th className="px-4 py-2 text-left">Applied Date</th>
-                        <th className="px-4 py-2 text-left">Resume</th>
-                        <th className="px-4 py-2 text-left">Status</th>
-                        <th className="px-4 py-2 text-left">Update Status</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {applications[internship._id].map((student) => (
-                        <tr key={student._id}>
-                          <td className="px-4 py-2">{student.userName}</td>
-                          <td className="px-4 py-2">{student.userEmail}</td>
-                          <td className="px-4 py-2">{new Date(student.appliedDate).toLocaleDateString()}</td>
-                          <td className="px-4 py-2">
-                            <a
-                              href={student.resumeUrl}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="text-indigo-600 underline"
-                            >
-                              View Resume
-                            </a>
-                          </td>
-
-                          <td className="px-4 py-2">{student.status || "Pending"}</td>
-                          <td className="px-4 py-2">
-                            <select
-                              value={student.status || "Pending"}
-                              onChange={(e) =>
-                                updateApplicationStatus(internship._id, student._id, e.target.value)
-                              }
-                              className="border rounded px-2 py-1"
-                            >
-                              <option value="Pending">Pending</option>
-                              <option value="Approved">Approved</option>
-                              <option value="Rejected">Rejected</option>
-                            </select>
-                          </td>
+                  <div className="overflow-x-auto mt-4">
+                    <table className="min-w-full table-auto">
+                      <thead>
+                        <tr className="bg-gray-200">
+                          <th className="px-4 py-2 text-left">Username</th>
+                          <th className="px-4 py-2 text-left">Email</th>
+                          <th className="px-4 py-2 text-left">Applied Date</th>
+                          <th className="px-4 py-2 text-left">Resume</th>
+                          <th className="px-4 py-2 text-left">Status</th>
+                          <th className="px-4 py-2 text-left">Update Status</th>
                         </tr>
-                      ))}
-                    </tbody>
-                  </table>
+                      </thead>
+                      <tbody>
+                        {applications[internship._id].map((student) => (
+                          <tr key={student._id}>
+                            <td className="px-4 py-2">{student.userName}</td>
+                            <td className="px-4 py-2">{student.userEmail}</td>
+                            <td className="px-4 py-2">{new Date(student.appliedDate).toLocaleDateString()}</td>
+                            <td className="px-4 py-2">
+                              <a
+                                href={student.resumeUrl}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="text-indigo-600 underline"
+                              >
+                                View Resume
+                              </a>
+                            </td>
+
+                            <td className="px-4 py-2">{student.status || "Pending"}</td>
+                            <td className="px-4 py-2">
+                              <select
+                                value={student.status || "Pending"}
+                                onChange={(e) =>
+                                  updateApplicationStatus(internship._id, student._id, e.target.value)
+                                }
+                                className="border rounded px-2 py-1"
+                              >
+                                <option value="Pending">Pending</option>
+                                <option value="Approved">Approved</option>
+                                <option value="Rejected">Rejected</option>
+                              </select>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
                 ) : (
                   <p>No students have applied for this internship yet.</p>
                 )
@@ -199,7 +202,7 @@ const InternshipList = () => {
         <div className="text-center text-lg text-gray-600">No internships found for this partner.</div>
       )}
     </div>
-  )
-}
+  );
+};
 
 export default InternshipList;

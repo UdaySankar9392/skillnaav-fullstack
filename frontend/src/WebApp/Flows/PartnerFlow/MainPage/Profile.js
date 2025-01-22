@@ -106,42 +106,41 @@ const ProfileForm = () => {
 
   return (
     <div className="min-h-screen mt-12 bg-white-50 flex items-center justify-center font-poppins">
-      <div className="relative w-full max-w-4xl bg-white p-8 rounded-lg">
+      <div className="relative w-full max-w-4xl bg-white p-6 sm:p-8 rounded-lg shadow-lg">
         {/* Action buttons */}
-        <div className="absolute top-4 right-4 flex space-x-4">
-          <button
-            type="button"
-            className="px-6 py-2 border border-gray-300 text-gray-700 rounded-md hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-purple-500"
-            onClick={() => {
-              // Discard changes in password and confirm password
-              setUser((prevUser) => ({
-                ...prevUser,
-                password: "",
-                confirmPassword: "",
-              }));
-              setErrorMessage(null);
-              setSuccessMessage("");
-            }}
-          >
-            Cancel
-          </button>
+        <div className="flex space-x-4 mt-4">
+            <button
+              type="button"
+              className="px-6 py-2 border border-gray-300 text-gray-700 rounded-md hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-purple-500"
+              onClick={() => {
+                setUser((prevUser) => ({
+                  ...prevUser,
+                  password: "",
+                  confirmPassword: "",
+                }));
+                setErrorMessage(null);
+                setSuccessMessage("");
+              }}
+            >
+              Cancel
+            </button>
 
-          <button
-            type="button"
-            className="px-6 py-2 bg-teal-600 text-white rounded-md hover:bg-teal-700 focus:outline-none focus:ring-2 focus:ring-purple-500"
-            onClick={handleUpdateProfile}
-          >
-            Save
-          </button>
-        </div>
+            <button
+              type="button"
+              className="px-6 py-2 bg-purple-600 text-white rounded-md hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-purple-500"
+              onClick={handleUpdateProfile}
+            >
+              Save
+            </button>
+          </div>
 
         <form className="w-full">
           <h2 className="text-2xl font-semibold mb-1 text-gray-800">Your profile</h2>
           <p className="text-gray-500 mb-6">Update your photo and personal details here.</p>
 
-          <div className="flex flex-wrap gap-6 mb-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-6">
             {inputFields.map((field, index) => (
-              <div key={index} className="flex flex-col flex-grow">
+              <div key={index} className="flex flex-col">
                 <label htmlFor={field.name} className="text-gray-700 font-medium mb-2">{field.label}</label>
                 <input
                   type={field.type}

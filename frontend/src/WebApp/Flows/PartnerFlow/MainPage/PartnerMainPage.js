@@ -31,6 +31,15 @@ const PartnerMainPage = () => {
   const [partnerInfo, setPartnerInfo] = useState(null);
   const [loading, setLoading] = useState(true); // Loading state
   const [adminApproved, setAdminApproved] = useState(false); // Track if partner is approved
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 768); // Track screen size
+
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
 
   useEffect(() => {
     const fetchPartnerInfo = async () => {
@@ -69,8 +78,11 @@ const PartnerMainPage = () => {
 
   return (
     <TabProvider>
-      <div className="flex relative">
-        <Sidebar />
+      <div className={`flex ${isMobile ? "flex-col" : "flex-row"} relative`}>
+        {/* Sidebar */}
+        <Sidebar isMobile={isMobile} />
+
+        {/* Main Content */}
         <div className="flex-1 flex flex-col">
           <Navbar />
 
