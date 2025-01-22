@@ -38,7 +38,19 @@ const BodyContent = () => {
       content = <div>Select a tab</div>;
   }
 
-  return <div className="flex-1 p-4">{content}</div>;
+  return (
+    <div className="flex flex-col lg:flex-row p-4 flex-1">
+      {/* Desktop View - Flex layout */}
+      <div className="lg:flex-1 hidden lg:block">
+        {content}
+      </div>
+
+      {/* Mobile View - Full screen layout */}
+      <div className="lg:hidden flex-1">
+        {content}
+      </div>
+    </div>
+  );
 };
 
 export default BodyContent;

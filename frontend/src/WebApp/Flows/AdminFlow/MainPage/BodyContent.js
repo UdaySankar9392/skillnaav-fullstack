@@ -109,7 +109,7 @@ const BodyContent = () => {
       case "bin":
         return (
           <div className="text-center mt-4">
-           <Bin/>
+            <Bin />
           </div>
         );
 
@@ -119,7 +119,13 @@ const BodyContent = () => {
   };
 
   return (
-    <div className="flex-1 font-poppins p-6 bg-gray-50">{renderContent()}</div>
+    <div className="flex-1 font-poppins p-6 bg-gray-50">
+      {/* Desktop View */}
+      <div className="hidden lg:block">{renderContent()}</div>
+
+      {/* Mobile View */}
+      <div className="lg:hidden">{renderContent()}</div>
+    </div>
   );
 };
 
