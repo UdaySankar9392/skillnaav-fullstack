@@ -1,7 +1,8 @@
 import React, { useState, useRef, useEffect } from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faUser, faSignOutAlt } from "@fortawesome/free-solid-svg-icons";
-import { useTabContext } from "./UserHomePageContext/HomePageContext";
+import logo from "../../../../assets-webapp/Skillnaav-logo.png"; // Replace with your actual logo path
+import { useTabContext } from "./UserHomePageContext/HomePageContext"; // Adjust path as needed
 import { useNavigate } from "react-router-dom";
 
 const Navbar = () => {
@@ -26,7 +27,7 @@ const Navbar = () => {
   const handleLogout = () => {
     // Clear user information from localStorage
     localStorage.removeItem("userInfo");
-    // Redirect to login page
+    // Redirect to partner login page
     navigate("/partner/login");
   };
 
@@ -46,13 +47,17 @@ const Navbar = () => {
 
   return (
     <div className="bg-white font-poppins text-gray-800 p-4 border-b border-gray-300 sticky top-0 z-50 flex justify-between items-center">
-      {/* Left side (Logo or navigation items can go here) */}
-      <div className="text-lg font-semibold">
-        {/* Add your logo or navigation links here */}
-      </div>
+      {/* Left side: Skillnaav logo */}
+      <div className="flex items-center lg:hidden md:hidden">
+             <img
+               src={logo}
+               alt="Skillnaav Logo"
+               className="h-10 object-contain"
+             />
+           </div>
 
-      {/* Right side (User icon with popup) */}
-      <div className="relative ml-auto">
+      {/* Right side: User icon and dropdown */}
+      <div className="relative ml-auto flex items-center">
         {/* Display user's name in the navbar */}
         {userInfo.name && (
           <span className="mr-2 text-gray-800 text-sm">{userInfo.name}</span>

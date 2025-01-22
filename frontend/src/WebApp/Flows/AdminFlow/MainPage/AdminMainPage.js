@@ -7,8 +7,11 @@ import { TabProvider } from "./UserHomePageContext/HomePageContext";
 const AdminMainPage = () => {
   return (
     <TabProvider>
-      <div className="flex">
+      <div className="flex flex-col lg:flex-row">
+        {/* Sidebar */}
         <Sidebar />
+
+        {/* Main Content */}
         <div className="flex-1 flex flex-col">
           <Navbar />
           <BodyContent />
