@@ -23,7 +23,7 @@ const userwebappSchema = new mongoose.Schema(
     otpExpiration: { 
       type: Date 
     },
- 
+
     universityName: {
       type: String,
       required: true,
@@ -50,8 +50,31 @@ const userwebappSchema = new mongoose.Schema(
     },
     portfolio: {
       type: String,
-      
     },
+
+    // New fields added (not required)
+    financialStatus: {
+      type: String,
+    },
+    state: {
+      type: String,
+    },
+    country: {
+      type: String,
+    },
+    city: {
+      type: String,
+    },
+    postalCode: {
+      type: String,
+    },
+    currentGrade: {
+      type: String,
+    },
+    gradePercentage: {
+      type: String,
+    },
+
     adminApproved: {
       type: Boolean,
       default: false,
@@ -64,7 +87,6 @@ const userwebappSchema = new mongoose.Schema(
   {
     timestamps: true,
   }
-  
 );
 
 // Hash password before saving
