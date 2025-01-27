@@ -24,7 +24,14 @@ const getUserProfile = asyncHandler(async (req, res) => {
     desiredField: user.desiredField,
     linkedin: user.linkedin,
     portfolio: user.portfolio,
-    adminApproved: user.adminApproved // Include admin approval status
+    adminApproved: user.adminApproved,
+    financialStatus: user.financialStatus,
+    state: user.state,
+    country: user.country,
+    city: user.city,
+    postalCode: user.postalCode,
+    currentGrade: user.currentGrade,
+    gradePercentage: user.gradePercentage,
   });
 });
 // Helper function to check required fields
@@ -218,9 +225,16 @@ const updateUserProfile = asyncHandler(async (req, res) => {
   user.desiredField = req.body.desiredField || user.desiredField;
   user.linkedin = req.body.linkedin || user.linkedin;
   user.portfolio = req.body.portfolio || user.portfolio;
+  user.financialStatus = req.body.financialStatus || user.financialStatus;
+  user.state = req.body.state || user.state;
+  user.country = req.body.country || user.country;
+  user.city = req.body.city || user.city;
+  user.postalCode = req.body.postalCode || user.postalCode;
+  user.currentGrade = req.body.currentGrade || user.currentGrade;
+  user.gradePercentage = req.body.gradePercentage || user.gradePercentage;
 
   if (req.body.password) {
-    user.password = req.body.password;
+    user.password = req.body.password; // This will trigger the password hashing pre-save hook
   }
 
   const updatedUser = await user.save();
@@ -236,9 +250,17 @@ const updateUserProfile = asyncHandler(async (req, res) => {
     desiredField: updatedUser.desiredField,
     linkedin: updatedUser.linkedin,
     portfolio: updatedUser.portfolio,
+    financialStatus: updatedUser.financialStatus,
+    state: updatedUser.state,
+    country: updatedUser.country,
+    city: updatedUser.city,
+    postalCode: updatedUser.postalCode,
+    currentGrade: updatedUser.currentGrade,
+    gradePercentage: updatedUser.gradePercentage,
     token: generateToken(updatedUser._id), // Regenerate token
   });
 });
+
 
 // Get all users with additional fields
 const getAllUsers = asyncHandler(async (req, res) => {

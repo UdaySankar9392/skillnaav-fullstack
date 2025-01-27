@@ -15,29 +15,33 @@ const ProfileForm = () => {
     desiredField: "",
     linkedin: "",
     portfolio: "",
+    financialStatus: "",
+    state: "", // Text input for state
+    country: "", // Text input for country
+    city: "", // Text input for city
+    postalCode: "",
+    currentGrade: "",
+    gradePercentage: "",
   });
 
   const [errorMessage, setErrorMessage] = useState(null);
   const [successMessage, setSuccessMessage] = useState("");
+  const [isLevel1Open, setIsLevel1Open] = useState(true);
+  const [isLevel2Open, setIsLevel2Open] = useState(false);
+  const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
     const userInfo = JSON.parse(localStorage.getItem("userInfo"));
-
     if (userInfo) {
-      setUser({
-        name: userInfo.name || "",
-        email: userInfo.email || "",
-        password: "",
-        confirmPassword: "",
-        universityName: userInfo.universityName || "",
-        dob: userInfo.dob ? new Date(userInfo.dob).toISOString().split("T")[0] : "",
-        educationLevel: userInfo.educationLevel || "",
-        fieldOfStudy: userInfo.fieldOfStudy || "",
-        desiredField: userInfo.desiredField || "",
-        linkedin: userInfo.linkedin || "",
-        portfolio: userInfo.portfolio || "",
-      });
+      // Map user information to state
+      setUser((prevUser) => ({
+        ...prevUser,
+        ...userInfo,
+        password: "", // Clear password to ensure it's not shown
+        confirmPassword: "", // Clear confirm password to ensure it's not shown
+        dob: userInfo.dob ? new Date(userInfo.dob).toISOString().split("T")[0] : "", // Handle dob properly
+      }));
     }
   }, []);
 
@@ -79,11 +83,11 @@ const ProfileForm = () => {
         },
       };
 
+      // Send updated user data to the server
       const { data } = await axios.post("/api/users/profile", user, config);
 
       if (data) {
         localStorage.setItem("userInfo", JSON.stringify({ ...data, token }));
-
         setSuccessMessage("Profile updated successfully!");
         setUser((prevUser) => ({
           ...prevUser,
@@ -91,14 +95,16 @@ const ProfileForm = () => {
           confirmPassword: "",
         }));
       }
+      
     } catch (error) {
+      console.error("Update error:", error); // Log complete error for debugging
       setErrorMessage(
-        "Failed to update profile. " + (error.response?.data?.message || "")
+        "Failed to update profile. " + (error.response?.data?.message || "Unknown error")
       );
     }
   };
 
-  const fields = [
+  const level1Fields = [
     { label: "Full name", name: "name", type: "text", placeholder: "Enter your full name" },
     { label: "Email Address", name: "email", type: "email", placeholder: "Enter your email address" },
     { label: "University Name", name: "universityName", type: "text", placeholder: "Enter your university name" },
@@ -108,81 +114,113 @@ const ProfileForm = () => {
     { label: "Desired Field", name: "desiredField", type: "text", placeholder: "Enter your desired field" },
     { label: "LinkedIn Profile", name: "linkedin", type: "url", placeholder: "Enter your LinkedIn URL" },
     { label: "Portfolio Link", name: "portfolio", type: "url", placeholder: "Enter your portfolio URL" },
-    { label: "Password", name: "password", type: "password", placeholder: "Enter your password" },
-    { label: "Confirm Password", name: "confirmPassword", type: "password", placeholder: "Confirm your password" },
+    { label: "Password", name: "password", type: "password", placeholder:"Enter your password" },
+    { label:"Confirm Password", name:"confirmPassword", type:"password", placeholder:"Confirm your password"},
   ];
 
+  const level2Fields = [
+     { label:"Financial Status", name:"financialStatus", type:"text", placeholder:"Enter your financial status"},
+     { label:"Country", name:"country", type:"text", placeholder:"Enter your country"},
+     { label:"State", name:"state", type:"text", placeholder:"Enter your state"},
+     { label:"City", name:"city", type:"text", placeholder:"Enter your city"},
+     { label:"Postal Code", name:"postalCode", type:"text", placeholder:"Enter your postal code"},
+     { label:"Current Grade", name:"currentGrade", type:"text", placeholder:"Enter your current grade"},
+     { label:"Grade Percentage", name:"gradePercentage", type:"text", placeholder:"Enter your grade percentage"},
+   ];
+
   return (
-    <div className="min-h-screen mt-12 bg-white-50 flex items-center justify-center font-poppins">
-      <div className="relative w-full max-w-4xl bg-white p-6 rounded-lg shadow-lg">
-        {/* Profile Heading */}
-        <div className="text-center md:text-left mb-6">
-          <h2 className="text-3xl font-bold text-gray-800">Your Profile</h2>
-          <p className="text-gray-500 mt-2">
-            Update your photo and personal details here.
-          </p>
-        </div>
+     <div className="min-h-screen mt-12 bg-white-50 flex items-center justify-center font-poppins">
+       <div className="relative w-full max-w-4xl bg-white p-6 rounded-lg shadow-lg">
+         {/* Profile Heading */}
+         <div className="text-center md:text-left mb-6">
+           <h2 className="text-3xl font-bold text-gray-800">Your Profile</h2>
+           <p className="text-gray-500 mt-2">Update your photo and personal details here.</p>
+         </div>
 
-        {/* Form Section */}
-        <div>
-          <form className="w-full">
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-6">
-              {fields.map(({ label, name, type, placeholder }) => (
-                <div className="flex flex-col" key={name}>
-                  <label htmlFor={name} className="text-gray-700 font-medium mb-2">
-                    {label}
-                  </label>
-                  <input
-                    type={type}
-                    id={name}
-                    name={name}
-                    value={user[name]}
-                    onChange={handleChange}
-                    className="px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 w-full"
-                    placeholder={placeholder}
-                  />
-                </div>
-              ))}
-            </div>
+         {/* Form Section */}
+         <form>
+           {/* Level 1 Section */}
+           <div>
+             <div className="flex items-center justify-between">
+               <h3 className="text-2xl font-semibold text-gray-800">Profile Level 1</h3>
+               <button
+                 type="button"
+                 onClick={() => setIsLevel1Open(!isLevel1Open)}
+                 className="text-gray-500 focus:outline-none"
+               >
+                 {isLevel1Open ? '▲' : '▼'}
+               </button>
+             </div>
+             {isLevel1Open && (
+               <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 mt-4">
+                 {level1Fields.map(({ label, name, type, placeholder }) => (
+                   <div className="flex flex-col" key={name}>
+                     <label htmlFor={name} className="text-sm font-medium text-gray-600 mb-2">{label}</label>
+                     <input
+                       type={type}
+                       id={name}
+                       name={name}
+                       value={user[name]}
+                       onChange={handleChange}
+                       placeholder={placeholder}
+                       className="px-4 py-2 border rounded-md"
+                     />
+                   </div>
+                 ))}
+               </div>
+             )}
+           </div>
 
-            {errorMessage && (
-              <p className="text-red-600 mb-4">{errorMessage}</p>
-            )}
-            {successMessage && (
-              <p className="text-green-600 mb-4">{successMessage}</p>
-            )}
-          </form>
+           {/* Level 2 Section */}
+           <div>
+             <div className="flex items-center justify-between mt-6">
+               <h3 className="text-2xl font-semibold text-gray-800">Profile Level 2</h3>
+               <button
+                 type="button"
+                 onClick={() => setIsLevel2Open(!isLevel2Open)}
+                 className="text-gray-500 focus:outline-none"
+               >
+                 {isLevel2Open ? '▲' : '▼'}
+               </button>
+             </div>
+             {isLevel2Open && (
+               <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 mt-4">
+                 {level2Fields.map(({ label, name, type, placeholder }) => (
+                   <div className="flex flex-col" key={name}>
+                     <label htmlFor={name} className="text-gray-700 font-medium mb-2">{label}</label>
+                     <input
+                       type={type}
+                       id={name}
+                       name={name}
+                       value={user[name]}
+                       onChange={handleChange}
+                       className="px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 w-full"
+                       placeholder={placeholder}
+                     />
+                   </div>
+                 ))}
+               </div>
+             )}
+           </div>
 
-          {/* Buttons */}
-          <div className="flex space-x-4 mt-4">
-            <button
-              type="button"
-              className="px-6 py-2 border border-gray-300 text-gray-700 rounded-md hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-purple-500"
-              onClick={() => {
-                setUser((prevUser) => ({
-                  ...prevUser,
-                  password: "",
-                  confirmPassword: "",
-                }));
-                setErrorMessage(null);
-                setSuccessMessage("");
-              }}
-            >
-              Cancel
-            </button>
+           {/* Update Profile Button */}
+           <div className="mt-8">
+             <button
+               type="button"
+               onClick={handleUpdateProfile}
+               className="w-full bg-blue-600 text-white py-3 rounded-md text-lg"
+             >
+               {loading ? 'Updating...' : 'Update Profile'}
+             </button>
+           </div>
 
-            <button
-              type="button"
-              className="px-6 py-2 bg-purple-600 text-white rounded-md hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-purple-500"
-              onClick={handleUpdateProfile}
-            >
-              Save
-            </button>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
+           {/* Messages */}
+           {errorMessage && <div className="text-red-600 mt-4">{errorMessage}</div>}
+           {successMessage && <div className="text-green-600 mt-4">{successMessage}</div>}
+         </form>
+       </div>
+     </div>
+   );
 };
 
 export default ProfileForm;
