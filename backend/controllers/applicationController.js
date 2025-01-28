@@ -6,8 +6,6 @@ const multer = require("multer"); // Multer for file uploads
 const path = require("path");
 const fs = require("fs");
 
-
-
 // Controller to handle applying for an internship (using multer for file uploads)
 const applyForInternship = async (req, res) => {
   const { studentId, internshipId } = req.body;
@@ -57,8 +55,6 @@ const applyForInternship = async (req, res) => {
   }
 };
 
-
-
 // Controller to get all students who applied for a specific internship
 const getApplicationsForInternship = async (req, res) => {
   const { internshipId } = req.params;
@@ -88,9 +84,6 @@ const getApplicationsForInternship = async (req, res) => {
   }
 };
 
-
-
-
 // Controller to get application status for a student
 const getApplicationStatus = async (req, res) => {
   const { studentId } = req.params;
@@ -117,8 +110,23 @@ const getApplicationStatus = async (req, res) => {
   }
 };
 
+const getApplicationsForStudent = async (req, res) => {
+  try {
+    const applications = await Application.find({ studentId: req.params.studentId })
+      .populate('internshipId')  // Populate internship details
+      .populate('studentId', 'userName userEmail');  // Populate user details
+
+    res.json({ applications });
+  } catch (err) {
+    console.error("Error fetching applications:", err);
+    res.status(500).json({ message: "Error fetching applications" });
+  }
+};
+
+
 module.exports = {
   applyForInternship,
   getApplicationsForInternship,
   getApplicationStatus, 
+  getApplicationsForStudent,
 };
