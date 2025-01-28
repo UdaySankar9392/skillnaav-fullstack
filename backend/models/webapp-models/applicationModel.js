@@ -8,7 +8,7 @@ const applicationSchema = new mongoose.Schema({
   },
   internshipId: { 
     type: mongoose.Schema.Types.ObjectId, 
-    ref: "InternshipPostings", 
+    ref: "InternshipPosting", 
     required: true 
   },
   resumeUrl: { 
