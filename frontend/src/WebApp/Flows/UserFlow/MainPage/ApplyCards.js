@@ -4,16 +4,35 @@ import { FaHeart, FaShareAlt, FaMapMarkerAlt, FaBriefcase, FaDollarSign } from "
 import { useTabContext } from "./UserHomePageContext/HomePageContext";
 
 const ApplyCards = ({ job, onBack }) => {
-  const { savedJobs, applications, saveJob, removeJob } = useTabContext();
+  const { savedJobs, saveJob, removeJob } = useTabContext();
   const [isApplied, setIsApplied] = useState(false);
   const [resume, setResume] = useState(null);
   const [isUploading, setIsUploading] = useState(false);
 
+  // Fetch applied status from the backend when the component mounts
   useEffect(() => {
-    // Check if the current job has already been applied by the user from localStorage
-    const appliedJobs = JSON.parse(localStorage.getItem("appliedJobs")) || [];
-    setIsApplied(appliedJobs.some((appJob) => appJob.jobTitle === job.jobTitle));
-  }, [job.jobTitle]);
+    const fetchAppliedStatus = async () => {
+      const userInfo = JSON.parse(localStorage.getItem("userInfo"));
+      const studentId = userInfo?._id;
+
+      if (!studentId) {
+        console.log("User not logged in.");
+        return;
+      }
+
+      try {
+        const response = await axios.get(
+          `/api/applications/check-applied/${studentId}/${job._id}`
+        );
+        setIsApplied(response.data.isApplied);
+        console.log("Is Job Applied:", response.data.isApplied); // Debugging
+      } catch (error) {
+        console.error("Error fetching applied status:", error);
+      }
+    };
+
+    fetchAppliedStatus();
+  }, [job._id]);
 
   const handleFileChange = (event) => {
     const file = event.target.files[0];
@@ -25,7 +44,10 @@ const ApplyCards = ({ job, onBack }) => {
   };
 
   const handleApply = async () => {
-    if (isApplied) return;
+    if (isApplied) {
+      alert("You have already applied for this job!");
+      return;
+    }
     if (!resume) {
       alert("Please upload your resume before applying!");
       return;
@@ -47,21 +69,14 @@ const ApplyCards = ({ job, onBack }) => {
       formData.append("internshipId", job._id);
       formData.append("resume", resume);
 
-      const apiResponse = await axios.post(
-       ("/api/applications/apply"),
-        formData,
-        {
-          headers: {
-            "Content-Type": "multipart/form-data",
-          },
-        }
-      );
+      const apiResponse = await axios.post("/api/applications/apply", formData, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      });
 
       if (apiResponse.status === 201) {
         setIsApplied(true);
-        const appliedJobs = JSON.parse(localStorage.getItem("appliedJobs")) || [];
-        appliedJobs.push({ jobTitle: job.jobTitle, internshipId: job._id });
-        localStorage.setItem("appliedJobs", JSON.stringify(appliedJobs));
         alert("Application submitted successfully!");
       } else {
         alert("Failed to submit application to the server.");
