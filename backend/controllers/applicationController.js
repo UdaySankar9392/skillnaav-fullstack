@@ -18,6 +18,7 @@ const applyForInternship = async (req, res) => {
   }
 
   try {
+    // Check if student and internship exist
     const student = await Userwebapp.findById(studentId);
     const internship = await InternshipPosting.findById(internshipId);
 
@@ -27,8 +28,20 @@ const applyForInternship = async (req, res) => {
       });
     }
 
-    const resumeUrl = resumeFile.location; // S3 file URL
+    // Check if the student has already applied for this internship
+    const existingApplication = await Application.findOne({
+      studentId,
+      internshipId,
+    });
 
+    if (existingApplication) {
+      return res.status(400).json({
+        message: "You have already applied for this internship.",
+      });
+    }
+
+    // Create a new application
+    const resumeUrl = resumeFile.location; // S3 file URL
     const newApplication = new Application({
       studentId,
       internshipId,
@@ -40,8 +53,10 @@ const applyForInternship = async (req, res) => {
       jobTitle: internship.jobTitle,
     });
 
+    // Save the application
     await newApplication.save();
 
+    // Return success response
     res.status(201).json({
       message: "Application submitted successfully!",
       application: newApplication,
@@ -123,10 +138,35 @@ const getApplicationsForStudent = async (req, res) => {
   }
 };
 
+// Controller to check if a specific job has been applied by the user
+const checkIfApplied = async (req, res) => {
+  const { studentId, internshipId } = req.params;
+
+  try {
+    // Check if the student has applied for this internship
+    const existingApplication = await Application.findOne({
+      studentId,
+      internshipId,
+    });
+
+    if (existingApplication) {
+      return res.status(200).json({ isApplied: true });
+    } else {
+      return res.status(200).json({ isApplied: false });
+    }
+  } catch (error) {
+    console.error("Error checking application status:", error.message);
+    res.status(500).json({
+      message: "Error checking application status.",
+      error: error.message,
+    });
+  }
+};
 
 module.exports = {
   applyForInternship,
   getApplicationsForInternship,
-  getApplicationStatus, 
+  getApplicationStatus,
   getApplicationsForStudent,
+  checkIfApplied, // Add the new function to exports
 };
