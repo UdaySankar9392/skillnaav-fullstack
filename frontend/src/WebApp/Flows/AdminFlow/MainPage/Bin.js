@@ -16,7 +16,7 @@ const BinManagement = () => {
         const response = await axios.get("/api/interns/bin");
         setDeletedInternships(response.data);
       } catch (error) {
-        setError("Failed to load deleted internships. Please try again later.");
+        setError("");
       } finally {
         setLoading(false);
       }
