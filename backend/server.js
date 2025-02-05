@@ -34,6 +34,9 @@ const chatRoutes = require("./routes/webapp-routes/ChatRoutes");
 const googleUserRoutes = require("./routes/webapp-routes/GoogleUserRoutes"); // Import Google User routes
 const applicationRoutes = require("./routes/webapp-routes/applicationRoutes"); // Import Application routes
 
+// Import Personality routes
+const personalityRoutes = require("./routes/webapp-routes/PersonalityRoutes"); // Import Personality routes
+
 // Define routes
 app.use("/api/users", userRoutes); // User Web App routes
 app.use("/api/interns", internRoutes); // Partner to Admin Intern Posts
@@ -45,6 +48,8 @@ app.use("/api/chats", chatRoutes); // Chat routes
 app.use("/api/google-users", googleUserRoutes); // Google User routes
 app.use("/api/applications", applicationRoutes); // Application routes (this should now work)
 
+// Add Personality routes for handling questions and responses
+app.use("/api/personality", personalityRoutes); // Personality related routes
 
 // Serve static assets if in production
 if (process.env.NODE_ENV === "production") {
