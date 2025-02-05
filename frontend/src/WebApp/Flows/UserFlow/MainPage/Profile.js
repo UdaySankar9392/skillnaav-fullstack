@@ -29,21 +29,36 @@ const ProfileForm = () => {
   const [successMessage, setSuccessMessage] = useState("");
   const [isLevel1Open, setIsLevel1Open] = useState(true);
   const [isLevel2Open, setIsLevel2Open] = useState(false);
-  const [isLevel3Open, setIsLevel3Open] = useState(false); // State to control Level 3 visibility
-  const [loading, setLoading] = useState(false);
+  const [isLevel3Open, setIsLevel3Open] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
-    const userInfo = JSON.parse(localStorage.getItem("userInfo"));
-    if (userInfo) {
-      setUser((prevUser) => ({
-        ...prevUser,
-        ...userInfo,
-        password: "",
-        confirmPassword: "",
-        dob: userInfo.dob ? new Date(userInfo.dob).toISOString().split("T")[0] : "",
-      }));
-    }
+    const fetchUserProfile = async () => {
+      try {
+        const userInfo = JSON.parse(localStorage.getItem("userInfo"));
+        const token = userInfo?.token;
+
+        if (token) {
+          const config = {
+            headers: { Authorization: `Bearer ${token}` },
+          };
+
+          const { data } = await axios.get("/api/users/profile", config);
+          setUser((prevUser) => ({
+            ...prevUser,
+            ...data,
+            password: "",
+            confirmPassword: "",
+            dob: data.dob ? new Date(data.dob).toISOString().split("T")[0] : "",
+          }));
+        }
+      } catch (error) {
+        console.error("Error fetching profile:", error);
+        setErrorMessage("Failed to load profile data.");
+      }
+    };
+
+    fetchUserProfile();
   }, []);
 
   const handleChange = (e) => {
@@ -58,7 +73,7 @@ const ProfileForm = () => {
     setErrorMessage(null);
     setSuccessMessage("");
 
-    if (user.password.length > 0 && user.password.length < 6) {
+    if (user.password && user.password.length < 6) {
       setErrorMessage("Password must be at least 6 characters long.");
       return;
     }
@@ -111,115 +126,94 @@ const ProfileForm = () => {
     { label: "Desired Field", name: "desiredField", type: "text", placeholder: "Enter your desired field" },
     { label: "LinkedIn Profile", name: "linkedin", type: "url", placeholder: "Enter your LinkedIn URL" },
     { label: "Portfolio Link", name: "portfolio", type: "url", placeholder: "Enter your portfolio URL" },
-    { label: "Password", name: "password", type: "password", placeholder:"Enter your password" },
-    { label:"Confirm Password", name:"confirmPassword", type:"password", placeholder:"Confirm your password"},
+    { label: "Password", name: "password", type: "password", placeholder: "Enter your password" },
+    { label: "Confirm Password", name: "confirmPassword", type: "password", placeholder: "Confirm your password" },
   ];
 
   const level2Fields = [
-    { label:"Financial Status", name:"financialStatus", type:"text", placeholder:"Enter your financial status"},
-    { label:"Country", name:"country", type:"text", placeholder:"Enter your country"},
-    { label:"State", name:"state", type:"text", placeholder:"Enter your state"},
-    { label:"City", name:"city", type:"text", placeholder:"Enter your city"},
-    { label:"Postal Code", name:"postalCode", type:"text", placeholder:"Enter your postal code"},
-    { label:"Current Grade", name:"currentGrade", type:"text", placeholder:"Enter your current grade"},
-    { label:"Grade Percentage", name:"gradePercentage", type:"text", placeholder:"Enter your grade percentage"},
+    { label: "Financial Status", name: "financialStatus", type: "text", placeholder: "Enter your financial status" },
+    { label: "Country", name: "country", type: "text", placeholder: "Enter your country" },
+    { label: "State", name: "state", type: "text", placeholder: "Enter your state" },
+    { label: "City", name: "city", type: "text", placeholder: "Enter your city" },
+    { label: "Postal Code", name: "postalCode", type: "text", placeholder: "Enter your postal code" },
+    { label: "Current Grade", name: "currentGrade", type: "text", placeholder: "Enter your current grade" },
+    { label: "Grade Percentage", name: "gradePercentage", type: "text", placeholder: "Enter your grade percentage" },
   ];
 
   return (
     <div className="min-h-screen mt-12 bg-white-50 flex items-center justify-center font-poppins">
       <div className="relative w-full max-w-4xl bg-white p-6 rounded-lg shadow-lg">
-        {/* Profile Heading */}
         <div className="text-center md:text-left mb-6">
           <h2 className="text-3xl font-bold text-gray-800">Your Profile</h2>
           <p className="text-gray-500 mt-2">Update your photo and personal details here.</p>
         </div>
 
-        {/* Form Section */}
-        <form>
-          {/* Level 1 Section */}
-          <div>
-            <div className="flex items-center justify-between">
-              <h3 className="text-2xl font-semibold text-gray-800">Profile Level 1</h3>
-              <button
-                type="button"
-                onClick={() => setIsLevel1Open(!isLevel1Open)}
-                className="text-gray-500 focus:outline-none"
-              >
-                {isLevel1Open ? '▲' : '▼'}
-              </button>
-            </div>
-            {isLevel1Open && (
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 mt-4">
-                {level1Fields.map(({ label, name, type, placeholder }) => (
-                  <div className="flex flex-col" key={name}>
-                    <label htmlFor={name} className="text-sm font-medium text-gray-600 mb-2">{label}</label>
-                    <input
-                      type={type}
-                      id={name}
-                      name={name}
-                      value={user[name]}
-                      onChange={handleChange}
-                      placeholder={placeholder}
-                      className="px-4 py-2 border rounded-md"
-                    />
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
+        {errorMessage && <div className="text-red-500 mb-4">{errorMessage}</div>}
+        {successMessage && <div className="text-green-500 mb-4">{successMessage}</div>}
 
-          {/* Level 2 Section */}
+        <form>
+          {[{ level: 1, isOpen: isLevel1Open, toggle: setIsLevel1Open, fields: level1Fields }, { level: 2, isOpen: isLevel2Open, toggle: setIsLevel2Open, fields: level2Fields }].map(({ level, isOpen, toggle, fields }) => (
+            <div key={level}>
+              <div className="flex items-center justify-between mt-6">
+                <h3 className="text-2xl font-semibold text-gray-800">Profile Level {level}</h3>
+                <button
+                  type="button"
+                  onClick={() => toggle(!isOpen)}
+                  className="text-gray-500 focus:outline-none"
+                >
+                  {isOpen ? '▲' : '▼'}
+                </button>
+              </div>
+              {isOpen && (
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 mt-4">
+                  {fields.map(({ label, name, type, placeholder }) => (
+                    <div className="flex flex-col" key={name}>
+                      <label htmlFor={name} className="text-sm font-medium text-gray-600 mb-2">{label}</label>
+                      <input
+                        type={type}
+                        id={name}
+                        name={name}
+                        value={user[name]}
+                        onChange={handleChange}
+                        placeholder={placeholder}
+                        className="px-4 py-2 border rounded-md"
+                      />
+                    </div>
+                  ))}
+                  {level === 2 && (
+                    <button
+                      type="button"
+                      onClick={handleUpdateProfile}
+                      className="mt-6 bg-blue-500 text-white px-6 py-2 rounded-md"
+                    >
+                      Save/Update Profile
+                    </button>
+                  )}
+                </div>
+              )}
+            </div>
+          ))}
+
           <div>
             <div className="flex items-center justify-between mt-6">
-              <h3 className="text-2xl font-semibold text-gray-800">Profile Level 2</h3>
+              <h3 className="text-2xl font-semibold text-gray-800">Profile Level 3 (Personality Questions)</h3>
               <button
                 type="button"
-                onClick={() => setIsLevel2Open(!isLevel2Open)}
+                onClick={() => setIsLevel3Open(!isLevel3Open)}
                 className="text-gray-500 focus:outline-none"
               >
-                {isLevel2Open ? '▲' : '▼'}
+                {isLevel3Open ? '▲' : '▼'}
               </button>
             </div>
-            {isLevel2Open && (
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 mt-4">
-                {level2Fields.map(({ label, name, type, placeholder }) => (
-                  <div className="flex flex-col" key={name}>
-                    <label htmlFor={name} className="text-sm font-medium text-gray-600 mb-2">{label}</label>
-                    <input
-                      type={type}
-                      id={name}
-                      name={name}
-                      value={user[name]}
-                      onChange={handleChange}
-                      placeholder={placeholder}
-                      className="px-4 py-2 border rounded-md"
-                    />
-                  </div>
-                ))}
-              </div>
+            {isLevel3Open && (
+              <LevelThree
+                profileData={user}
+                createLevelThree={isLevel3Open}
+                setCreateLevelThree={setIsLevel3Open}
+                handleProfileData={handleUpdateProfile}
+              />
             )}
           </div>
-
-          {/* Level 3 Section */}
-          {isLevel3Open && (
-            <LevelThree
-              profileData={user} // Passing user data as profileData
-              createLevelThree={isLevel3Open}
-              setCreateLevelThree={setIsLevel3Open}
-              handleProfileData={handleUpdateProfile}
-            />
-          )}
-
-          {/* Toggle Level 3 */}
-          {!isLevel3Open && (
-            <button
-              type="button"
-              onClick={() => setIsLevel3Open(true)}
-              className="text-blue-500 mt-6"
-            >
-              Go to Level 3 (Personality Questions)
-            </button>
-          )}
         </form>
       </div>
     </div>
