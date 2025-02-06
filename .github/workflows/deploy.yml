@@ -3,7 +3,7 @@ name: Deploy to Server
 on:
   push:
     branches:
-      - udaysai6-02-25  # Adjust the branch as necessary
+      - udaysai6-02-25  # Updated default branch
 
 jobs:
   deploy:
@@ -16,11 +16,15 @@ jobs:
       - name: Setup SSH
         uses: webfactory/ssh-agent@v0.5.3
         with:
-          ssh-private-key: ${{ secrets.EC2_SSH_KEY }}  # Ensure this matches the secret name
+          ssh-private-key: ${{ secrets.EC2_SSH_KEY }}  # Ensure this matches your GitHub secret
 
-      - name: Run deployment script
+      - name: Get Branch Name
+        id: branch
+        run: echo "BRANCH_NAME=${GITHUB_REF#refs/heads/}" >> $GITHUB_ENV  # Extracts the branch name dynamically
+
+      - name: Run deployment script on EC2
         run: |
-          ssh -o StrictHostKeyChecking=no ubuntu@www.skillnaav.com << 'EOF'
+          ssh -o StrictHostKeyChecking=no ubuntu@www.skillnaav.com << EOF
             cd /home/ubuntu/skillnaav-fullstack
-            ./deploy.sh udaysai6-02-25  # Pass the branch name directly
+            ./deploy.sh "$BRANCH_NAME"  # Passes the branch dynamically
           EOF
