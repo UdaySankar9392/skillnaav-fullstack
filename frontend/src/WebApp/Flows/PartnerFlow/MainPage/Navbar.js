@@ -8,7 +8,7 @@ import { useNavigate } from "react-router-dom";
 const Navbar = () => {
   const { fine } = useTabContext();
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
-  const [userInfo, setUserInfo] = useState({ name: "", email: "", profileImage: "" });
+  const [userInfo, setUserInfo] = useState({ name: "", email: "" });
   const dropdownRef = useRef(null);
   const navigate = useNavigate();
 
@@ -49,26 +49,15 @@ const Navbar = () => {
     <div className="bg-white font-poppins text-gray-800 p-4 border-b border-gray-300 sticky top-0 z-50 flex justify-between items-center">
       {/* Left side: Skillnaav logo */}
       <div className="flex items-center lg:hidden md:hidden">
-        <img
-          src={logo}
-          alt="Skillnaav Logo"
-          className="h-10 object-contain"
-        />
-      </div>
+             <img
+               src={logo}
+               alt="Skillnaav Logo"
+               className="h-10 object-contain"
+             />
+           </div>
 
       {/* Right side: User icon and dropdown */}
       <div className="relative ml-auto flex items-center">
-        {/* Display profile image */}
-        {userInfo.profileImage ? (
-          <img
-            src={userInfo.profileImage}
-            alt="User Profile"
-            className="w-8 h-8 rounded-full object-cover mr-2"
-          />
-        ) : (
-          <FontAwesomeIcon icon={faUser} className="w-8 h-8 text-gray-800" />
-        )}
-
         {/* Display user's name in the navbar */}
         {userInfo.name && (
           <span className="mr-2 text-gray-800 text-sm">{userInfo.name}</span>
