@@ -1,4 +1,4 @@
-name: Deploy to Server
+name: Deploy to Server 
 
 on:
   push:
@@ -18,15 +18,9 @@ jobs:
         with:
           ssh-private-key: ${{ secrets.EC2_SSH_KEY }}  # Ensure this matches the secret name
 
-      - name: Update .env file on server
-        run: |
-          ssh -o StrictHostKeyChecking=no ubuntu@www.skillnaav.com << 'EOF'
-            echo "${{ secrets.ENV_FILE }}" > /home/ubuntu/skillnaav-fullstack/backend/.env
-          EOF
-
       - name: Run deployment script
         run: |
-          ssh -o StrictHostKeyChecking=no ubuntu@www.skillnaav.com << 'EOF'
+          ssh -o StrictHostKeyChecking=no ubuntu@www.skillnaav.com <<EOF
             cd /home/ubuntu/skillnaav-fullstack
             ./deploy.sh udaysai8-1-25  # Pass the branch name directly
           EOF
