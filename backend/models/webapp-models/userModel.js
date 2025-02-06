@@ -3,90 +3,35 @@ const bcrypt = require("bcrypt");
 
 const userwebappSchema = new mongoose.Schema(
   {
-    name: {
-      type: String,
-      required: true,
-    },
-    email: {
-      type: String,
-      required: true,
-      unique: true,
-      trim: true,
-    },
-    password: {
-      type: String,
-      required: true,
-    },
-    otp: { 
-      type: String 
-    },
-    otpExpiration: { 
-      type: Date 
-    },
+    name: { type: String, required: true },
+    email: { type: String, required: true, unique: true, trim: true },
+    password: { type: String, required: true },
+    otp: { type: String },
+    otpExpiration: { type: Date },
+    universityName: { type: String, required: true },
+    dob: { type: String, required: true },
+    educationLevel: { type: String, required: true },
+    fieldOfStudy: { type: String, required: true },
+    desiredField: { type: String, required: true },
+    linkedin: { type: String, required: true },
+    portfolio: { type: String },
 
-    universityName: {
-      type: String,
-      required: true,
-    },
-    dob: {
-      type: String,
-      required: true,
-    },
-    educationLevel: {
-      type: String,
-      required: true,
-    },
-    fieldOfStudy: {
-      type: String,
-      required: true,
-    },
-    desiredField: {
-      type: String,
-      required: true,
-    },
-    linkedin: {
-      type: String,
-      required: true,
-    },
-    portfolio: {
-      type: String,
-    },
+    // ✅ Keep only one profileImage field
+    profileImage: { type: String, required: true },
 
-    // New fields added (not required)
-    financialStatus: {
-      type: String,
-    },
-    state: {
-      type: String,
-    },
-    country: {
-      type: String,
-    },
-    city: {
-      type: String,
-    },
-    postalCode: {
-      type: String,
-    },
-    currentGrade: {
-      type: String,
-    },
-    gradePercentage: {
-      type: String,
-    },
+    // New fields added (optional)
+    financialStatus: { type: String },
+    state: { type: String },
+    country: { type: String },
+    city: { type: String },
+    postalCode: { type: String },
+    currentGrade: { type: String },
+    gradePercentage: { type: String },
 
-    adminApproved: {
-      type: Boolean,
-      default: false,
-    },
-    isActive: {
-      type: Boolean,
-      default: false,
-    },
+    adminApproved: { type: Boolean, default: false },
+    isActive: { type: Boolean, default: false },
   },
-  {
-    timestamps: true,
-  }
+  { timestamps: true }
 );
 
 // Hash password before saving

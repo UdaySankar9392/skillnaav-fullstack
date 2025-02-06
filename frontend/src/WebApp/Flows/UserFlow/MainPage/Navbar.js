@@ -1,14 +1,14 @@
 import React, { useState, useRef, useEffect } from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faUser, faSignOutAlt } from "@fortawesome/free-solid-svg-icons";
-import { useTabContext } from "./UserHomePageContext/HomePageContext";
-import { useNavigate } from "react-router-dom";
 import logo from "../../../../assets-webapp/Skillnaav-logo.png"; // Replace with your actual logo path
+import { useTabContext } from "./UserHomePageContext/HomePageContext"; // Adjust path as needed
+import { useNavigate } from "react-router-dom";
 
 const Navbar = () => {
   const { fine } = useTabContext();
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
-  const [userInfo, setUserInfo] = useState({ name: "", email: "" });
+  const [userInfo, setUserInfo] = useState({ name: "", email: "", profileImage: "" });
   const dropdownRef = useRef(null);
   const navigate = useNavigate();
 
@@ -21,13 +21,13 @@ const Navbar = () => {
   }, []);
 
   const handleUserClick = () => {
-    setIsDropdownOpen(!isDropdownOpen);
+    setIsDropdownOpen(!isDropdownOpen); // Toggle dropdown visibility when profile image is clicked
   };
 
   const handleLogout = () => {
     // Clear user information from localStorage
     localStorage.removeItem("userInfo");
-    // Redirect to login page
+    // Redirect to partner login page
     navigate("/user/login");
   };
 
@@ -56,16 +56,28 @@ const Navbar = () => {
         />
       </div>
 
-      {/* Right side: User icon and dropdown */}
+      {/* Right side: User profile image and dropdown */}
       <div className="relative ml-auto flex items-center">
+        {/* Display profile image */}
+        {userInfo.profileImage ? (
+          <img
+            src={userInfo.profileImage}
+            alt="User Profile"
+            className="w-8 h-8 rounded-full object-cover mr-2 cursor-pointer"
+            onClick={handleUserClick} // Open dropdown when profile image is clicked
+          />
+        ) : (
+          <FontAwesomeIcon
+            icon={faUser}
+            className="w-8 h-8 text-gray-800 cursor-pointer"
+            onClick={handleUserClick} // Open dropdown when default user icon is clicked
+          />
+        )}
+
         {/* Display user's name in the navbar */}
         {userInfo.name && (
           <span className="mr-2 text-gray-800 text-sm">{userInfo.name}</span>
         )}
-
-        <button onClick={handleUserClick} className="focus:outline-none">
-          <FontAwesomeIcon icon={faUser} className="w-6 h-6 text-gray-800" />
-        </button>
 
         {isDropdownOpen && (
           <div
