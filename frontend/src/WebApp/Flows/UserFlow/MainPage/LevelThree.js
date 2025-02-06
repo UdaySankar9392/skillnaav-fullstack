@@ -1,14 +1,15 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
-import { CircularProgress } from "@mui/material";
+import { CircularProgress } from "@mui/material"; // Material UI Spinner
 
-const LevelThree = ({ profileData, setCreateLevelThree }) => {
+const LevelThree = ({ profileData, setCreateLevelThree, handleProfileData }) => {
   const [loading, setLoading] = useState(false);
   const [allQuestions, setAllQuestions] = useState([]);
   const [selectedAnswers, setSelectedAnswers] = useState({});
-  const [submitted, setSubmitted] = useState(false);
+  const [submitted, setSubmitted] = useState(false); // Track submission status
 
   const answrOptions = [1, 2, 3, 4, 5];
+
   const answerMapping = {
     1: "Dislike",
     2: "Slightly Dislike",
@@ -21,6 +22,7 @@ const LevelThree = ({ profileData, setCreateLevelThree }) => {
     const fetchQuestionsAndResponses = async () => {
       try {
         setLoading(true);
+
         const questionsRes = await axios.get("/api/personality/questions");
         const sortedQuestions = questionsRes.data.sort(
           (a, b) => new Date(b.createdAt) - new Date(a.createdAt)
@@ -62,6 +64,7 @@ const LevelThree = ({ profileData, setCreateLevelThree }) => {
 
   const handleAnswerChange = (questionId, answerIndex) => {
     const responseValue = answerMapping[answerIndex];
+
     setSelectedAnswers((prev) => ({
       ...prev,
       [questionId]: {
@@ -71,17 +74,26 @@ const LevelThree = ({ profileData, setCreateLevelThree }) => {
     }));
   };
 
-  const handleSubmit = () => {
-    if (submitted) return;
-
-    const answersToSubmit = Object.keys(selectedAnswers).map((questionId) => ({
-      userId: profileData?._id,
-      questionId: questionId,
-      response: selectedAnswers[questionId]?.response,
-      points: 0,
-      status: "active",
-    }));
-
+  const handleSubmit = (event) => {
+    event.preventDefault(); // Prevent page reload
+  
+    if (submitted) {
+      return; // Don't submit if already submitted
+    }
+  
+    const answersToSubmit = Object.keys(selectedAnswers).map((questionId) => {
+      const responseValue = selectedAnswers[questionId]?.response;
+      return {
+        userId: profileData?._id,
+        questionId: questionId,
+        response: responseValue,
+        points: 0,
+        status: "active",
+      };
+    });
+  
+    console.log("Submitting answers:", answersToSubmit);
+  
     axios
       .post("/api/personality/responses/bulk", {
         responses: answersToSubmit,
@@ -90,7 +102,7 @@ const LevelThree = ({ profileData, setCreateLevelThree }) => {
       .then(({ data }) => {
         if (data.success) {
           setCreateLevelThree(false);
-          setSubmitted(true);
+          setSubmitted(true); // Set submitted to true after successful submission
         } else {
           console.error("Error saving answers:", data.message);
         }
@@ -99,54 +111,68 @@ const LevelThree = ({ profileData, setCreateLevelThree }) => {
         console.error("Error saving answers:", error.response || error.message);
       });
   };
+  
 
   return (
-    <div className="p-6 bg-white shadow-md rounded-lg">
-      <div className="flex justify-between items-center mb-4">
-        <h2 className="text-xl font-semibold">Personality Questionnaire</h2>
-        <button onClick={() => setCreateLevelThree(false)} className="text-red-500 text-xl">&#10006;</button>
+    <div className="popularS1">
+      <div className="head-txt">
+        <div className="title">Naavi Profile Level Three</div>
+        <div
+          onClick={() => setCreateLevelThree(false)}
+          className="close-div cursor-pointer"
+        >
+          <span>&#10006;</span>
+        </div>
       </div>
 
-      {loading ? (
-        <div className="flex justify-center py-4">
-          <CircularProgress />
-        </div>
-      ) : (
-        <>
-          <p className="mb-4 text-gray-600">Progress: {totalAnswered} / {allQuestions.length}</p>
-          <div className="space-y-4">
-            {allQuestions.map((item) => (
-              <div key={item._id} className="border p-4 rounded-md bg-gray-50">
-                <p className="mb-2 font-medium text-gray-800">{item.question}</p>
-                <div className="flex space-x-4 justify-start">
-                  {answrOptions.map((option) => {
-                    const isSelected = selectedAnswers[item._id]?.response === answerMapping[option];
-                    return (
-                      <button
-                        key={option}
-                        className={`w-10 h-10 rounded-full text-center font-bold border transition duration-300 ${
-                          isSelected ? "bg-blue-500 text-white" : "bg-white border-gray-300"
-                        }`}
-                        onClick={() => handleAnswerChange(item._id, option)}
-                      >
-                        {option}
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-            ))}
+      <div className="overall-div">
+        {loading ? (
+          <div className="flex justify-center items-center py-4">
+            <CircularProgress />
           </div>
+        ) : (
+          <>
+            <div className="progress-text">
+              Test Progress: {totalAnswered} / {allQuestions.length}
+            </div>
+            <div className="level3-section">
+              {allQuestions.map((item) => (
+                <div key={item._id} className="single-question-wrapper py-4">
+                  <div className="question-text">{item.question}</div>
+                  <div className="answer-options flex gap-6 mt-2">
+                    {answrOptions.map((option) => {
+                      const isSelected =
+                        selectedAnswers[item._id]?.response ===
+                        answerMapping[option];
 
-          <button
-            onClick={handleSubmit}
-            className="mt-6 w-full bg-blue-600 text-white py-3 rounded-md hover:bg-blue-700 disabled:bg-gray-400"
-            disabled={totalAnswered !== allQuestions.length || submitted}
-          >
-            Submit Answers
-          </button>
-        </>
-      )}
+                      return (
+                        <div
+                          key={option}
+                          className={`answer-circle p-4 cursor-pointer rounded-full text-center transition-colors duration-300 ${
+                            isSelected
+                              ? "bg-blue-500 text-white"
+                              : "bg-gray-200"
+                          }`}
+                          onClick={() => handleAnswerChange(item._id, option)}
+                        >
+                          {option}
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              ))}
+              <button
+                onClick={handleSubmit}
+                className="submit-btn bg-blue-500 text-white px-6 py-3 rounded-full mt-4 disabled:bg-gray-400"
+                disabled={totalAnswered !== allQuestions.length || submitted}
+              >
+                Submit All Answers
+              </button>
+            </div>
+          </>
+        )}
+      </div>
     </div>
   );
 };
