@@ -3,7 +3,7 @@ name: Deploy to Server
 on:
   push:
     branches:
-      - udaysai6-02-25  # Adjust the branch as necessary
+      - udaysai6-02-25 # Adjust the branch as necessary
 
 jobs:
   deploy:
