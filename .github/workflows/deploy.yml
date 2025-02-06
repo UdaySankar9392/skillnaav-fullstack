@@ -18,6 +18,12 @@ jobs:
         with:
           ssh-private-key: ${{ secrets.EC2_SSH_KEY }}  # Ensure this matches the secret name
 
+      - name: Update .env file on server
+        run: |
+          ssh -o StrictHostKeyChecking=no ubuntu@www.skillnaav.com << 'EOF'
+            echo "${{ secrets.ENV_FILE }}" > /home/ubuntu/skillnaav-fullstack/backend/.env
+          EOF
+
       - name: Run deployment script
         run: |
           ssh -o StrictHostKeyChecking=no ubuntu@www.skillnaav.com << 'EOF'
