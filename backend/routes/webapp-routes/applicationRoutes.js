@@ -1,7 +1,7 @@
 const express = require("express");
 const router = express.Router();
 const applicationController = require("../../controllers/applicationController");
-const { upload } = require("../../utils/multer"); // Multer middleware for file uploads
+const { resumeUpload } = require("../../utils/multer"); // Multer middleware for file uploads
 
 // Destructure the required function from applicationController
 const {
@@ -13,7 +13,7 @@ const {
 } = applicationController;
 
 // Route to apply for an internship
-router.post("/apply", upload.single("resume"), (req, res, next) => {
+router.post("/apply", resumeUpload.single("resume"), (req, res, next) => {
   if (!req.file) {
     return res.status(400).json({
       message: "No file uploaded, please upload a resume.",

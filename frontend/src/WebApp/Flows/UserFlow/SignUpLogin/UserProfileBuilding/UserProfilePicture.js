@@ -5,8 +5,8 @@ import axios from "axios";
 const UserProfilePicture = () => {
   const location = useLocation();
   const navigate = useNavigate();
-  
-  // Initialize formData with localStorage or location state
+
+  // Initialize formData with profile picture field
   const [formData, setFormData] = useState(() => {
     const savedData = localStorage.getItem("userProfileData");
     return savedData ? JSON.parse(savedData) : {
@@ -14,49 +14,94 @@ const UserProfilePicture = () => {
       desiredField: "",
       linkedin: "",
       portfolio: "",
+      profilePic: null,
     };
   });
 
-  // Save form data to localStorage whenever it changes
+  // Save form data to localStorage
   useEffect(() => {
     localStorage.setItem("userProfileData", JSON.stringify(formData));
   }, [formData]);
 
+  const handleFileChange = (e) => {
+    const file = e.target.files[0];
+    if (file && !file.type.startsWith("image/")) {
+      alert("Please upload an image file (JPEG, PNG, JPG)");
+      return;
+    }
+    setFormData({ ...formData, profilePic: file });
+  };
+
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData({ ...formData, [name]: value });
+    setFormData((prevData) => ({
+      ...prevData,
+      [name]: value,
+    }));
   };
 
   const handleSubmit = async () => {
-    // Combine the formData with location.state.formData
-    const completeProfileData = {
+    // Combine all form data
+    const completeData = {
       ...location.state.formData,
       ...formData,
     };
 
-    // Validate all required fields except portfolio
-    if (!completeProfileData.name || !completeProfileData.email || !completeProfileData.universityName || !completeProfileData.dob || !completeProfileData.educationLevel || !completeProfileData.fieldOfStudy || !completeProfileData.desiredField || !completeProfileData.linkedin) {
-      alert("Please fill all required fields.");
+    // Validate required fields
+    const requiredFields = [
+      "name", "email", "password", "confirmPassword",
+      "universityName", "dob", "educationLevel",
+      "fieldOfStudy", "desiredField", "linkedin"
+    ];
+
+    if (!requiredFields.every(field => completeData[field])) {
+      alert("Please fill all required fields");
+      return;
+    }
+
+    if (!formData.profilePic) {
+      alert("Please upload a profile picture");
       return;
     }
 
     try {
-      // Submit the data to your backend/database using Axios
-      const response = await axios.post('/api/users/register', completeProfileData);
+      const formDataToSend = new FormData();
+      
+      // Append all registration fields
+      Object.entries(completeData).forEach(([key, value]) => {
+        if (key === "profilePic") return; // Handle file separately
+        formDataToSend.append(key, value);
+      });
+
+      // Append profile picture with correct field name
+      formDataToSend.append("profileImage", formData.profilePic);
+
+
+      const response = await axios.post("/api/users/register", formDataToSend, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      });
 
       if (response.status === 201) {
-        // Clear localStorage after successful submission
         localStorage.removeItem("userProfileData");
         navigate("/user/login");
       }
     } catch (error) {
-      console.error("Error submitting form:", error);
-      alert("Registration failed. Please try again.");
+      console.error("Registration error:", error);
+      alert(
+        error.response?.data?.error ||
+        "Registration failed. Please check your inputs and try again."
+      );
     }
   };
 
   const isFormValid = () => {
-    return formData.desiredField && formData.linkedin;
+    return (
+      formData.desiredField &&
+      formData.linkedin &&
+      formData.profilePic
+    );
   };
 
   return (
@@ -118,6 +163,19 @@ const UserProfilePicture = () => {
                 placeholder="Enter your Portfolio URL"
               />
             </div>
+
+            {/* Profile Image Input */}
+            <div>
+              <label htmlFor="profilepic" className="block text-sm font-medium text-gray-700">Profile Image</label>
+              <input
+                id="profilePic"
+                type="file"
+                name="profilePic"
+                onChange={handleFileChange}
+                accept="image/*"
+                className="mt-2 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-purple-500 focus:border-purple-500"
+              />
+            </div>
           </div>
 
           {/* Button Section with Back and Submit Buttons */}
@@ -133,9 +191,7 @@ const UserProfilePicture = () => {
               type="button"
               onClick={handleSubmit}
               disabled={!isFormValid()}
-              className={`w-full py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white ${
-                isFormValid() ? "bg-purple-600 hover:bg-purple-700" : "bg-purple-300 cursor-not-allowed"
-              } focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500`}
+              className={`w-full py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white ${isFormValid() ? "bg-purple-600 hover:bg-purple-700" : "bg-purple-300 cursor-not-allowed"} focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500`}
             >
               Submit
             </button>

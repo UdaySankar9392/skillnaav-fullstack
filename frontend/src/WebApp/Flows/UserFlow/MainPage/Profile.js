@@ -23,6 +23,7 @@ const ProfileForm = () => {
     postalCode: "",
     currentGrade: "",
     gradePercentage: "",
+    profileImage: "", // New profileImage state for storing the selected image
   });
 
   const [errorMessage, setErrorMessage] = useState(null);
@@ -37,12 +38,12 @@ const ProfileForm = () => {
       try {
         const userInfo = JSON.parse(localStorage.getItem("userInfo"));
         const token = userInfo?.token;
-
+  
         if (token) {
           const config = {
             headers: { Authorization: `Bearer ${token}` },
           };
-
+  
           const { data } = await axios.get("/api/users/profile", config);
           setUser((prevUser) => ({
             ...prevUser,
@@ -50,6 +51,7 @@ const ProfileForm = () => {
             password: "",
             confirmPassword: "",
             dob: data.dob ? new Date(data.dob).toISOString().split("T")[0] : "",
+            profileImage: data.profileImage || prevUser.profileImage, // If profilePic exists, update state
           }));
         }
       } catch (error) {
@@ -57,10 +59,11 @@ const ProfileForm = () => {
         setErrorMessage("Failed to load profile data.");
       }
     };
-
+  
     fetchUserProfile();
   }, []);
-
+  
+  
   const handleChange = (e) => {
     const { name, value } = e.target;
     setUser((prevUser) => ({
@@ -69,45 +72,51 @@ const ProfileForm = () => {
     }));
   };
 
+  const handleFileChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setUser((prevUser) => ({
+          ...prevUser,
+          profileImage: reader.result, // Set the image as a base64 string
+        }));
+      };
+      reader.readAsDataURL(file); // Convert image to base64
+    }
+  };
+
   const handleUpdateProfile = async () => {
     setErrorMessage(null);
     setSuccessMessage("");
-
-    if (user.password && user.password.length < 6) {
-      setErrorMessage("Password must be at least 6 characters long.");
-      return;
-    }
-
-    if (user.password !== user.confirmPassword) {
-      setErrorMessage("Passwords do not match.");
-      return;
-    }
-
+  
     try {
       const userInfo = JSON.parse(localStorage.getItem("userInfo"));
       const token = userInfo?.token;
-
+  
       if (!token) {
         setErrorMessage("No token found. Please log in again.");
         return;
       }
-
+  
       const config = {
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
         },
       };
-
+  
       const { data } = await axios.post("/api/users/profile", user, config);
-
+  
       if (data) {
         localStorage.setItem("userInfo", JSON.stringify({ ...data, token }));
         setSuccessMessage("Profile updated successfully!");
+  
         setUser((prevUser) => ({
           ...prevUser,
           password: "",
           confirmPassword: "",
+          profileImage: data.profilePic || prevUser.profileImage, // Update profile image after saving
         }));
       }
     } catch (error) {
@@ -115,7 +124,7 @@ const ProfileForm = () => {
       setErrorMessage("Failed to update profile. " + (error.response?.data?.message || "Unknown error"));
     }
   };
-
+  
   const level1Fields = [
     { label: "Full name", name: "name", type: "text", placeholder: "Enter your full name" },
     { label: "Email Address", name: "email", type: "email", placeholder: "Enter your email address" },
@@ -142,59 +151,85 @@ const ProfileForm = () => {
 
   return (
     <div className="min-h-screen mt-12 bg-white-50 flex items-center justify-center font-poppins">
-      <div className="relative w-full max-w-4xl bg-white p-6 rounded-lg shadow-lg">
-        <div className="text-center md:text-left mb-6">
-          <h2 className="text-3xl font-bold text-gray-800">Your Profile</h2>
-          <p className="text-gray-500 mt-2">Update your photo and personal details here.</p>
-        </div>
-
-        {errorMessage && <div className="text-red-500 mb-4">{errorMessage}</div>}
-        {successMessage && <div className="text-green-500 mb-4">{successMessage}</div>}
-
-        <form>
-          {[{ level: 1, isOpen: isLevel1Open, toggle: setIsLevel1Open, fields: level1Fields }, { level: 2, isOpen: isLevel2Open, toggle: setIsLevel2Open, fields: level2Fields }].map(({ level, isOpen, toggle, fields }) => (
-            <div key={level}>
-              <div className="flex items-center justify-between mt-6">
-                <h3 className="text-2xl font-semibold text-gray-800">Profile Level {level}</h3>
-                <button
-                  type="button"
-                  onClick={() => toggle(!isOpen)}
-                  className="text-gray-500 focus:outline-none"
-                >
-                  {isOpen ? '▲' : '▼'}
-                </button>
-              </div>
-              {isOpen && (
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 mt-4">
-                  {fields.map(({ label, name, type, placeholder }) => (
-                    <div className="flex flex-col" key={name}>
-                      <label htmlFor={name} className="text-sm font-medium text-gray-600 mb-2">{label}</label>
-                      <input
-                        type={type}
-                        id={name}
-                        name={name}
-                        value={user[name]}
-                        onChange={handleChange}
-                        placeholder={placeholder}
-                        className="px-4 py-2 border rounded-md"
-                      />
-                    </div>
-                  ))}
-                  {level === 2 && (
-                    <button
-                      type="button"
-                      onClick={handleUpdateProfile}
-                      className="mt-6 bg-blue-500 text-white px-6 py-2 rounded-md"
-                    >
-                      Save/Update Profile
-                    </button>
-                  )}
-                </div>
-              )}
+    <div className="relative w-full max-w-4xl bg-white p-6 rounded-lg shadow-lg">
+      <div className="text-center md:text-left mb-6">
+        <h2 className="text-3xl font-bold text-gray-800">Your Profile</h2>
+        <p className="text-gray-500 mt-2">Update your photo and personal details here.</p>
+      </div>
+  
+      {errorMessage && <div className="text-red-500 mb-4">{errorMessage}</div>}
+      {successMessage && <div className="text-green-500 mb-4">{successMessage}</div>}
+  
+      <form>
+        {[{ level: 1, isOpen: isLevel1Open, toggle: setIsLevel1Open, fields: level1Fields }, { level: 2, isOpen: isLevel2Open, toggle: setIsLevel2Open, fields: level2Fields }].map(({ level, isOpen, toggle, fields }) => (
+          <div key={level}>
+            <div className="flex items-center justify-between mt-6">
+              <h3 className="text-2xl font-semibold text-gray-800">Profile Level {level}</h3>
+              <button
+                type="button"
+                onClick={() => toggle(!isOpen)}
+                className="text-gray-500 focus:outline-none"
+              >
+                {isOpen ? '▲' : '▼'}
+              </button>
             </div>
-          ))}
+            {isOpen && (
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 mt-4">
+                {fields.map(({ label, name, type, placeholder }) => (
+                  <div className="flex flex-col" key={name}>
+                    <label htmlFor={name} className="text-sm font-medium text-gray-600 mb-2">{label}</label>
+                    <input
+                      type={type}
+                      id={name}
+                      name={name}
+                      value={user[name]}
+                      onChange={handleChange}
+                      placeholder={placeholder}
+                      className="px-4 py-2 border rounded-md"
+                    />
+                  </div>
+                ))}
+                {/* Profile Image upload section */}
+                {level === 1 && (
+  <div className="flex flex-col">
+    <label htmlFor="profileImage" className="text-sm font-medium text-gray-600 mb-2">Profile Image</label>
+    <input
+      type="file"
+      id="profileImage"
+      name="profileImage"
+      accept="image/*"
+      onChange={handleFileChange}
+      className="px-4 py-2 border rounded-md"
+    />
+    <div className="mt-4 flex justify-center items-center">
+      {/* Display the uploaded or existing profile image */}
+      {user.profileImage && (
+        <img 
+          src={user.profileImage} 
+          alt="Profile"
+          className="w-24 h-24 rounded-full object-cover border-4 border-gray-300"
+        />
+      )}
+    </div>
+  </div>
+)}
 
-          <div>
+                {level === 2 && (
+                  <button
+                    type="button"
+                    onClick={handleUpdateProfile}
+                    className="mt-6 bg-blue-500 text-white px-6 py-2 rounded-md w-full"
+                  >
+                    Save Changes
+                  </button>
+                )}
+              </div>
+              
+            )}
+          </div>
+          
+        ))}
+         <div>
             <div className="flex items-center justify-between mt-6">
               <h3 className="text-2xl font-semibold text-gray-800">Profile Level 3 (Personality Questions)</h3>
               <button
@@ -214,9 +249,10 @@ const ProfileForm = () => {
               />
             )}
           </div>
-        </form>
-      </div>
+      </form>
     </div>
+  </div>
+  
   );
 };
 

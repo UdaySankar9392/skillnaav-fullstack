@@ -2,7 +2,7 @@ const asyncHandler = require("express-async-handler");
 const Userwebapp = require("../models/webapp-models/userModel");
 const generateToken = require("../utils/generateToken");
 const notifyUser = require("../utils/notifyUser"); // Import the notifyUser function
-
+const { profilePicUpload } = require('../utils/multer'); // Import the profilePicUpload middleware
 
 // In your controller file (e.g., userController.js)
 const getUserProfile = asyncHandler(async (req, res) => {
@@ -32,8 +32,10 @@ const getUserProfile = asyncHandler(async (req, res) => {
     postalCode: user.postalCode,
     currentGrade: user.currentGrade,
     gradePercentage: user.gradePercentage,
+    profileImage: user.profileImage,  // Include the profile image in the response
   });
 });
+
 // Helper function to check required fields
 const areFieldsFilled = (fields) => fields.every((field) => field);
 
@@ -44,8 +46,6 @@ const checkIfUserExists = asyncHandler(async (req, res) => {
   
   res.json({ exists: !!userExists }); // Respond with true or false
 });
-
-
 
   // Generate a random OTP
 const generateOTP = () => {
@@ -103,6 +103,7 @@ const verifyOTPAndResetPassword = asyncHandler(async (req, res) => {
 
   res.status(200).json({ message: "Password has been successfully updated." });
 });
+
 // Register a new user
 const registerUser = asyncHandler(async (req, res) => {
   console.log('Request Body:', req.body); // Log the request body
@@ -122,7 +123,7 @@ const registerUser = asyncHandler(async (req, res) => {
   } = req.body;
 
   // Check for required fields
-  if (!areFieldsFilled([name, email, password, confirmPassword, universityName, dob, educationLevel, fieldOfStudy, desiredField, linkedin, ])) {
+  if (!areFieldsFilled([name, email, password, confirmPassword, universityName, dob, educationLevel, fieldOfStudy, desiredField, linkedin])) {
     res.status(400);
     throw new Error("Please fill all required fields.");
   }
@@ -140,6 +141,15 @@ const registerUser = asyncHandler(async (req, res) => {
     throw new Error("User already exists");
   }
 
+  // Check if a profile picture was uploaded
+  if (!req.file) {
+    res.status(400);
+    throw new Error("Profile picture is required.");
+  }
+
+  // Get the S3 URL of the uploaded profile picture
+  const profilePicUrl = req.file.location;
+
   // Create new user
   const user = await Userwebapp.create({
     name,
@@ -152,6 +162,7 @@ const registerUser = asyncHandler(async (req, res) => {
     desiredField,
     linkedin,
     portfolio,
+    profileImage: profilePicUrl, // Save the profile picture URL (aligned with model)
     adminApproved: false, // Default to false
   });
 
@@ -167,6 +178,7 @@ const registerUser = asyncHandler(async (req, res) => {
       desiredField: user.desiredField,
       linkedin: user.linkedin,
       portfolio: user.portfolio,
+      profileImage: user.profileImage, // Include profile image URL in the response (aligned with model)
       token: generateToken(user._id), // Generate token
       adminApproved: user.adminApproved, // Include admin approval status
     });
@@ -175,6 +187,7 @@ const registerUser = asyncHandler(async (req, res) => {
     throw new Error("Error occurred while registering user.");
   }
 });
+
 
 // Authenticate user (login)
 const authUser = asyncHandler(async (req, res) => {
@@ -197,6 +210,7 @@ const authUser = asyncHandler(async (req, res) => {
       desiredField: user.desiredField,
       linkedin: user.linkedin,
       portfolio: user.portfolio,
+      profileImage: user.profileImage,
       token, // Generate token here
       adminApproved: user.adminApproved // Include admin approval status
     });
@@ -233,6 +247,9 @@ const updateUserProfile = asyncHandler(async (req, res) => {
   user.currentGrade = req.body.currentGrade || user.currentGrade;
   user.gradePercentage = req.body.gradePercentage || user.gradePercentage;
 
+  // Add profile image if provided
+  user.profileImage = req.body.profileImage || user.profileImage;
+
   if (req.body.password) {
     user.password = req.body.password; // This will trigger the password hashing pre-save hook
   }
@@ -257,9 +274,11 @@ const updateUserProfile = asyncHandler(async (req, res) => {
     postalCode: updatedUser.postalCode,
     currentGrade: updatedUser.currentGrade,
     gradePercentage: updatedUser.gradePercentage,
+    profileImage: updatedUser.profileImage,  // Include the updated profile image in the response
     token: generateToken(updatedUser._id), // Regenerate token
   });
 });
+
 
 
 // Get all users with additional fields
