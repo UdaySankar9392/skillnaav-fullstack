@@ -27,4 +27,4 @@ jobs:
           ssh -o StrictHostKeyChecking=no ubuntu@www.skillnaav.com << EOF
             cd /home/ubuntu/skillnaav-fullstack
             ./deploy.sh "$BRANCH_NAME"  # Passes the branch dynamically
-          EOF
+
