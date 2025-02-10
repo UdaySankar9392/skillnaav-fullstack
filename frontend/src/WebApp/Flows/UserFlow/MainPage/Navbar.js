@@ -19,6 +19,7 @@ const Navbar = () => {
       setUserInfo(storedUserInfo); // Update the user info state
     }
   }, []);
+  //now the image is loading directly while login
 
   const handleUserClick = () => {
     setIsDropdownOpen(!isDropdownOpen); // Toggle dropdown visibility when profile image is clicked
