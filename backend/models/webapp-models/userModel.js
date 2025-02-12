@@ -30,6 +30,7 @@ const userwebappSchema = new mongoose.Schema(
 
     adminApproved: { type: Boolean, default: false },
     isActive: { type: Boolean, default: false },
+    isPremium: { type: Boolean, default: false },
   },
   { timestamps: true }
 );

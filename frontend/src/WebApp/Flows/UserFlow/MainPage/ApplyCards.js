@@ -3,63 +3,70 @@ import axios from "axios";
 import { FaHeart, FaShareAlt, FaMapMarkerAlt, FaBriefcase, FaDollarSign } from "react-icons/fa";
 import { useTabContext } from "./UserHomePageContext/HomePageContext";
 
+const MAX_FREE_APPLICATIONS = 5;
+
 const ApplyCards = ({ job, onBack }) => {
   const { savedJobs, saveJob, removeJob } = useTabContext();
   const [isApplied, setIsApplied] = useState(false);
   const [resume, setResume] = useState(null);
   const [isUploading, setIsUploading] = useState(false);
+  const [applicationCount, setApplicationCount] = useState(0);
+  const [showLimitPopup, setShowLimitPopup] = useState(false);
 
-  // Fetch applied status from the backend when the component mounts
   useEffect(() => {
-    const fetchAppliedStatus = async () => {
+    const fetchApplicationData = async () => {
       const userInfo = JSON.parse(localStorage.getItem("userInfo"));
       const studentId = userInfo?._id;
-
-      if (!studentId) {
-        console.log("User not logged in.");
-        return;
-      }
+      if (!studentId) return;
 
       try {
-        const response = await axios.get(
-          `/api/applications/check-applied/${studentId}/${job._id}`
-        );
-        setIsApplied(response.data.isApplied);
-        console.log("Is Job Applied:", response.data.isApplied); // Debugging
+        const { data: appliedData } = await axios.get(`/api/applications/check-applied/${studentId}/${job._id}`);
+        setIsApplied(appliedData.isApplied);
+
+        const { data: countData } = await axios.get(`/api/applications/count/${studentId}`);
+        setApplicationCount(countData.applicationCount || 0);
+
+        // Show popup if the limit is reached
+        if (countData.applicationCount >= MAX_FREE_APPLICATIONS) {
+          setShowLimitPopup(true);
+        }
       } catch (error) {
-        console.error("Error fetching applied status:", error);
+        console.error("Error fetching application data:", error);
       }
     };
 
-    fetchAppliedStatus();
+    fetchApplicationData();
   }, [job._id]);
 
   const handleFileChange = (event) => {
     const file = event.target.files[0];
-    if (file.size > 5 * 1024 * 1024) {
-      alert("File size should not exceed 5MB.");
-    } else {
+    const allowedTypes = ["application/pdf", "application/msword", "application/vnd.openxmlformats-officedocument.wordprocessingml.document"];
+
+    if (file) {
+      if (!allowedTypes.includes(file.type)) {
+        alert("Only PDF, DOC, and DOCX files are allowed.");
+        return;
+      }
+      if (file.size > 5 * 1024 * 1024) {
+        alert("File size should not exceed 5MB.");
+        return;
+      }
       setResume(file);
     }
   };
 
   const handleApply = async () => {
-    if (isApplied) {
-      alert("You have already applied for this job!");
-      return;
-    }
-    if (!resume) {
-      alert("Please upload your resume before applying!");
+    if (isApplied) return;
+    if (!resume) return alert("Please upload your resume before applying!");
+    if (applicationCount >= MAX_FREE_APPLICATIONS) {
+      setShowLimitPopup(true);
       return;
     }
 
     const userInfo = JSON.parse(localStorage.getItem("userInfo"));
     const studentId = userInfo ? userInfo._id : null;
 
-    if (!studentId) {
-      alert("Student ID not found. Please log in.");
-      return;
-    }
+    if (!studentId) return;
 
     setIsUploading(true);
 
@@ -70,20 +77,20 @@ const ApplyCards = ({ job, onBack }) => {
       formData.append("resume", resume);
 
       const apiResponse = await axios.post("/api/applications/apply", formData, {
-        headers: {
-          "Content-Type": "multipart/form-data",
-        },
+        headers: { "Content-Type": "multipart/form-data" },
       });
 
       if (apiResponse.status === 201) {
         setIsApplied(true);
-        alert("Application submitted successfully!");
-      } else {
-        alert("Failed to submit application to the server.");
+        setApplicationCount(applicationCount + 1);
       }
     } catch (error) {
       console.error("Error applying for the job:", error);
-      alert("Failed to submit your application. Please try again.");
+
+      // If API returns 403 (limit reached), show upgrade popup
+      if (error.response && error.response.status === 403) {
+        setShowLimitPopup(true);
+      }
     } finally {
       setIsUploading(false);
     }
@@ -202,6 +209,23 @@ const ApplyCards = ({ job, onBack }) => {
           {job.contactInfo?.phone || "Not provided"}
         </p>
       </div>
+    
+      {/* Limit Reached Popup */}
+      {showLimitPopup && (
+        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
+          <div className="bg-white p-6 rounded-lg shadow-lg max-w-sm text-center">
+            <h2 className="text-xl font-semibold text-gray-800">Application Limit Reached</h2>
+            <p className="text-gray-600 mt-2">You have reached the maximum of {MAX_FREE_APPLICATIONS} free applications.</p>
+            <p className="text-gray-600 mt-1">Upgrade your account to apply for more jobs.</p>
+            <button
+              className="bg-purple-500 text-white px-4 py-2 rounded-md mt-4 hover:bg-purple-600"
+              onClick={() => setShowLimitPopup(false)}
+            >
+              Close
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
