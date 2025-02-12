@@ -6,15 +6,30 @@ const multer = require("multer"); // Multer for file uploads
 const path = require("path");
 const fs = require("fs");
 
+const upgradeToPremium = async (req, res) => {
+  const { studentId } = req.body;
+
+  try {
+    const student = await Userwebapp.findByIdAndUpdate(studentId, { isPremium: true }, { new: true });
+
+    if (!student) {
+      return res.status(404).json({ message: "User not found." });
+    }
+
+    res.status(200).json({ message: "User upgraded to premium!", user: student });
+  } catch (error) {
+    console.error("Error upgrading user:", error.message);
+    res.status(500).json({ message: "Error upgrading to premium.", error: error.message });
+  }
+};
+
 // Controller to handle applying for an internship (using multer for file uploads)
 const applyForInternship = async (req, res) => {
   const { studentId, internshipId } = req.body;
   const resumeFile = req.file;
 
   if (!resumeFile) {
-    return res.status(400).json({
-      message: "Please upload a resume.",
-    });
+    return res.status(400).json({ message: "Please upload a resume." });
   }
 
   try {
@@ -23,25 +38,32 @@ const applyForInternship = async (req, res) => {
     const internship = await InternshipPosting.findById(internshipId);
 
     if (!student || !internship) {
-      return res.status(404).json({
-        message: "Student or Internship not found.",
-      });
+      return res.status(404).json({ message: "Student or Internship not found." });
+    }
+
+    // Check if user is premium
+    if (!student.isPremium) {
+      const applicationCount = await Application.countDocuments({ studentId });
+
+      if (applicationCount >= 5) {
+        return res.status(403).json({
+          message: "You have reached the limit of 5 applications. Upgrade to premium to apply for more jobs.",
+          limitReached: true,
+        });
+      }
     }
 
     // Check if the student has already applied for this internship
-    const existingApplication = await Application.findOne({
-      studentId,
-      internshipId,
-    });
+    const existingApplication = await Application.findOne({ studentId, internshipId });
 
     if (existingApplication) {
-      return res.status(400).json({
-        message: "You have already applied for this internship.",
-      });
+      return res.status(400).json({ message: "You have already applied for this internship." });
     }
 
+    // Use resumeFile.location (S3 URL) instead of memory storage
+    const resumeUrl = resumeFile.location; 
+
     // Create a new application
-    const resumeUrl = resumeFile.location; // S3 file URL
     const newApplication = new Application({
       studentId,
       internshipId,
@@ -53,13 +75,12 @@ const applyForInternship = async (req, res) => {
       jobTitle: internship.jobTitle,
     });
 
-    // Save the application
     await newApplication.save();
 
-    // Return success response
     res.status(201).json({
       message: "Application submitted successfully!",
       application: newApplication,
+      limitReached: false,
     });
   } catch (error) {
     console.error("Error during application submission:", error.message);
@@ -67,6 +88,26 @@ const applyForInternship = async (req, res) => {
       message: "Error applying for the internship.",
       error: error.message,
     });
+  }
+};
+
+const getApplicationCount = async (req, res) => {
+  try {
+    console.log("Request received at /count/:studentId"); // Debugging log
+    console.log("Params received:", req.params);
+
+    const { studentId } = req.params;
+
+    if (!studentId) {
+      return res.status(400).json({ message: "Student ID is required" });
+    }
+
+    const applicationCount = await Application.countDocuments({ studentId });
+
+    res.status(200).json({ count: applicationCount });
+  } catch (error) {
+    console.error("Error fetching application count:", error.message);
+    res.status(500).json({ message: "Error fetching application count." });
   }
 };
 
@@ -169,4 +210,6 @@ module.exports = {
   getApplicationStatus,
   getApplicationsForStudent,
   checkIfApplied, // Add the new function to exports
+  upgradeToPremium,
+  getApplicationCount,
 };

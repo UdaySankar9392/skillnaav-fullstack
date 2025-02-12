@@ -1,16 +1,17 @@
 import React, { useState, useEffect } from "react";
-import { Skeleton } from "antd";
+import { Skeleton, Modal, Button } from "antd"; // Import Modal and Button
 import Navbar from "./Navbar";
 import Sidebar from "./Sidebar";
-import BodyContent from "./BodyContent"; // Main content component
+import BodyContent from "./BodyContent"; 
 import { TabProvider } from "./UserHomePageContext/HomePageContext";
-import axios from "axios"; // Import axios
+import axios from "axios"; 
 
 const UserMainPage = () => {
   const [userInfo, setUserInfo] = useState(null);
-  const [loading, setLoading] = useState(true); // Loading state
-  const [isApproved, setIsApproved] = useState(false); // Track if user is approved
-  const [isMobile, setIsMobile] = useState(window.innerWidth < 768); // Track screen size
+  const [loading, setLoading] = useState(true);
+  const [isApproved, setIsApproved] = useState(false);
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+  const [showUpgradePopup, setShowUpgradePopup] = useState(false); 
 
   useEffect(() => {
     const handleResize = () => {
@@ -42,13 +43,22 @@ const UserMainPage = () => {
     fetchUserInfo();
   }, []);
 
+  useEffect(() => {
+    if (userInfo && !userInfo.isPremium) {
+      const interval = setInterval(() => {
+        setShowUpgradePopup(true);
+        setTimeout(() => setShowUpgradePopup(false), 10000); // Auto-close after 10 sec
+      }, 30000); // Show popup every 30 sec
+
+      return () => clearInterval(interval);
+    }
+  }, [userInfo]);
+
   return (
     <TabProvider>
       <div className={`flex ${isMobile ? "flex-col" : "flex-row"} relative`}>
-        {/* Sidebar */}
         <Sidebar isMobile={isMobile} />
 
-        {/* Main Content */}
         <div className="flex-1 flex flex-col">
           <Navbar />
 
@@ -60,7 +70,6 @@ const UserMainPage = () => {
             <div className="relative flex-1">
               <BodyContent />
 
-              {/* Mask features if user is not approved */}
               {!isApproved && (
                 <>
                   <div className="absolute inset-0 bg-gray-500 opacity-50 z-10" />
@@ -81,6 +90,24 @@ const UserMainPage = () => {
           )}
         </div>
       </div>
+
+      {/* Premium Upgrade Modal */}
+      <Modal
+        open={showUpgradePopup}
+        onCancel={() => setShowUpgradePopup(false)}
+        footer={[
+          <Button key="upgrade" type="primary" className="bg-blue-500">
+            Upgrade Now
+          </Button>,
+        ]}
+      >
+        <div className="text-center">
+          <h2 className="text-xl font-semibold">Unlock More Features!</h2>
+          <p className="text-gray-600 mt-2">
+            Upgrade to <span className="text-blue-500 font-medium">Premium</span> to apply for unlimited jobs, get priority listings, and exclusive opportunities.
+          </p>
+        </div>
+      </Modal>
     </TabProvider>
   );
 };

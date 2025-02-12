@@ -9,8 +9,14 @@ const {
   getApplicationsForInternship,
   getApplicationStatus,
   getApplicationsForStudent,
-  checkIfApplied, // Add the new function
+  checkIfApplied,
+  upgradeToPremium,
+  getApplicationCount, // Add the new function
 } = applicationController;
+
+router.post("/upgrade-to-premium", upgradeToPremium);
+
+router.get("/count/:studentId", getApplicationCount);
 
 // Route to apply for an internship
 router.post("/apply", resumeUpload.single("resume"), (req, res, next) => {
