@@ -12,6 +12,7 @@ const ApplyCards = ({ job, onBack }) => {
   const [isUploading, setIsUploading] = useState(false);
   const [applicationCount, setApplicationCount] = useState(0);
   const [showLimitPopup, setShowLimitPopup] = useState(false);
+  const [isPremium, setIsPremium] = useState(false); // Add state for premium status
 
   useEffect(() => {
     const fetchApplicationData = async () => {
@@ -20,16 +21,21 @@ const ApplyCards = ({ job, onBack }) => {
       if (!studentId) return;
 
       try {
+        // Fetch user's premium status
+        const { data: userData } = await axios.get("/api/users/profile", {
+          headers: {
+            Authorization: `Bearer ${userInfo.token}`, // Assuming the token is stored in userInfo
+          },
+        });
+        setIsPremium(userData.isPremium); // Set premium status
+
+        // Fetch application data
         const { data: appliedData } = await axios.get(`/api/applications/check-applied/${studentId}/${job._id}`);
         setIsApplied(appliedData.isApplied);
 
         const { data: countData } = await axios.get(`/api/applications/count/${studentId}`);
-        setApplicationCount(countData.applicationCount || 0);
-
-        // Show popup if the limit is reached
-        if (countData.applicationCount >= MAX_FREE_APPLICATIONS) {
-          setShowLimitPopup(true);
-        }
+        console.log("Fetched application count:", countData.count); // Debugging
+        setApplicationCount(countData.count); // Ensure correct key
       } catch (error) {
         console.error("Error fetching application data:", error);
       }
@@ -58,35 +64,46 @@ const ApplyCards = ({ job, onBack }) => {
   const handleApply = async () => {
     if (isApplied) return;
     if (!resume) return alert("Please upload your resume before applying!");
-    if (applicationCount >= MAX_FREE_APPLICATIONS) {
-      setShowLimitPopup(true);
-      return;
-    }
-
+  
     const userInfo = JSON.parse(localStorage.getItem("userInfo"));
     const studentId = userInfo ? userInfo._id : null;
-
     if (!studentId) return;
-
+  
+    // Check application limit only if the user is not premium
+    try {
+      const { data: countData } = await axios.get(`/api/applications/count/${studentId}`);
+      if (!isPremium && countData.count >= MAX_FREE_APPLICATIONS) {
+        setShowLimitPopup(true);
+        return;
+      }
+    } catch (error) {
+      console.error("Error fetching application count before applying:", error);
+      return;
+    }
+  
     setIsUploading(true);
-
+  
     try {
       const formData = new FormData();
       formData.append("studentId", studentId);
       formData.append("internshipId", job._id);
       formData.append("resume", resume);
-
+  
       const apiResponse = await axios.post("/api/applications/apply", formData, {
         headers: { "Content-Type": "multipart/form-data" },
       });
-
+  
       if (apiResponse.status === 201) {
         setIsApplied(true);
-        setApplicationCount(applicationCount + 1);
+  
+        // 🔥 Fetch the latest count immediately after applying
+        const { data: updatedCount } = await axios.get(`/api/applications/count/${studentId}`);
+        setApplicationCount(updatedCount.count);
+        console.log("Updated application count:", updatedCount.count);
       }
     } catch (error) {
       console.error("Error applying for the job:", error);
-
+  
       // If API returns 403 (limit reached), show upgrade popup
       if (error.response && error.response.status === 403) {
         setShowLimitPopup(true);
@@ -95,7 +112,7 @@ const ApplyCards = ({ job, onBack }) => {
       setIsUploading(false);
     }
   };
-
+  
   const toggleSaveJob = () => {
     if (savedJobs.some((savedJob) => savedJob.jobTitle === job.jobTitle)) {
       removeJob(job);

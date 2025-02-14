@@ -33,6 +33,7 @@ const getUserProfile = asyncHandler(async (req, res) => {
     currentGrade: user.currentGrade,
     gradePercentage: user.gradePercentage,
     profileImage: user.profileImage,  // Include the profile image in the response
+    isPremium: user.isPremium,
   });
 });
 
@@ -211,6 +212,7 @@ const authUser = asyncHandler(async (req, res) => {
       linkedin: user.linkedin,
       portfolio: user.portfolio,
       profileImage: user.profileImage,
+      isPremium: user.isPremium,
       token, // Generate token here
       adminApproved: user.adminApproved // Include admin approval status
     });
@@ -246,7 +248,7 @@ const updateUserProfile = asyncHandler(async (req, res) => {
   user.postalCode = req.body.postalCode || user.postalCode;
   user.currentGrade = req.body.currentGrade || user.currentGrade;
   user.gradePercentage = req.body.gradePercentage || user.gradePercentage;
-
+  user.isPremium = req.body.isPremium || user.isPremium;
   // Add profile image if provided
   user.profileImage = req.body.profileImage || user.profileImage;
 
