@@ -9,11 +9,17 @@ import {
 } from "@fortawesome/free-solid-svg-icons";
 import ApplyCards from "./ApplyCards";
 import { useTabContext } from "./UserHomePageContext/HomePageContext";
+import axios from "axios";
+
+const MAX_FREE_APPLICATIONS = 5;
 
 const Home = () => {
   const { savedJobs, saveJob, removeJob } = useTabContext();
   const [selectedJob, setSelectedJob] = useState(null);
   const [jobData, setJobData] = useState([]);
+  const [applicationCount, setApplicationCount] = useState(0);
+  const [showLimitPopup, setShowLimitPopup] = useState(false);
+  const [isPremium, setIsPremium] = useState(false);
 
   useEffect(() => {
     const fetchJobData = async () => {
@@ -27,7 +33,38 @@ const Home = () => {
       }
     };
 
+    const fetchUserProfile = async () => {
+      try {
+        const userInfo = JSON.parse(localStorage.getItem("userInfo"));
+        const token = userInfo?.token;
+        console.log("Fetched user info:", userInfo);
+
+        if (!token) {
+          console.error("No token found in userInfo");
+          return;
+        }
+
+        // Fetch user profile data
+        const { data } = await axios.get("/api/users/profile", {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+        console.log("User profile response:", data); // Debugging
+        setIsPremium(data.isPremium);
+
+        // Fetch application count
+        const studentId = userInfo._id;
+        const { data: countData } = await axios.get(`/api/applications/count/${studentId}`);
+        console.log("Application count response:", countData); // Debugging
+        setApplicationCount(countData.count);
+      } catch (error) {
+        console.error("Error fetching user profile or application count:", error);
+      }
+    };
+
     fetchJobData();
+    fetchUserProfile();
   }, []);
 
   const calculatePostedTime = (date) => {
@@ -51,10 +88,27 @@ const Home = () => {
     }
   };
 
-  const handleViewDetails = (job) => {
-    setSelectedJob(job);
+  const handleViewDetails = async (job) => {
+    try {
+      const userInfo = JSON.parse(localStorage.getItem("userInfo"));
+      if (!userInfo) return;
+  
+      const studentId = userInfo._id;
+      const { data: countData } = await axios.get(`/api/applications/count/${studentId}`);
+      
+      setApplicationCount(countData.count); // Update state with latest count
+      console.log("Updated application count:", countData.count);
+  
+      if (!isPremium && countData.count >= MAX_FREE_APPLICATIONS) {
+        setShowLimitPopup(true);
+      } else {
+        setSelectedJob(job);
+      }
+    } catch (error) {
+      console.error("Error fetching updated application count:", error);
+    }
   };
-
+  
   const handleBack = () => {
     setSelectedJob(null);
   };
@@ -70,7 +124,7 @@ const Home = () => {
   return (
     <div className="font-poppins">
       {selectedJob ? (
-        <ApplyCards job={selectedJob} onBack={handleBack} />
+        <ApplyCards job={selectedJob} onBack={handleBack} isPremium={isPremium} />
       ) : (
         <>
           {/* Header Section */}
@@ -162,6 +216,24 @@ const Home = () => {
             </div>
           </section>
         </>
+      )}
+
+      {/* Limit Reached Popup */}
+      {showLimitPopup && (
+        console.log("Rendering limit popup"), // Debugging
+        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
+          <div className="bg-white p-6 rounded-lg shadow-lg max-w-sm text-center">
+            <h2 className="text-xl font-semibold text-gray-800">Application Limit Reached</h2>
+            <p className="text-gray-600 mt-2">You have reached the maximum of {MAX_FREE_APPLICATIONS} free applications.</p>
+            <p className="text-gray-600 mt-1">Upgrade your account to apply for more jobs.</p>
+            <button
+              className="bg-purple-500 text-white px-4 py-2 rounded-md mt-4 hover:bg-purple-600"
+              onClick={() => setShowLimitPopup(false)}
+            >
+              Close
+            </button>
+          </div>
+        </div>
       )}
     </div>
   );

@@ -8,8 +8,6 @@ const connectDB = async () => {
     }
 
     await mongoose.connect(mongoURL, {
-      useNewUrlParser: true,
-      useUnifiedTopology: true,
       serverSelectionTimeoutMS: 50000, // Increase timeout in case of slow connections
     });
 
