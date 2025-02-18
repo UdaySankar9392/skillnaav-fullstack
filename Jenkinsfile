@@ -1,13 +1,13 @@
 pipeline {
     agent any
-    
+
     environment {
         ECR_REPOSITORY_BACKEND = '982287259474.dkr.ecr.us-west-1.amazonaws.com/skillnaav-backend'
         ECR_REPOSITORY_FRONTEND = '982287259474.dkr.ecr.us-west-1.amazonaws.com/skillnaav-frontend'
         AWS_REGION = 'us-west-1'
         DOCKER_IMAGE_TAG = "${GIT_COMMIT}"
-        SSH_KEY_ID = 'test-instance-ssh-key'  // Jenkins SSH key to access the test instance
-        TEST_INSTANCE_IP = '13.52.211.131'  // IP of your test instance
+        SSH_KEY_ID = 'test-instance-ssh-key' // Jenkins SSH key to access the test instance
+        TEST_INSTANCE_IP = '13.52.211.131' // IP of your test instance
     }
 
     stages {
@@ -19,25 +19,39 @@ pipeline {
             }
         }
 
-        stage('Build Docker Images') {
+        stage('Prepare Test Instance') {
             steps {
                 script {
-                    // Backend Docker Build
-                    sh 'docker build -t $ECR_REPOSITORY_BACKEND:$DOCKER_IMAGE_TAG ./backend'
-                    // Frontend Docker Build
-                    sh 'docker build -t $ECR_REPOSITORY_FRONTEND:$DOCKER_IMAGE_TAG ./frontend'
+                    sh """
+                    ssh -o StrictHostKeyChecking=no -i /var/lib/jenkins/.ssh/${SSH_KEY_ID} ubuntu@$TEST_INSTANCE_IP <<EOF
+                        sudo apt-get update -y
+                        sudo apt-get install awscli docker.io -y
+                        sudo systemctl enable docker
+                        sudo systemctl start docker
+
+                        # Authenticate Docker with AWS ECR
+                        aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin $ECR_REPOSITORY_BACKEND
+                        aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin $ECR_REPOSITORY_FRONTEND
+                    EOF
+                    """
                 }
             }
         }
 
-        stage('Authenticate to ECR') {
+        stage('Build Docker Images on Test Instance') {
             steps {
                 script {
-                    // AWS CLI Authentication to ECR
-                    withAWS(credentials: 'aws-credentials') {
-                        sh "aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin $ECR_REPOSITORY_BACKEND"
-                        sh "aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin $ECR_REPOSITORY_FRONTEND"
-                    }
+                    sh """
+                    ssh -o StrictHostKeyChecking=no -i /var/lib/jenkins/.ssh/${SSH_KEY_ID} ubuntu@$TEST_INSTANCE_IP <<EOF
+                        # Cleanup old Docker resources to free space
+                        docker system prune -af --volumes
+
+                        # Build Docker images
+                        cd /home/ubuntu/skillnaav-fullstack
+                        docker build -t $ECR_REPOSITORY_BACKEND:$DOCKER_IMAGE_TAG ./backend
+                        docker build -t $ECR_REPOSITORY_FRONTEND:$DOCKER_IMAGE_TAG ./frontend
+                    EOF
+                    """
                 }
             }
         }
@@ -45,10 +59,12 @@ pipeline {
         stage('Push Docker Images to ECR') {
             steps {
                 script {
-                    // Push backend Docker image to ECR
-                    sh "docker push $ECR_REPOSITORY_BACKEND:$DOCKER_IMAGE_TAG"
-                    // Push frontend Docker image to ECR
-                    sh "docker push $ECR_REPOSITORY_FRONTEND:$DOCKER_IMAGE_TAG"
+                    sh """
+                    ssh -o StrictHostKeyChecking=no -i /var/lib/jenkins/.ssh/${SSH_KEY_ID} ubuntu@$TEST_INSTANCE_IP <<EOF
+                        docker push $ECR_REPOSITORY_BACKEND:$DOCKER_IMAGE_TAG
+                        docker push $ECR_REPOSITORY_FRONTEND:$DOCKER_IMAGE_TAG
+                    EOF
+                    """
                 }
             }
         }
@@ -56,16 +72,34 @@ pipeline {
         stage('Deploy to Test Instance') {
             steps {
                 script {
-                    // SSH into the test instance and pull the latest images from ECR
                     sh """
-                        ssh -o StrictHostKeyChecking=no -i /var/lib/jenkins/.ssh/${SSH_KEY_ID} ubuntu@$TEST_INSTANCE_IP <<EOF
-                            docker-compose -f /home/ubuntu/skillnaav-fullstack/docker-compose.yml down
-                            docker-compose -f /home/ubuntu/skillnaav-fullstack/docker-compose.yml pull
-                            docker-compose -f /home/ubuntu/skillnaav-fullstack/docker-compose.yml up -d
-                        EOF
+                    ssh -o StrictHostKeyChecking=no -i /var/lib/jenkins/.ssh/${SSH_KEY_ID} ubuntu@$TEST_INSTANCE_IP <<EOF
+                        cd /home/ubuntu/skillnaav-fullstack
+
+                        # Update docker-compose.yml with new image tags
+                        sed -i 's|image: $ECR_REPOSITORY_BACKEND:.*|image: $ECR_REPOSITORY_BACKEND:$DOCKER_IMAGE_TAG|' docker-compose.yml
+                        sed -i 's|image: $ECR_REPOSITORY_FRONTEND:.*|image: $ECR_REPOSITORY_FRONTEND:$DOCKER_IMAGE_TAG|' docker-compose.yml
+
+                        # Restart services with updated images
+                        docker-compose down
+                        docker-compose pull
+                        docker-compose up -d
+
+                        # Ensure Docker containers are running
+                        docker ps -a
+                    EOF
                     """
                 }
             }
+        }
+    }
+
+    post {
+        success {
+            echo 'Deployment completed successfully! ✅'
+        }
+        failure {
+            echo 'Deployment failed! ❌ Check logs for errors.'
         }
     }
 }
