@@ -19,8 +19,8 @@ services:
     networks:
       - app-network
     depends_on:
-      - backend  # Frontend should wait for backend
+      - backend  # Frontend should wait for backend the mainly focuses on so many things 
 
 networks:
   app-network:
-    driver: bridge
+    driver: bridge 
