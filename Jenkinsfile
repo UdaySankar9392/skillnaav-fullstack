@@ -23,20 +23,21 @@ pipeline {
                 script {
                     sshagent(credentials: ['test-instance-ssh-key']) {
                         sh """
-                        ssh -o StrictHostKeyChecking=no ubuntu@$TEST_INSTANCE_IP <<EOF
+                        ssh -o StrictHostKeyChecking=no ubuntu@$TEST_INSTANCE_IP << 'EOF'
+                            set -e  # Exit on error
+
                             sudo apt-get update -y
                             sudo apt-get install -y curl unzip
 
-                            # Check if AWS CLI is already installed
+                            # Install AWS CLI only if not installed
                             if ! command -v aws &> /dev/null; then
-                                echo "AWS CLI not found. Installing..."
                                 curl "https://d1vvhvl2y92vvt.cloudfront.net/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
-                                unzip -o awscliv2.zip
+                                unzip awscliv2.zip
                                 sudo ./aws/install
-                            else
-                                echo "AWS CLI is already installed. Skipping installation."
                             fi
 
+                            # Fix Docker installation issue by removing conflicting containerd
+                            sudo apt-get remove -y containerd
                             sudo apt-get install -y docker.io
                             sudo systemctl enable docker
                             sudo systemctl start docker
@@ -44,7 +45,7 @@ pipeline {
                             # Authenticate Docker with AWS ECR
                             aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin $ECR_REPOSITORY_BACKEND
                             aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin $ECR_REPOSITORY_FRONTEND
-                        EOF
+EOF
                         """
                     }
                 }
@@ -56,10 +57,10 @@ pipeline {
                 script {
                     sshagent(credentials: ['test-instance-ssh-key']) {
                         sh """
-                        ssh -o StrictHostKeyChecking=no ubuntu@$TEST_INSTANCE_IP <<EOF
+                        ssh -o StrictHostKeyChecking=no ubuntu@$TEST_INSTANCE_IP << 'EOF'
                             echo "Cleaning up Docker environment..."
                             docker system prune -af --volumes
-                        EOF
+EOF
                         """
                     }
                 }
@@ -71,11 +72,11 @@ pipeline {
                 script {
                     sshagent(credentials: ['test-instance-ssh-key']) {
                         sh """
-                        ssh -o StrictHostKeyChecking=no ubuntu@$TEST_INSTANCE_IP <<EOF
+                        ssh -o StrictHostKeyChecking=no ubuntu@$TEST_INSTANCE_IP << 'EOF'
                             cd /home/ubuntu/skillnaav-fullstack
                             docker build -t $ECR_REPOSITORY_BACKEND:$DOCKER_IMAGE_TAG ./backend
                             docker build -t $ECR_REPOSITORY_FRONTEND:$DOCKER_IMAGE_TAG ./frontend
-                        EOF
+EOF
                         """
                     }
                 }
@@ -87,10 +88,10 @@ pipeline {
                 script {
                     sshagent(credentials: ['test-instance-ssh-key']) {
                         sh """
-                        ssh -o StrictHostKeyChecking=no ubuntu@$TEST_INSTANCE_IP <<EOF
+                        ssh -o StrictHostKeyChecking=no ubuntu@$TEST_INSTANCE_IP << 'EOF'
                             docker push $ECR_REPOSITORY_BACKEND:$DOCKER_IMAGE_TAG
                             docker push $ECR_REPOSITORY_FRONTEND:$DOCKER_IMAGE_TAG
-                        EOF
+EOF
                         """
                     }
                 }
@@ -102,15 +103,15 @@ pipeline {
                 script {
                     sshagent(credentials: ['test-instance-ssh-key']) {
                         sh """
-                        ssh -o StrictHostKeyChecking=no ubuntu@$TEST_INSTANCE_IP <<EOF
+                        ssh -o StrictHostKeyChecking=no ubuntu@$TEST_INSTANCE_IP << 'EOF'
                             cd /home/ubuntu/skillnaav-fullstack
-                            sed -i 's|image: $ECR_REPOSITORY_BACKEND:.*|image: $ECR_REPOSITORY_BACKEND:$DOCKER_IMAGE_TAG|' docker-compose.yml
-                            sed -i 's|image: $ECR_REPOSITORY_FRONTEND:.*|image: $ECR_REPOSITORY_FRONTEND:$DOCKER_IMAGE_TAG|' docker-compose.yml
+                            sed -i 's|image: .*/skillnaav-backend:.*|image: $ECR_REPOSITORY_BACKEND:$DOCKER_IMAGE_TAG|' docker-compose.yml
+                            sed -i 's|image: .*/skillnaav-frontend:.*|image: $ECR_REPOSITORY_FRONTEND:$DOCKER_IMAGE_TAG|' docker-compose.yml
                             docker-compose down
                             docker-compose pull
                             docker-compose up -d
                             docker ps -a
-                        EOF
+EOF
                         """
                     }
                 }
