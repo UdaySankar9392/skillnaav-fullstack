@@ -23,15 +23,19 @@ pipeline {
             steps {
                 sshagent(['test-instance-ssh-key']) {
                     sh """
-                        ssh -o StrictHostKeyChecking=no ubuntu@$TEST_INSTANCE_IP <<EOF
+                        ssh -o StrictHostKeyChecking=no ubuntu@$TEST_INSTANCE_IP << 'EOF'
+                            set -e  # Exit on error
+                            echo "Updating system and installing dependencies..."
                             sudo apt-get update -y
-                            sudo apt-get install awscli docker.io -y
+                            sudo apt-get install -y awscli docker.io docker-compose
+
+                            echo "Starting Docker service..."
                             sudo systemctl enable docker
                             sudo systemctl start docker
 
-                            # Authenticate Docker with AWS ECR
-                            aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin $ECR_REPOSITORY_BACKEND
-                            aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin $ECR_REPOSITORY_FRONTEND
+                            echo "Authenticating with AWS ECR..."
+                            aws ecr get-login-password --region ${AWS_REGION} | sudo docker login --username AWS --password-stdin ${ECR_REPOSITORY_BACKEND}
+                            aws ecr get-login-password --region ${AWS_REGION} | sudo docker login --username AWS --password-stdin ${ECR_REPOSITORY_FRONTEND}
                         EOF
                     """
                 }
@@ -42,14 +46,19 @@ pipeline {
             steps {
                 sshagent(['test-instance-ssh-key']) {
                     sh """
-                        ssh -o StrictHostKeyChecking=no ubuntu@$TEST_INSTANCE_IP <<EOF
-                            # Cleanup old Docker resources to free space
-                            docker system prune -af --volumes
+                        ssh -o StrictHostKeyChecking=no ubuntu@$TEST_INSTANCE_IP << 'EOF'
+                            set -e  # Exit on error
+                            echo "Cleaning up old Docker resources..."
+                            sudo docker system prune -af --volumes
+                            sudo docker volume prune -a -f
 
-                            # Build Docker images
-                            cd /home/ubuntu/skillnaav-fullstack
-                            docker build -t $ECR_REPOSITORY_BACKEND:$DOCKER_IMAGE_TAG ./backend
-                            docker build -t $ECR_REPOSITORY_FRONTEND:$DOCKER_IMAGE_TAG ./frontend
+                            echo "Cloning latest codebase..."
+                            cd /home/ubuntu/skillnaav-fullstack || exit 1
+                            git pull origin uday18-02-25
+
+                            echo "Building Docker images..."
+                            sudo docker build -t ${ECR_REPOSITORY_BACKEND}:${DOCKER_IMAGE_TAG} ./backend
+                            sudo docker build -t ${ECR_REPOSITORY_FRONTEND}:${DOCKER_IMAGE_TAG} ./frontend
                         EOF
                     """
                 }
@@ -60,9 +69,11 @@ pipeline {
             steps {
                 sshagent(['test-instance-ssh-key']) {
                     sh """
-                        ssh -o StrictHostKeyChecking=no ubuntu@$TEST_INSTANCE_IP <<EOF
-                            docker push $ECR_REPOSITORY_BACKEND:$DOCKER_IMAGE_TAG
-                            docker push $ECR_REPOSITORY_FRONTEND:$DOCKER_IMAGE_TAG
+                        ssh -o StrictHostKeyChecking=no ubuntu@$TEST_INSTANCE_IP << 'EOF'
+                            set -e  # Exit on error
+                            echo "Pushing Docker images to AWS ECR..."
+                            sudo docker push ${ECR_REPOSITORY_BACKEND}:${DOCKER_IMAGE_TAG}
+                            sudo docker push ${ECR_REPOSITORY_FRONTEND}:${DOCKER_IMAGE_TAG}
                         EOF
                     """
                 }
@@ -73,20 +84,22 @@ pipeline {
             steps {
                 sshagent(['test-instance-ssh-key']) {
                     sh """
-                        ssh -o StrictHostKeyChecking=no ubuntu@$TEST_INSTANCE_IP <<EOF
-                            cd /home/ubuntu/skillnaav-fullstack
+                        ssh -o StrictHostKeyChecking=no ubuntu@$TEST_INSTANCE_IP << 'EOF'
+                            set -e  # Exit on error
+                            echo "Updating docker-compose configuration with new image tags..."
 
-                            # Update docker-compose.yml with new image tags
-                            sed -i 's|image: $ECR_REPOSITORY_BACKEND:.*|image: $ECR_REPOSITORY_BACKEND:$DOCKER_IMAGE_TAG|' docker-compose.yml
-                            sed -i 's|image: $ECR_REPOSITORY_FRONTEND:.*|image: $ECR_REPOSITORY_FRONTEND:$DOCKER_IMAGE_TAG|' docker-compose.yml
+                            cd /home/ubuntu/skillnaav-fullstack || exit 1
 
-                            # Restart services with updated images
-                            docker-compose down
-                            docker-compose pull
-                            docker-compose up -d
+                            sed -i "s|image: .*${ECR_REPOSITORY_BACKEND}:.*|image: ${ECR_REPOSITORY_BACKEND}:${DOCKER_IMAGE_TAG}|" docker-compose.yml
+                            sed -i "s|image: .*${ECR_REPOSITORY_FRONTEND}:.*|image: ${ECR_REPOSITORY_FRONTEND}:${DOCKER_IMAGE_TAG}|" docker-compose.yml
 
-                            # Ensure Docker containers are running
-                            docker ps -a
+                            echo "Restarting Docker containers..."
+                            sudo docker-compose down
+                            sudo docker-compose pull
+                            sudo docker-compose up -d
+
+                            echo "Checking running Docker containers..."
+                            sudo docker ps -a
                         EOF
                     """
                 }
@@ -96,10 +109,10 @@ pipeline {
 
     post {
         success {
-            echo 'Deployment completed successfully! ✅'
+            echo '✅ Deployment completed successfully!'
         }
         failure {
-            echo 'Deployment failed! ❌ Check logs for errors.'
+            echo '❌ Deployment failed! Check logs for errors.'
         }
     }
 }
