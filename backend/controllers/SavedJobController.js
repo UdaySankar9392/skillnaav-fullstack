@@ -16,20 +16,26 @@ const saveJob = async (req, res) => {
     userId = new mongoose.Types.ObjectId(userId);
     jobId = new mongoose.Types.ObjectId(jobId);
 
+    // Check if the job is already saved
     const existingSavedJob = await SavedJob.findOne({ userId, jobId });
     if (existingSavedJob) {
       return res.status(400).json({ message: "Job already saved" });
     }
 
-    const savedJob = new SavedJob({ userId, jobId });
-    await savedJob.save();
+    // Create and save the job first
+    const newSavedJob = new SavedJob({ userId, jobId });
+    await newSavedJob.save();
 
-    res.status(201).json({ message: "Job saved successfully", savedJob });
+    // Fetch the saved job with populated job details
+    const savedJob = await SavedJob.findById(newSavedJob._id).populate("jobId");
+
+    res.status(201).json(savedJob);
   } catch (error) {
     console.error("Error saving job:", error);
     res.status(500).json({ message: "Error saving job", error });
   }
 };
+
 
 
 // ✅ Get saved jobs for a user (with job details)

@@ -1,17 +1,14 @@
 import React, { useState, useEffect } from "react";
 import Homeimage from "../../../../assets-webapp/Home-Image.png";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import {
-  faMapMarkerAlt,
-  faClock,
-  faDollarSign,
-  faHeart,
-} from "@fortawesome/free-solid-svg-icons";
+import { faMapMarkerAlt, faClock, faDollarSign, faHeart } from "@fortawesome/free-solid-svg-icons";
 import ApplyCards from "./ApplyCards";
 import { useTabContext } from "./UserHomePageContext/HomePageContext";
 import axios from "axios";
+import { useNavigate } from "react-router-dom";
 
 const MAX_FREE_APPLICATIONS = 5;
+const MAX_SAVED_JOBS = 3;
 
 const Home = () => {
   const { savedJobs, saveJob, removeJob } = useTabContext();
@@ -19,8 +16,11 @@ const Home = () => {
   const [jobData, setJobData] = useState([]);
   const [applicationCount, setApplicationCount] = useState(0);
   const [showLimitPopup, setShowLimitPopup] = useState(false);
+  const [showSavedJobPopup, setShowSavedJobPopup] = useState(false);
   const [isPremium, setIsPremium] = useState(false);
+  const navigate = useNavigate();
 
+  // Fetch job data and user profile only once on mount
   useEffect(() => {
     const fetchJobData = async () => {
       try {
@@ -55,6 +55,16 @@ const Home = () => {
     fetchUserProfile();
   }, []);
 
+  // Normalize savedJobs array
+  useEffect(() => {
+    const normalized = savedJobs.map(job => ({
+      ...job,
+      jobId: job.jobId?.location ? job.jobId : job // Handle population
+    }));
+    console.log("Normalized jobs:", normalized);
+  }, [savedJobs]);
+
+  // Handle View Details (with application limit check)
   const handleViewDetails = async (job) => {
     try {
       const userInfo = JSON.parse(localStorage.getItem("userInfo"));
@@ -63,8 +73,9 @@ const Home = () => {
       const { data: countData } = await axios.get(`/api/applications/count/${userInfo._id}`);
       setApplicationCount(countData.count);
 
+      // Check if the user has reached the free application limit
       if (!isPremium && countData.count >= MAX_FREE_APPLICATIONS) {
-        setShowLimitPopup(true);
+        setShowLimitPopup(true); // Show the application limit popup
       } else {
         setSelectedJob(job);
       }
@@ -73,28 +84,33 @@ const Home = () => {
     }
   };
 
+  // Handle Back to Job List
   const handleBack = () => setSelectedJob(null);
 
-  // In Home.js
-// In Home.js
-// In Home.js
-const toggleSaveJob = async (job) => {
-  try {
-    const isSaved = savedJobs.some(
-      (savedJob) => savedJob.jobId?._id === job._id || savedJob._id === job._id
-    );
+  // Toggle Save Job Logic (check saved job limit)
+  const toggleSaveJob = async (job) => {
+    try {
+      if (!isPremium && savedJobs.length >= MAX_SAVED_JOBS) {
+        setShowSavedJobPopup(true); // Show saved job limit popup
+        return;
+      }
 
-    if (isSaved) {
-      await removeJob(job._id);
-    } else {
-      await saveJob(job);
+      const jobExists = savedJobs.some((savedJob) => {
+        const jobToCheck = savedJob.savedJob || savedJob;
+        return jobToCheck.jobId?._id === job._id || jobToCheck._id === job._id;
+      });
+
+      if (jobExists) {
+        await removeJob(job._id);
+      } else {
+        await saveJob(job);
+      }
+    } catch (error) {
+      console.error("Error toggling job save:", error);
     }
-  } catch (error) {
-    console.error("Error toggling job save:", error);
-  }
-};
-  
+  };
 
+  // Calculate posted time (to avoid repeated render)
   const calculatePostedTime = (date) => {
     const postedDate = new Date(date);
     const currentDate = new Date();
@@ -127,17 +143,17 @@ const toggleSaveJob = async (job) => {
                 <div key={index} className="relative border rounded-lg p-6 shadow-sm">
                   {/* Save Button */}
                   <div className="absolute top-2 right-2">
-                  
-<button onClick={() => toggleSaveJob(job)} className="text-gray-500 hover:text-red-500">
-  <FontAwesomeIcon
-    icon={faHeart}
-    className={`w-6 h-6 ${
-      savedJobs.some(
-        (savedJob) => savedJob.jobId?._id === job._id || savedJob._id === job._id
-      ) ? "text-red-500" : "text-gray-500"
-    }`}
-  />
-</button>
+                    <button onClick={() => toggleSaveJob(job)} className="text-gray-500 hover:text-red-500">
+                    <FontAwesomeIcon
+  icon={faHeart}
+  className={`w-6 h-6 ${
+    savedJobs.some(savedJob => 
+      savedJob.jobId?._id === job._id || // For populated jobs
+      savedJob.jobId === job._id         // For non-populated jobs
+    ) ? "text-red-500" : "text-gray-500"
+  }`}
+/>
+                    </button>
                   </div>
 
                   {/* Job Details */}
@@ -175,16 +191,57 @@ const toggleSaveJob = async (job) => {
         </>
       )}
 
-      {/* Limit Reached Popup */}
+      {/* Application Limit Reached Popup */}
       {showLimitPopup && (
         <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
           <div className="bg-white p-6 rounded-lg shadow-lg max-w-sm text-center">
             <h2 className="text-xl font-semibold text-gray-800">Application Limit Reached</h2>
-            <p className="text-gray-600 mt-2">You have reached the maximum of {MAX_FREE_APPLICATIONS} free applications.</p>
+            <p className="text-gray-600 mt-2">
+              You have reached the maximum of {MAX_FREE_APPLICATIONS} free applications.
+            </p>
             <p className="text-gray-600 mt-1">Upgrade your account to apply for more jobs.</p>
-            <button className="bg-purple-500 text-white px-4 py-2 rounded-md mt-4 hover:bg-purple-600" onClick={() => setShowLimitPopup(false)}>
-              Close
-            </button>
+
+            {/* Buttons Container */}
+            <div className="flex justify-between mt-4">
+              <button
+                className="bg-gray-400 text-white px-4 py-2 rounded-md hover:bg-gray-500"
+                onClick={() => setShowLimitPopup(false)}
+              >
+                Close
+              </button>
+              <button
+                className="bg-purple-500 text-white px-4 py-2 rounded-md hover:bg-purple-600"
+                onClick={() => navigate("/user-premiumpage")}
+              >
+                Upgrade Now
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Saved Jobs Limit Reached Popup */}
+      {showSavedJobPopup && (
+        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
+          <div className="bg-white p-6 rounded-lg shadow-lg max-w-sm text-center">
+            <h2 className="text-xl font-semibold text-gray-800">Saved Jobs Limit Reached</h2>
+            <p className="text-gray-600 mt-2">
+              You have reached the maximum of {MAX_SAVED_JOBS} saved jobs.
+            </p>
+            <div className="flex justify-between mt-4">
+              <button
+                className="bg-gray-400 text-white px-4 py-2 rounded-md hover:bg-gray-500"
+                onClick={() => setShowSavedJobPopup(false)}
+              >
+                Close
+              </button>
+              <button
+                className="bg-purple-500 text-white px-4 py-2 rounded-md hover:bg-purple-600"
+                onClick={() => navigate("/user-premiumpage")}
+              >
+                Upgrade Now
+              </button>
+            </div>
           </div>
         </div>
       )}

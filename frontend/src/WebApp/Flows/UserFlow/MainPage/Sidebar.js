@@ -144,9 +144,13 @@ const Sidebar = () => {
           <p className="text-xs text-gray-600 mt-1">
             Your team has used 80% of your available space. Need more?
           </p>
-          <button className="mt-4 w-full bg-purple-700 text-white py-2 px-4 rounded-lg">
-            Upgrade plan
-          </button>
+          <button
+  onClick={() => navigate("/user-premiumpage")}
+  className="mt-4 w-full bg-purple-700 text-white py-2 px-4 rounded-lg"
+>
+  Upgrade plan
+</button>
+
         </div>
     </div>
   </div>

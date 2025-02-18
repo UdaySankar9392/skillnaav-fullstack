@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Skeleton, Modal, Button } from "antd"; // Import Modal and Button
+import { useNavigate } from "react-router-dom"; // Import useNavigate
 import Navbar from "./Navbar";
 import Sidebar from "./Sidebar";
 import BodyContent from "./BodyContent"; 
@@ -12,6 +13,7 @@ const UserMainPage = () => {
   const [isApproved, setIsApproved] = useState(false);
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
   const [showUpgradePopup, setShowUpgradePopup] = useState(false); 
+  const navigate = useNavigate(); // Initialize useNavigate
 
   useEffect(() => {
     const handleResize = () => {
@@ -96,7 +98,12 @@ const UserMainPage = () => {
         open={showUpgradePopup}
         onCancel={() => setShowUpgradePopup(false)}
         footer={[
-          <Button key="upgrade" type="primary" className="bg-blue-500">
+          <Button 
+            key="upgrade" 
+            type="primary" 
+            className="bg-blue-500"
+            onClick={() => navigate("/user-premiumpage")} // Navigate to Premium Page
+          >
             Upgrade Now
           </Button>,
         ]}
