@@ -25,7 +25,12 @@ pipeline {
                         sh """
                         ssh -o StrictHostKeyChecking=no ubuntu@$TEST_INSTANCE_IP <<EOF
                             sudo apt-get update -y
-                            sudo apt-get install awscli docker.io -y
+                            sudo apt-get install -y curl unzip
+                            curl "https://d1vvhvl2y92vvt.cloudfront.net/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
+                            unzip awscliv2.zip
+                            sudo ./aws/install
+
+                            sudo apt-get install -y docker.io
                             sudo systemctl enable docker
                             sudo systemctl start docker
 
@@ -115,6 +120,3 @@ pipeline {
         }
     }
 }
-
-
-
