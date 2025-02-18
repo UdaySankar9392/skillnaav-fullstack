@@ -11,7 +11,7 @@ import Support from "./Support";
 import Profile from "./Profile"; // Import the Profile component
 
 const BodyContent = () => {
-  const { selectedTab, fine, handleSelectTab } = useTabContext();
+  const { selectedTab, handleSelectTab } = useTabContext();
   console.log("Selected Tab:", selectedTab);
 
   let content;
@@ -27,7 +27,7 @@ const BodyContent = () => {
       content = <SearchBar />;
       break;
     case "messages":
-      content = <Message />; // Assuming Notifications is for messages
+      content = <Message />;
       break;
     case "applications":
       content = <Applications />;
@@ -36,7 +36,7 @@ const BodyContent = () => {
       content = <SavedJobs />;
       break;
     case "profile":
-      content = <Profile />; // Render the Profile component
+      content = <Profile />;
       break;
     case "support":
       content = <Support />;
@@ -45,14 +45,14 @@ const BodyContent = () => {
       content = <div>Logout Content</div>;
       break;
     case "filter":
-      content = <Filter />; // Render the Filter component
+      content = <Filter />;
       break;
     default:
-      content = <div>Select a tab {fine}</div>;
+      content = <div>Select a tab</div>;
   }
 
   return (
-    <div className="flex flex-col lg:flex-row  p-4 flex-1">
+    <div className="flex flex-col lg:flex-row p-4 flex-1">
       {/* Desktop View - Flex layout */}
       <div className="lg:flex-1 hidden lg:block">
         {content}
