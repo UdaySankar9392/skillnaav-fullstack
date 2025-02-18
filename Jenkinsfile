@@ -26,9 +26,16 @@ pipeline {
                         ssh -o StrictHostKeyChecking=no ubuntu@$TEST_INSTANCE_IP <<EOF
                             sudo apt-get update -y
                             sudo apt-get install -y curl unzip
-                            curl "https://d1vvhvl2y92vvt.cloudfront.net/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
-                            unzip awscliv2.zip
-                            sudo ./aws/install
+
+                            # Check if AWS CLI is already installed
+                            if ! command -v aws &> /dev/null; then
+                                echo "AWS CLI not found. Installing..."
+                                curl "https://d1vvhvl2y92vvt.cloudfront.net/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
+                                unzip -o awscliv2.zip
+                                sudo ./aws/install
+                            else
+                                echo "AWS CLI is already installed. Skipping installation."
+                            fi
 
                             sudo apt-get install -y docker.io
                             sudo systemctl enable docker
