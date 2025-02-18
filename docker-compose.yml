@@ -1,0 +1,26 @@
+version: "3.8"
+
+services:
+  backend:
+    build: ./backend
+    ports:
+      - "5000:5000"
+    env_file:
+      - ./backend/.env
+    networks:
+      - app-network
+
+  frontend:
+    build: ./frontend
+    ports:
+      - "80:80"
+    env_file:
+      - ./frontend/.env
+    networks:
+      - app-network
+    depends_on:
+      - backend  # Frontend should wait for backend
+
+networks:
+  app-network:
+    driver: bridge
