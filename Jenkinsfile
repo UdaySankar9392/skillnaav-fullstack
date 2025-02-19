@@ -24,7 +24,7 @@ pipeline {
                     sshagent(credentials: ['test-instance-ssh-key']) {
                         sh '''
                         echo "✅ Preparing Test Instance..."
-                        ssh -o StrictHostKeyChecking=no ubuntu@$TEST_INSTANCE_IP <<'EOF'
+                        ssh -o StrictHostKeyChecking=no ubuntu@$TEST_INSTANCE_IP << EOF
                             set -e
                             echo "✅ Connected to Test Instance"
 
@@ -33,9 +33,8 @@ pipeline {
                             sudo systemctl start docker || true
 
                             echo "🔐 Authenticating Docker with AWS ECR..."
-                            export AWS_REGION="us-west-1"
-                            aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin 982287259474.dkr.ecr.us-west-1.amazonaws.com/skillnaav-backend
-                            aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin 982287259474.dkr.ecr.us-west-1.amazonaws.com/skillnaav-frontend
+                            aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin $ECR_REPOSITORY_BACKEND
+                            aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin $ECR_REPOSITORY_FRONTEND
                         EOF
                         '''
                     }
