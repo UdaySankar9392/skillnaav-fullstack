@@ -1,154 +1,78 @@
-pipeline { 
+pipeline {
     agent any
 
     environment {
-        ECR_REPOSITORY_BACKEND = '982287259474.dkr.ecr.us-west-1.amazonaws.com/skillnaav-backend'
-        ECR_REPOSITORY_FRONTEND = '982287259474.dkr.ecr.us-west-1.amazonaws.com/skillnaav-frontend'
+        AWS_ACCOUNT_ID = '982287259474'
         AWS_REGION = 'us-west-1'
-        DOCKER_IMAGE_TAG = "${GIT_COMMIT}"
-        TEST_INSTANCE_IP = '13.52.211.131'
+        FRONTEND_REPO = '982287259474.dkr.ecr.us-west-1.amazonaws.com/skillnaav-frontend'
+        BACKEND_REPO = '982287259474.dkr.ecr.us-west-1.amazonaws.com/skillnaav-backend'
     }
 
     stages {
-        stage('Clone Code') {
+
+        stage('Clone Repository') {
             steps {
                 script {
-                    git branch: 'uday18-02-25', url: 'https://github.com/saipraneethEdutechex/skillnaav-fullstack.git'
+                    echo 'Cloning repository...'
+                    checkout scm
                 }
             }
         }
 
-        stage('Prepare Test Instance') {
+        stage('Login to AWS ECR') {
             steps {
                 script {
-                    sshagent(credentials: ['test-instance-ssh-key']) {
-                        sh '''
-                        echo "✅ Preparing Test Instance..."
-                        ssh -o StrictHostKeyChecking=no ubuntu@$TEST_INSTANCE_IP << 'EOF'
-                            set -e
-                            echo "✅ Connected to Test Instance"
-
-                            # Ensure Docker is running
-                            sudo systemctl enable docker || true
-                            sudo systemctl start docker || true
-
-                            echo "🔐 Authenticating Docker with AWS ECR..."
-                            aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin $ECR_REPOSITORY_BACKEND
-                            aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin $ECR_REPOSITORY_FRONTEND
-
-                            echo "🔐 Docker authentication successful."
-                        EOF
-                        '''
-                    }
+                    sh 'aws ecr get-login-password --region us-west-1 | docker login --username AWS --password-stdin 982287259474.dkr.ecr.us-west-1.amazonaws.com'
                 }
             }
         }
 
-        stage('Clean Docker Environment') {
+        stage('Build Docker Images') {
             steps {
                 script {
-                    sshagent(credentials: ['test-instance-ssh-key']) {
-                        sh '''
-                        echo "🧹 Cleaning Docker Environment..."
-                        ssh -o StrictHostKeyChecking=no ubuntu@$TEST_INSTANCE_IP << 'EOF'
-                            set -e
-                            docker stop $(docker ps -q) || true
-                            docker system prune -af --volumes || true
-                        EOF
-                        '''
-                    }
+                    echo 'Building Docker images...'
+                    sh 'docker-compose down'
+                    sh 'docker-compose build'
                 }
             }
         }
 
-        stage('Copy Source Code to Test Instance') {
+        stage('Tag and Push Docker Images to ECR') {
             steps {
                 script {
-                    sshagent(credentials: ['test-instance-ssh-key']) {
-                        sh '''
-                        echo "📂 Copying Source Code to Test Instance..."
-                        rsync -avz --exclude='.git' ./ ubuntu@$TEST_INSTANCE_IP:/home/ubuntu/skillnaav-fullstack
-                        '''
-                    }
+                    sh "docker tag skillnaav-fullstack-frontend:latest ${FRONTEND_REPO}:latest"
+                    sh "docker tag skillnaav-fullstack-backend:latest ${BACKEND_REPO}:latest"
+
+                    sh "docker push ${FRONTEND_REPO}:latest"
+                    sh "docker push ${BACKEND_REPO}:latest"
                 }
             }
         }
 
-        stage('Build Docker Images on Test Instance') {
+        stage('Deploy Updated Containers on EC2') {
             steps {
                 script {
-                    sshagent(credentials: ['test-instance-ssh-key']) {
-                        sh '''
-                        echo "🐳 Building Docker Images..."
-                        ssh -o StrictHostKeyChecking=no ubuntu@$TEST_INSTANCE_IP << 'EOF'
-                            set -e
-                            cd /home/ubuntu/skillnaav-fullstack
-
-                            docker build -t $ECR_REPOSITORY_BACKEND:$DOCKER_IMAGE_TAG ./backend
-                            docker build -t $ECR_REPOSITORY_FRONTEND:$DOCKER_IMAGE_TAG ./frontend
-                        EOF
-                        '''
-                    }
-                }
-            }
-        }
-
-        stage('Push Docker Images to ECR') {
-            steps {
-                script {
-                    sshagent(credentials: ['test-instance-ssh-key']) {
-                        sh '''
-                        echo "🚀 Pushing Docker Images to AWS ECR..."
-                        ssh -o StrictHostKeyChecking=no ubuntu@$TEST_INSTANCE_IP << 'EOF'
-                            set -e
-                            docker push $ECR_REPOSITORY_BACKEND:$DOCKER_IMAGE_TAG
-                            docker push $ECR_REPOSITORY_FRONTEND:$DOCKER_IMAGE_TAG
-                        EOF
-                        '''
-                    }
-                }
-            }
-        }
-
-        stage('Deploy to Test Instance') {
-            steps {
-                script {
-                    sshagent(credentials: ['test-instance-ssh-key']) {
-                        sh '''
-                        echo "🚢 Deploying to Test Instance..."
-                        ssh -o StrictHostKeyChecking=no ubuntu@$TEST_INSTANCE_IP << 'EOF'
-                            set -e
-                            cd /home/ubuntu/skillnaav-fullstack
-
-                            # Update Docker Compose with new image tags
-                            sed -i "s|image:.*$ECR_REPOSITORY_BACKEND:.*|image: $ECR_REPOSITORY_BACKEND:$DOCKER_IMAGE_TAG|" docker-compose.yml
-                            sed -i "s|image:.*$ECR_REPOSITORY_FRONTEND:.*|image: $ECR_REPOSITORY_FRONTEND:$DOCKER_IMAGE_TAG|" docker-compose.yml
-
-                            echo "🛑 Stopping current Docker containers..."
-                            docker-compose down || true
-
-                            echo "📥 Pulling updated Docker images..."
-                            docker-compose pull
-
-                            echo "🚀 Starting new Docker containers..."
-                            docker-compose up -d
-
-                            echo "🔍 Checking running containers:" 
-                            docker ps -a
-                        EOF
-                        '''
-                    }
+                    echo 'Deploying containers...'
+                    sh '''
+                    ssh -o StrictHostKeyChecking=no ubuntu@13.52.211.131 "docker-compose down"
+                    ssh -o StrictHostKeyChecking=no ubuntu@13.52.211.131 "docker pull ${FRONTEND_REPO}:latest"
+                    ssh -o StrictHostKeyChecking=no ubuntu@13.52.211.131 "docker pull ${BACKEND_REPO}:latest"
+                    ssh -o StrictHostKeyChecking=no ubuntu@13.52.211.131 "docker-compose up -d"
+                    '''
                 }
             }
         }
     }
 
     post {
+        always {
+            echo 'Pipeline completed!'
+        }
         success {
-            echo '🎉 Deployment to Test Instance completed successfully!'
+            echo '✅ Deployment successful!'
         }
         failure {
-            echo '❌ Deployment failed! Check the logs for errors.'
+            echo '❌ Deployment failed! Check logs for errors.'
         }
     }
 }
