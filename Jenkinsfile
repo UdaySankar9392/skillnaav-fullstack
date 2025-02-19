@@ -24,7 +24,7 @@ pipeline {
                     sshagent(credentials: ['test-instance-ssh-key']) {
                         sh '''
                         echo "✅ Preparing Test Instance..."
-                        ssh -o StrictHostKeyChecking=no ubuntu@$TEST_INSTANCE_IP << EOF
+                        ssh -o StrictHostKeyChecking=no ubuntu@$TEST_INSTANCE_IP << 'EOF'
                             set -e
                             echo "✅ Connected to Test Instance"
 
@@ -35,6 +35,8 @@ pipeline {
                             echo "🔐 Authenticating Docker with AWS ECR..."
                             aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin $ECR_REPOSITORY_BACKEND
                             aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin $ECR_REPOSITORY_FRONTEND
+
+                            echo "🔐 Docker authentication successful."
                         EOF
                         '''
                     }
@@ -48,7 +50,7 @@ pipeline {
                     sshagent(credentials: ['test-instance-ssh-key']) {
                         sh '''
                         echo "🧹 Cleaning Docker Environment..."
-                        ssh -o StrictHostKeyChecking=no ubuntu@$TEST_INSTANCE_IP <<'EOF'
+                        ssh -o StrictHostKeyChecking=no ubuntu@$TEST_INSTANCE_IP << 'EOF'
                             set -e
                             docker stop $(docker ps -aq) || true
                             docker system prune -af --volumes || true
@@ -78,7 +80,7 @@ pipeline {
                     sshagent(credentials: ['test-instance-ssh-key']) {
                         sh '''
                         echo "🐳 Building Docker Images..."
-                        ssh -o StrictHostKeyChecking=no ubuntu@$TEST_INSTANCE_IP <<'EOF'
+                        ssh -o StrictHostKeyChecking=no ubuntu@$TEST_INSTANCE_IP << 'EOF'
                             set -e
                             cd /home/ubuntu/skillnaav-fullstack
 
@@ -97,7 +99,7 @@ pipeline {
                     sshagent(credentials: ['test-instance-ssh-key']) {
                         sh '''
                         echo "🚀 Pushing Docker Images to AWS ECR..."
-                        ssh -o StrictHostKeyChecking=no ubuntu@$TEST_INSTANCE_IP <<'EOF'
+                        ssh -o StrictHostKeyChecking=no ubuntu@$TEST_INSTANCE_IP << 'EOF'
                             set -e
                             docker push $ECR_REPOSITORY_BACKEND:$DOCKER_IMAGE_TAG
                             docker push $ECR_REPOSITORY_FRONTEND:$DOCKER_IMAGE_TAG
@@ -114,7 +116,7 @@ pipeline {
                     sshagent(credentials: ['test-instance-ssh-key']) {
                         sh '''
                         echo "🚢 Deploying to Test Instance..."
-                        ssh -o StrictHostKeyChecking=no ubuntu@$TEST_INSTANCE_IP <<'EOF'
+                        ssh -o StrictHostKeyChecking=no ubuntu@$TEST_INSTANCE_IP << 'EOF'
                             set -e
                             cd /home/ubuntu/skillnaav-fullstack
 
