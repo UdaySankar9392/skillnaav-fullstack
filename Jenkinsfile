@@ -1,4 +1,4 @@
-pipeline {
+pipeline { 
     agent any
 
     environment {
@@ -33,17 +33,19 @@ pipeline {
             steps {
                 script {
                     echo '🔨 Building and pushing Docker images...'
-                    sh """
-                    ssh -o StrictHostKeyChecking=no ${TEST_INSTANCE} '
-                    cd /home/ubuntu/skillnaav-fullstack &&
-                    docker-compose down &&
-                    docker-compose build &&
-                    docker tag skillnaav-fullstack-frontend:latest ${FRONTEND_REPO}:latest &&
-                    docker tag skillnaav-fullstack-backend:latest ${BACKEND_REPO}:latest &&
-                    docker push ${FRONTEND_REPO}:latest &&
-                    docker push ${BACKEND_REPO}:latest
-                    '
-                    """
+                    withCredentials([sshUserPrivateKey(credentialsId: 'skillnaav-test-key', keyFileVariable: 'SSH_KEY')]) {
+                        sh """
+                        ssh -i $SSH_KEY -o StrictHostKeyChecking=no ${TEST_INSTANCE} '
+                        cd /home/ubuntu/skillnaav-fullstack &&
+                        docker-compose down &&
+                        docker-compose build &&
+                        docker tag skillnaav-fullstack-frontend:latest ${FRONTEND_REPO}:latest &&
+                        docker tag skillnaav-fullstack-backend:latest ${BACKEND_REPO}:latest &&
+                        docker push ${FRONTEND_REPO}:latest &&
+                        docker push ${BACKEND_REPO}:latest
+                        '
+                        """
+                    }
                 }
             }
         }
@@ -52,15 +54,17 @@ pipeline {
             steps {
                 script {
                     echo '🚢 Deploying updated containers...'
-                    sh """
-                    ssh -o StrictHostKeyChecking=no ${TEST_INSTANCE} '
-                    cd /home/ubuntu/skillnaav-fullstack &&
-                    docker-compose down &&
-                    docker pull ${FRONTEND_REPO}:latest &&
-                    docker pull ${BACKEND_REPO}:latest &&
-                    docker-compose up -d
-                    '
-                    """
+                    withCredentials([sshUserPrivateKey(credentialsId: 'skillnaav-test-key', keyFileVariable: 'SSH_KEY')]) {
+                        sh """
+                        ssh -i $SSH_KEY -o StrictHostKeyChecking=no ${TEST_INSTANCE} '
+                        cd /home/ubuntu/skillnaav-fullstack &&
+                        docker-compose down &&
+                        docker pull ${FRONTEND_REPO}:latest &&
+                        docker pull ${BACKEND_REPO}:latest &&
+                        docker-compose up -d
+                        '
+                        """
+                    }
                 }
             }
         }
