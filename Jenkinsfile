@@ -25,6 +25,7 @@ pipeline {
                         sh '''
                         echo "🔐 Authenticating Docker with AWS ECR..."
                         ssh -o StrictHostKeyChecking=no ubuntu@$TEST_INSTANCE_IP <<'EOF'
+                            export AWS_REGION="us-west-1"
                             aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin 982287259474.dkr.ecr.$AWS_REGION.amazonaws.com
                         EOF
                         '''
