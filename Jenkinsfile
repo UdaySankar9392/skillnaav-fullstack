@@ -1,4 +1,4 @@
-pipeline { 
+pipeline {
     agent any
 
     environment {
@@ -32,11 +32,13 @@ pipeline {
         stage('Build and Push Docker Images on Test Instance') {
             steps {
                 script {
-                    echo '🔨 Building and pushing Docker images...'
+                    echo '🔨 Pulling latest code and building Docker images...'
                     withCredentials([sshUserPrivateKey(credentialsId: 'skillnaav-test-key', keyFileVariable: 'SSH_KEY')]) {
                         sh """
                         ssh -i $SSH_KEY -o StrictHostKeyChecking=no ${TEST_INSTANCE} '
                         cd /home/ubuntu/skillnaav-fullstack &&
+                        git reset --hard &&
+                        git pull origin uday18-02-25 && 
                         docker-compose down &&
                         docker-compose build &&
                         docker tag skillnaav-fullstack-frontend:latest ${FRONTEND_REPO}:latest &&
