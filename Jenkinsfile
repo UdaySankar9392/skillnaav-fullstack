@@ -18,7 +18,10 @@ pipeline {
                     echo '📦 Pulling latest code from GitHub...'
                     checkout([$class: 'GitSCM', 
                         branches: [[name: "*/${GIT_BRANCH}"]], 
-                        userRemoteConfigs: [[url: 'git@github.com:yourrepo/yourproject.git']]
+                        userRemoteConfigs: [[
+                            url: 'https://github.com/saipraneethEdutechex/skillnaav-fullstack.git', 
+                            credentialsId: 'github-access'  // Updated to use stored credentials
+                        ]]
                     ])
                 }
             }
