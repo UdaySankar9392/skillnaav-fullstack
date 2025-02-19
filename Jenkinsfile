@@ -33,8 +33,9 @@ pipeline {
                             sudo systemctl start docker || true
 
                             echo "🔐 Authenticating Docker with AWS ECR..."
-                            aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin $ECR_REPOSITORY_BACKEND
-                            aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin $ECR_REPOSITORY_FRONTEND
+                            export AWS_REGION="us-west-1"
+                            aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin 982287259474.dkr.ecr.us-west-1.amazonaws.com/skillnaav-backend
+                            aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin 982287259474.dkr.ecr.us-west-1.amazonaws.com/skillnaav-frontend
                         EOF
                         '''
                     }
