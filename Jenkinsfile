@@ -1,4 +1,4 @@
-pipeline {
+pipeline { 
     agent any
 
     environment {
@@ -52,7 +52,7 @@ pipeline {
                         echo "🧹 Cleaning Docker Environment..."
                         ssh -o StrictHostKeyChecking=no ubuntu@$TEST_INSTANCE_IP << 'EOF'
                             set -e
-                            docker stop $(docker ps -aq) || true
+                            docker stop $(docker ps -q) || true
                             docker system prune -af --volumes || true
                         EOF
                         '''
