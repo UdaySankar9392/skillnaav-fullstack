@@ -18,23 +18,14 @@ pipeline {
             }
         }
 
-        stage('Prepare Test Instance') {
+        stage('Authenticate with AWS ECR') {
             steps {
                 script {
                     sshagent(credentials: ['test-instance-ssh-key']) {
                         sh '''
-                        echo "✅ Preparing Test Instance..."
+                        echo "🔐 Authenticating Docker with AWS ECR..."
                         ssh -o StrictHostKeyChecking=no ubuntu@$TEST_INSTANCE_IP <<'EOF'
-                            set -e
-                            echo "✅ Connected to Test Instance"
-
-                            # Ensure Docker is running
-                            sudo systemctl enable docker || true
-                            sudo systemctl start docker || true
-
-                            echo "🔐 Authenticating Docker with AWS ECR..."
-                            aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin $ECR_REPOSITORY_BACKEND
-                            aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin $ECR_REPOSITORY_FRONTEND
+                            aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin 982287259474.dkr.ecr.$AWS_REGION.amazonaws.com
                         EOF
                         '''
                     }
@@ -81,7 +72,7 @@ pipeline {
                         ssh -o StrictHostKeyChecking=no ubuntu@$TEST_INSTANCE_IP <<'EOF'
                             set -e
                             cd /home/ubuntu/skillnaav-fullstack
-
+                            
                             docker build -t $ECR_REPOSITORY_BACKEND:$DOCKER_IMAGE_TAG ./backend
                             docker build -t $ECR_REPOSITORY_FRONTEND:$DOCKER_IMAGE_TAG ./frontend
                         EOF
