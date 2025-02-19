@@ -35,7 +35,7 @@ pipeline {
                     echo '🔨 Building and pushing Docker images...'
                     sh """
                     ssh -o StrictHostKeyChecking=no ${TEST_INSTANCE} '
-                    cd /home/ubuntu/skillnaav-test &&
+                    cd /home/ubuntu/skillnaav-fullstack &&
                     docker-compose down &&
                     docker-compose build &&
                     docker tag skillnaav-fullstack-frontend:latest ${FRONTEND_REPO}:latest &&
@@ -54,6 +54,7 @@ pipeline {
                     echo '🚢 Deploying updated containers...'
                     sh """
                     ssh -o StrictHostKeyChecking=no ${TEST_INSTANCE} '
+                    cd /home/ubuntu/skillnaav-fullstack &&
                     docker-compose down &&
                     docker pull ${FRONTEND_REPO}:latest &&
                     docker pull ${BACKEND_REPO}:latest &&
