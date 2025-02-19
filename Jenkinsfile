@@ -22,13 +22,13 @@ pipeline {
             steps {
                 script {
                     sshagent(credentials: ['test-instance-ssh-key']) {
-                        sh """
+                        sh '''
                         echo "✅ Preparing Test Instance..."
                         ssh -o StrictHostKeyChecking=no ubuntu@$TEST_INSTANCE_IP <<'EOF'
+                            set -e
                             echo "✅ Connected to Test Instance"
-                            aws --version
-                            docker --version
 
+                            # Ensure Docker is running
                             sudo systemctl enable docker || true
                             sudo systemctl start docker || true
 
@@ -36,7 +36,7 @@ pipeline {
                             aws ecr get-login-password --region ${AWS_REGION} | docker login --username AWS --password-stdin ${ECR_REPOSITORY_BACKEND}
                             aws ecr get-login-password --region ${AWS_REGION} | docker login --username AWS --password-stdin ${ECR_REPOSITORY_FRONTEND}
                         EOF
-                        """
+                        '''
                     }
                 }
             }
@@ -46,13 +46,14 @@ pipeline {
             steps {
                 script {
                     sshagent(credentials: ['test-instance-ssh-key']) {
-                        sh """
+                        sh '''
                         echo "🧹 Cleaning Docker Environment..."
                         ssh -o StrictHostKeyChecking=no ubuntu@$TEST_INSTANCE_IP <<'EOF'
+                            set -e
+                            docker stop $(docker ps -aq) || true
                             docker system prune -af --volumes || true
-                            docker image prune -af || true
                         EOF
-                        """
+                        '''
                     }
                 }
             }
@@ -62,10 +63,10 @@ pipeline {
             steps {
                 script {
                     sshagent(credentials: ['test-instance-ssh-key']) {
-                        sh """
+                        sh '''
                         echo "📂 Copying Source Code to Test Instance..."
                         rsync -avz --exclude='.git' ./ ubuntu@$TEST_INSTANCE_IP:/home/ubuntu/skillnaav-fullstack
-                        """
+                        '''
                     }
                 }
             }
@@ -75,14 +76,16 @@ pipeline {
             steps {
                 script {
                     sshagent(credentials: ['test-instance-ssh-key']) {
-                        sh """
+                        sh '''
                         echo "🐳 Building Docker Images..."
-                        ssh -o StrictHostKeyChecking=no ubuntu@$TEST_INSTANCE_IP <<EOF
+                        ssh -o StrictHostKeyChecking=no ubuntu@$TEST_INSTANCE_IP <<'EOF'
+                            set -e
                             cd /home/ubuntu/skillnaav-fullstack
+
                             docker build -t ${ECR_REPOSITORY_BACKEND}:${DOCKER_IMAGE_TAG} ./backend
                             docker build -t ${ECR_REPOSITORY_FRONTEND}:${DOCKER_IMAGE_TAG} ./frontend
                         EOF
-                        """
+                        '''
                     }
                 }
             }
@@ -92,13 +95,14 @@ pipeline {
             steps {
                 script {
                     sshagent(credentials: ['test-instance-ssh-key']) {
-                        sh """
+                        sh '''
                         echo "🚀 Pushing Docker Images to AWS ECR..."
-                        ssh -o StrictHostKeyChecking=no ubuntu@$TEST_INSTANCE_IP <<EOF
+                        ssh -o StrictHostKeyChecking=no ubuntu@$TEST_INSTANCE_IP <<'EOF'
+                            set -e
                             docker push ${ECR_REPOSITORY_BACKEND}:${DOCKER_IMAGE_TAG}
                             docker push ${ECR_REPOSITORY_FRONTEND}:${DOCKER_IMAGE_TAG}
                         EOF
-                        """
+                        '''
                     }
                 }
             }
@@ -108,14 +112,15 @@ pipeline {
             steps {
                 script {
                     sshagent(credentials: ['test-instance-ssh-key']) {
-                        sh """
+                        sh '''
                         echo "🚢 Deploying to Test Instance..."
-                        ssh -o StrictHostKeyChecking=no ubuntu@$TEST_INSTANCE_IP <<EOF
+                        ssh -o StrictHostKeyChecking=no ubuntu@$TEST_INSTANCE_IP <<'EOF'
+                            set -e
                             cd /home/ubuntu/skillnaav-fullstack
 
                             # Update Docker Compose with new image tags
-                            sed -i 's|image:.*${ECR_REPOSITORY_BACKEND}:.*|image: ${ECR_REPOSITORY_BACKEND}:${DOCKER_IMAGE_TAG}|' docker-compose.yml
-                            sed -i 's|image:.*${ECR_REPOSITORY_FRONTEND}:.*|image: ${ECR_REPOSITORY_FRONTEND}:${DOCKER_IMAGE_TAG}|' docker-compose.yml
+                            sed -i "s|image:.*${ECR_REPOSITORY_BACKEND}:.*|image: ${ECR_REPOSITORY_BACKEND}:${DOCKER_IMAGE_TAG}|" docker-compose.yml
+                            sed -i "s|image:.*${ECR_REPOSITORY_FRONTEND}:.*|image: ${ECR_REPOSITORY_FRONTEND}:${DOCKER_IMAGE_TAG}|" docker-compose.yml
 
                             echo "🛑 Stopping current Docker containers..."
                             docker-compose down || true
@@ -126,10 +131,10 @@ pipeline {
                             echo "🚀 Starting new Docker containers..."
                             docker-compose up -d
 
-                            echo "🔍 Checking running containers:"
+                            echo "🔍 Checking running containers:" 
                             docker ps -a
                         EOF
-                        """
+                        '''
                     }
                 }
             }
