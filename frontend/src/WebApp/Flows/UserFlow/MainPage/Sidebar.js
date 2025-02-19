@@ -66,7 +66,7 @@ const Sidebar = () => {
       <nav className="flex-1">
         <ul className="space-y-2">
           {[
-            { id: "home", icon: faHome, label: "Homepage" },
+            { id: "home", icon: faHome, label: "page" },
             { id: "aeronautical-jobs", icon: faPlane, label: "Aeronautical jobs" },
             { id: "searchbar", icon: faSearch, label: "Search" },
             { id: "applications", icon: faFileAlt, label: "Applications" },
