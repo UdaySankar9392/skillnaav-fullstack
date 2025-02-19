@@ -1,11 +1,6 @@
 pipeline {
     agent any
 
-    parameters {
-        string(name: 'GIT_REPO', defaultValue: 'https://github.com/saipraneethEdutechex/skillnaav-fullstack.git', description: 'GitHub Repository URL')
-        string(name: 'GIT_BRANCH', defaultValue: 'uday18-02-25', description: 'Branch to build')
-    }
-
     environment {
         AWS_REGION = 'us-west-1'
         ECR_REGISTRY = '982287259474.dkr.ecr.us-west-1.amazonaws.com'
@@ -13,14 +8,18 @@ pipeline {
         BACKEND_REPO = "${ECR_REGISTRY}/skillnaav-backend"
         TEST_INSTANCE_IP = '13.52.211.131'
         REMOTE_WORKDIR = '/home/ubuntu/skillnaav-fullstack'
+        GIT_BRANCH = 'uday18-02-25'  // Ensure this is updated dynamically if needed
     }
 
     stages {
-        stage('Checkout') {
+        stage('Checkout Code') {
             steps {
                 script {
                     echo '📦 Pulling latest code from GitHub...'
-                    git branch: params.GIT_BRANCH, url: params.GIT_REPO
+                    checkout([$class: 'GitSCM', 
+                        branches: [[name: "*/${GIT_BRANCH}"]], 
+                        userRemoteConfigs: [[url: 'git@github.com:yourrepo/yourproject.git']]
+                    ])
                 }
             }
         }
@@ -37,60 +36,77 @@ pipeline {
             }
         }
 
-        stage('Build and Push Docker Images on Test Instance') {
-            steps {
-                script {
-                    echo '🔨 Building and pushing Docker images...'
+        stage('Build and Push Docker Images') {
+            parallel {
+                stage('Build and Push Frontend') {
+                    steps {
+                        script {
+                            echo '🔨 Building and pushing Frontend Docker image...'
+                            withCredentials([sshUserPrivateKey(credentialsId: 'skillnaav-test-key', keyFileVariable: 'SSH_KEY')]) {
+                                sh """
+                                ssh -i $SSH_KEY -o StrictHostKeyChecking=no ubuntu@${TEST_INSTANCE_IP} '
+                                    set -e
+                                    cd ${REMOTE_WORKDIR}
 
-                    withCredentials([sshUserPrivateKey(credentialsId: 'skillnaav-test-key', keyFileVariable: 'SSH_KEY')]) {
-                        sh """
-                        ssh -i $SSH_KEY -o StrictHostKeyChecking=no ubuntu@${TEST_INSTANCE_IP} '
-                            set -e
-                            cd ${REMOTE_WORKDIR}
+                                    echo "🔄 Syncing with remote branch..."
+                                    git fetch origin
+                                    git reset --hard origin/${GIT_BRANCH}
 
-                            echo "🔄 Force syncing with remote branch..."
-                            git fetch origin
-                            git reset --hard origin/${params.GIT_BRANCH}
-                            git clean -fd  # Remove untracked files
+                                    echo "📉 Stopping existing containers..."
+                                    docker-compose down || true
 
-                            echo "📉 Stopping existing containers..."
-                            docker-compose down || true  # Prevent failure if no containers are running
+                                    echo "🔧 Building Frontend Image..."
+                                    docker-compose build frontend
 
-                            echo "🔧 Building Docker images..."
-                            docker-compose build
+                                    echo "🛳 Tagging Frontend image..."
+                                    docker tag skillnaav-fullstack_frontend:latest ${FRONTEND_REPO}:latest
 
-                            echo "🛳️ Tagging images..."
-                            docker tag skillnaav-fullstack_frontend:latest ${FRONTEND_REPO}:latest
-                            docker tag skillnaav-fullstack_backend:latest ${BACKEND_REPO}:latest
+                                    echo "🚀 Pushing Frontend to AWS ECR..."
+                                    docker push ${FRONTEND_REPO}:latest
+                                '
+                                """
+                            }
+                        }
+                    }
+                }
+                stage('Build and Push Backend') {
+                    steps {
+                        script {
+                            echo '🔨 Building and pushing Backend Docker image...'
+                            withCredentials([sshUserPrivateKey(credentialsId: 'skillnaav-test-key', keyFileVariable: 'SSH_KEY')]) {
+                                sh """
+                                ssh -i $SSH_KEY -o StrictHostKeyChecking=no ubuntu@${TEST_INSTANCE_IP} '
+                                    set -e
+                                    cd ${REMOTE_WORKDIR}
 
-                            echo "🚀 Pushing images to AWS ECR..."
-                            docker push ${FRONTEND_REPO}:latest
-                            docker push ${BACKEND_REPO}:latest
-                        '
-                        """
+                                    echo "🔧 Building Backend Image..."
+                                    docker-compose build backend
+
+                                    echo "🛳 Tagging Backend image..."
+                                    docker tag skillnaav-fullstack_backend:latest ${BACKEND_REPO}:latest
+
+                                    echo "🚀 Pushing Backend to AWS ECR..."
+                                    docker push ${BACKEND_REPO}:latest
+                                '
+                                """
+                            }
+                        }
                     }
                 }
             }
         }
 
-        stage('Deploy Updated Containers on Test Instance') {
+        stage('Deploy Updated Containers') {
             steps {
                 script {
                     echo '🚢 Deploying updated containers on the test instance...'
-
                     withCredentials([sshUserPrivateKey(credentialsId: 'skillnaav-test-key', keyFileVariable: 'SSH_KEY')]) {
                         sh """
                         ssh -i $SSH_KEY -o StrictHostKeyChecking=no ubuntu@${TEST_INSTANCE_IP} '
                             cd ${REMOTE_WORKDIR}
 
-                            echo "🧹 Cleaning up old Docker images and containers..."
-                            docker system prune -af --volumes
-
                             echo "📊 Restarting Docker containers..."
-                            docker-compose up -d
-
-                            echo "🔎 Checking container status..."
-                            docker ps --format "table {{.Names}}\t{{.Status}}"
+                            docker-compose up --build -d  # Ensures containers are rebuilt with latest changes
                         '
                         """
                     }
