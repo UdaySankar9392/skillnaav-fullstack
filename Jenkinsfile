@@ -33,8 +33,8 @@ pipeline {
                             sudo systemctl start docker || true
 
                             echo "🔐 Authenticating Docker with AWS ECR..."
-                            aws ecr get-login-password --region ${AWS_REGION} | docker login --username AWS --password-stdin ${ECR_REPOSITORY_BACKEND}
-                            aws ecr get-login-password --region ${AWS_REGION} | docker login --username AWS --password-stdin ${ECR_REPOSITORY_FRONTEND}
+                            aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin $ECR_REPOSITORY_BACKEND
+                            aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin $ECR_REPOSITORY_FRONTEND
                         EOF
                         '''
                     }
@@ -82,8 +82,8 @@ pipeline {
                             set -e
                             cd /home/ubuntu/skillnaav-fullstack
 
-                            docker build -t ${ECR_REPOSITORY_BACKEND}:${DOCKER_IMAGE_TAG} ./backend
-                            docker build -t ${ECR_REPOSITORY_FRONTEND}:${DOCKER_IMAGE_TAG} ./frontend
+                            docker build -t $ECR_REPOSITORY_BACKEND:$DOCKER_IMAGE_TAG ./backend
+                            docker build -t $ECR_REPOSITORY_FRONTEND:$DOCKER_IMAGE_TAG ./frontend
                         EOF
                         '''
                     }
@@ -99,8 +99,8 @@ pipeline {
                         echo "🚀 Pushing Docker Images to AWS ECR..."
                         ssh -o StrictHostKeyChecking=no ubuntu@$TEST_INSTANCE_IP <<'EOF'
                             set -e
-                            docker push ${ECR_REPOSITORY_BACKEND}:${DOCKER_IMAGE_TAG}
-                            docker push ${ECR_REPOSITORY_FRONTEND}:${DOCKER_IMAGE_TAG}
+                            docker push $ECR_REPOSITORY_BACKEND:$DOCKER_IMAGE_TAG
+                            docker push $ECR_REPOSITORY_FRONTEND:$DOCKER_IMAGE_TAG
                         EOF
                         '''
                     }
@@ -119,8 +119,8 @@ pipeline {
                             cd /home/ubuntu/skillnaav-fullstack
 
                             # Update Docker Compose with new image tags
-                            sed -i "s|image:.*${ECR_REPOSITORY_BACKEND}:.*|image: ${ECR_REPOSITORY_BACKEND}:${DOCKER_IMAGE_TAG}|" docker-compose.yml
-                            sed -i "s|image:.*${ECR_REPOSITORY_FRONTEND}:.*|image: ${ECR_REPOSITORY_FRONTEND}:${DOCKER_IMAGE_TAG}|" docker-compose.yml
+                            sed -i "s|image:.*$ECR_REPOSITORY_BACKEND:.*|image: $ECR_REPOSITORY_BACKEND:$DOCKER_IMAGE_TAG|" docker-compose.yml
+                            sed -i "s|image:.*$ECR_REPOSITORY_FRONTEND:.*|image: $ECR_REPOSITORY_FRONTEND:$DOCKER_IMAGE_TAG|" docker-compose.yml
 
                             echo "🛑 Stopping current Docker containers..."
                             docker-compose down || true
