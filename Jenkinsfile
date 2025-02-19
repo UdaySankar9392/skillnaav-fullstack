@@ -1,6 +1,11 @@
 pipeline {
     agent any
 
+    parameters {
+        string(name: 'GIT_REPO', defaultValue: 'https://github.com/saipraneethEdutechex/skillnaav-fullstack.git', description: 'GitHub Repository URL')
+        string(name: 'GIT_BRANCH', defaultValue: 'uday18-02-25', description: 'Branch to build')
+    }
+
     environment {
         AWS_REGION = 'us-west-1'
         ECR_REGISTRY = '982287259474.dkr.ecr.us-west-1.amazonaws.com'
@@ -15,7 +20,7 @@ pipeline {
             steps {
                 script {
                     echo '📦 Pulling latest code from GitHub...'
-                    checkout scm
+                    git branch: params.GIT_BRANCH, url: params.GIT_REPO
                 }
             }
         }
@@ -45,10 +50,11 @@ pipeline {
 
                             echo "🔄 Force syncing with remote branch..."
                             git fetch origin
-                            git reset --hard origin/uday18-02-25
+                            git reset --hard origin/${params.GIT_BRANCH}
+                            git clean -fd  # Remove untracked files
 
                             echo "📉 Stopping existing containers..."
-                            docker-compose down || true
+                            docker-compose down || true  # Prevent failure if no containers are running
 
                             echo "🔧 Building Docker images..."
                             docker-compose build
@@ -76,8 +82,15 @@ pipeline {
                         sh """
                         ssh -i $SSH_KEY -o StrictHostKeyChecking=no ubuntu@${TEST_INSTANCE_IP} '
                             cd ${REMOTE_WORKDIR}
+
+                            echo "🧹 Cleaning up old Docker images and containers..."
+                            docker system prune -af --volumes
+
                             echo "📊 Restarting Docker containers..."
                             docker-compose up -d
+
+                            echo "🔎 Checking container status..."
+                            docker ps --format "table {{.Names}}\t{{.Status}}"
                         '
                         """
                     }
