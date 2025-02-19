@@ -54,8 +54,8 @@ pipeline {
                             docker-compose build
 
                             echo "🛳️ Tagging images..."
-                            docker tag skillnaav-fullstack-frontend:latest ${FRONTEND_REPO}:latest
-                            docker tag skillnaav-fullstack-backend:latest ${BACKEND_REPO}:latest
+                            docker tag skillnaav-fullstack_frontend:latest ${FRONTEND_REPO}:latest
+                            docker tag skillnaav-fullstack_backend:latest ${BACKEND_REPO}:latest
 
                             echo "🚀 Pushing images to AWS ECR..."
                             docker push ${FRONTEND_REPO}:latest
@@ -72,7 +72,7 @@ pipeline {
                 script {
                     echo '🚢 Deploying updated containers on the test instance...'
 
-                    withCredentials([sshUserPrivateKey(credentialsId: 'jenkins-ssh-key', keyFileVariable: 'SSH_KEY')]) {
+                    withCredentials([sshUserPrivateKey(credentialsId: 'skillnaav-test-key', keyFileVariable: 'SSH_KEY')]) {
                         sh """
                         ssh -i $SSH_KEY -o StrictHostKeyChecking=no ubuntu@${TEST_INSTANCE_IP} '
                             cd ${REMOTE_WORKDIR}
