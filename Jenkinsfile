@@ -10,7 +10,6 @@ pipeline {
     }
 
     stages {
-
         stage('Clone Code') {
             steps {
                 script {
@@ -24,18 +23,18 @@ pipeline {
                 script {
                     sshagent(credentials: ['test-instance-ssh-key']) {
                         sh """
-                        echo "✅ Connecting to Test Instance and Preparing Environment..."
-                        ssh -o StrictHostKeyChecking=no ubuntu@$TEST_INSTANCE_IP <<EOF
-                            echo "✅ Test Instance Connected!"
+                        echo "✅ Preparing Test Instance..."
+                        ssh -o StrictHostKeyChecking=no ubuntu@$TEST_INSTANCE_IP <<'EOF'
+                            echo "✅ Connected to Test Instance"
                             aws --version
                             docker --version
+
                             sudo systemctl enable docker || true
                             sudo systemctl start docker || true
 
-                            # Authenticate Docker with AWS ECR
-                            echo "🔐 Authenticating with AWS ECR..."
-                            aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin $ECR_REPOSITORY_BACKEND
-                            aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin $ECR_REPOSITORY_FRONTEND
+                            echo "🔐 Authenticating Docker with AWS ECR..."
+                            aws ecr get-login-password --region ${AWS_REGION} | docker login --username AWS --password-stdin ${ECR_REPOSITORY_BACKEND}
+                            aws ecr get-login-password --region ${AWS_REGION} | docker login --username AWS --password-stdin ${ECR_REPOSITORY_FRONTEND}
                         EOF
                         """
                     }
@@ -48,8 +47,8 @@ pipeline {
                 script {
                     sshagent(credentials: ['test-instance-ssh-key']) {
                         sh """
-                        echo "🧹 Cleaning Docker Environment on Test Instance..."
-                        ssh -o StrictHostKeyChecking=no ubuntu@$TEST_INSTANCE_IP <<EOF
+                        echo "🧹 Cleaning Docker Environment..."
+                        ssh -o StrictHostKeyChecking=no ubuntu@$TEST_INSTANCE_IP <<'EOF'
                             docker system prune -af --volumes || true
                             docker image prune -af || true
                         EOF
@@ -64,7 +63,7 @@ pipeline {
                 script {
                     sshagent(credentials: ['test-instance-ssh-key']) {
                         sh """
-                        echo "📂 Copying source code to Test Instance..."
+                        echo "📂 Copying Source Code to Test Instance..."
                         rsync -avz --exclude='.git' ./ ubuntu@$TEST_INSTANCE_IP:/home/ubuntu/skillnaav-fullstack
                         """
                     }
@@ -77,11 +76,11 @@ pipeline {
                 script {
                     sshagent(credentials: ['test-instance-ssh-key']) {
                         sh """
-                        echo "🐳 Building Docker Images on Test Instance..."
+                        echo "🐳 Building Docker Images..."
                         ssh -o StrictHostKeyChecking=no ubuntu@$TEST_INSTANCE_IP <<EOF
                             cd /home/ubuntu/skillnaav-fullstack
-                            docker build -t $ECR_REPOSITORY_BACKEND:$DOCKER_IMAGE_TAG ./backend
-                            docker build -t $ECR_REPOSITORY_FRONTEND:$DOCKER_IMAGE_TAG ./frontend
+                            docker build -t ${ECR_REPOSITORY_BACKEND}:${DOCKER_IMAGE_TAG} ./backend
+                            docker build -t ${ECR_REPOSITORY_FRONTEND}:${DOCKER_IMAGE_TAG} ./frontend
                         EOF
                         """
                     }
@@ -96,8 +95,8 @@ pipeline {
                         sh """
                         echo "🚀 Pushing Docker Images to AWS ECR..."
                         ssh -o StrictHostKeyChecking=no ubuntu@$TEST_INSTANCE_IP <<EOF
-                            docker push $ECR_REPOSITORY_BACKEND:$DOCKER_IMAGE_TAG
-                            docker push $ECR_REPOSITORY_FRONTEND:$DOCKER_IMAGE_TAG
+                            docker push ${ECR_REPOSITORY_BACKEND}:${DOCKER_IMAGE_TAG}
+                            docker push ${ECR_REPOSITORY_FRONTEND}:${DOCKER_IMAGE_TAG}
                         EOF
                         """
                     }
@@ -110,25 +109,24 @@ pipeline {
                 script {
                     sshagent(credentials: ['test-instance-ssh-key']) {
                         sh """
-                        echo "🚢 Deploying Docker Containers on Test Instance..."
+                        echo "🚢 Deploying to Test Instance..."
                         ssh -o StrictHostKeyChecking=no ubuntu@$TEST_INSTANCE_IP <<EOF
                             cd /home/ubuntu/skillnaav-fullstack
 
-                            # Update docker-compose.yml with new image tags
-                            sed -i 's|image: $ECR_REPOSITORY_BACKEND:.*|image: $ECR_REPOSITORY_BACKEND:$DOCKER_IMAGE_TAG|' docker-compose.yml
-                            sed -i 's|image: $ECR_REPOSITORY_FRONTEND:.*|image: $ECR_REPOSITORY_FRONTEND:$DOCKER_IMAGE_TAG|' docker-compose.yml
+                            # Update Docker Compose with new image tags
+                            sed -i 's|image:.*${ECR_REPOSITORY_BACKEND}:.*|image: ${ECR_REPOSITORY_BACKEND}:${DOCKER_IMAGE_TAG}|' docker-compose.yml
+                            sed -i 's|image:.*${ECR_REPOSITORY_FRONTEND}:.*|image: ${ECR_REPOSITORY_FRONTEND}:${DOCKER_IMAGE_TAG}|' docker-compose.yml
 
-                            # Restart Docker Services
                             echo "🛑 Stopping current Docker containers..."
-                            docker-compose down
+                            docker-compose down || true
 
-                            echo "📥 Pulling new Docker images..."
+                            echo "📥 Pulling updated Docker images..."
                             docker-compose pull
 
                             echo "🚀 Starting new Docker containers..."
                             docker-compose up -d
 
-                            echo "🔍 Verifying Running Containers:"
+                            echo "🔍 Checking running containers:"
                             docker ps -a
                         EOF
                         """
@@ -143,7 +141,7 @@ pipeline {
             echo '🎉 Deployment to Test Instance completed successfully!'
         }
         failure {
-            echo '❌ Deployment failed! Check the logs for details.'
+            echo '❌ Deployment failed! Check the logs for errors.'
         }
     }
 }
