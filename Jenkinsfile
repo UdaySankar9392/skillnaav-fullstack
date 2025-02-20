@@ -8,7 +8,7 @@ pipeline {
         BACKEND_REPO = "${ECR_REGISTRY}/skillnaav-backend"
         TEST_INSTANCE_IP = '13.52.211.131'
         REMOTE_WORKDIR = '/home/ubuntu/skillnaav-fullstack'
-        GIT_BRANCH = 'uday18-02-25'
+        GIT_BRANCH = 'uday18-02-25'  // Ensure this is updated dynamically if needed
     }
 
     triggers {
@@ -24,7 +24,7 @@ pipeline {
                         branches: [[name: "*/${GIT_BRANCH}"]], 
                         userRemoteConfigs: [[
                             url: 'https://github.com/saipraneethEdutechex/skillnaav-fullstack.git', 
-                            credentialsId: 'github-access'
+                            credentialsId: 'github-access'  // Updated to use stored credentials
                         ]]
                     ])
                 }
@@ -43,15 +43,6 @@ pipeline {
             }
         }
 
-        stage('Cleanup Docker Volumes') {
-            steps {
-                script {
-                    echo '🧹 Cleaning up unused Docker volumes...'
-                    sh 'docker volume prune -f'
-                }
-            }
-        }
-
         stage('Build and Push Docker Images') {
             parallel {
                 stage('Build and Push Frontend') {
@@ -64,6 +55,10 @@ pipeline {
                                     set -e
                                     cd ${REMOTE_WORKDIR}
 
+                                    echo "🔄 Syncing with remote branch..."
+                                    git fetch origin
+                                    git reset --hard origin/${GIT_BRANCH}
+
                                     echo "📉 Stopping existing containers..."
                                     docker-compose down || true
 
@@ -73,9 +68,6 @@ pipeline {
                                     echo "🛳 Tagging Frontend image..."
                                     docker tag skillnaav-fullstack_frontend:latest ${FRONTEND_REPO}:latest
 
-                                    echo "🔐 Re-authenticating with AWS ECR..."
-                                    aws ecr get-login-password --region ${AWS_REGION} | docker login --username AWS --password-stdin ${ECR_REGISTRY}
-
                                     echo "🚀 Pushing Frontend to AWS ECR..."
                                     docker push ${FRONTEND_REPO}:latest
                                 '
@@ -84,7 +76,6 @@ pipeline {
                         }
                     }
                 }
-
                 stage('Build and Push Backend') {
                     steps {
                         script {
@@ -100,9 +91,6 @@ pipeline {
 
                                     echo "🛳 Tagging Backend image..."
                                     docker tag skillnaav-fullstack_backend:latest ${BACKEND_REPO}:latest
-
-                                    echo "🔐 Re-authenticating with AWS ECR..."
-                                    aws ecr get-login-password --region ${AWS_REGION} | docker login --username AWS --password-stdin ${ECR_REGISTRY}
 
                                     echo "🚀 Pushing Backend to AWS ECR..."
                                     docker push ${BACKEND_REPO}:latest
@@ -125,7 +113,7 @@ pipeline {
                             cd ${REMOTE_WORKDIR}
 
                             echo "📊 Restarting Docker containers..."
-                            docker-compose up --build -d
+                            docker-compose up --build -d  # Ensures containers are rebuilt with latest changes
                         '
                         """
                     }
