@@ -20,14 +20,11 @@ export const TabProvider = ({ children }) => {
       setIsLoadingSavedJobs(false);
       return;
     }
-
+  
     setIsLoadingSavedJobs(true);
     try {
-      const response = await fetch(`http://localhost:5000/api/savedJobs/getSavedJobs/${userId}`);
-      if (!response.ok) throw new Error("Failed to fetch saved jobs");
-
-      const data = await response.json();
-      console.log("✅ Fetched saved jobs:", data); // Debugging log
+      const { data } = await axios.get(/api/savedJobs/getSavedJobs/${userId});
+      console.log("✅ Fetched saved jobs:", data);
       setSavedJobs(Array.isArray(data) ? data : []);
     } catch (err) {
       console.error("❌ Error fetching saved jobs:", err);
@@ -35,7 +32,8 @@ export const TabProvider = ({ children }) => {
     } finally {
       setIsLoadingSavedJobs(false);
     }
-  }, [userId]); // Only recreate if userId changes
+  }, [userId]);
+   // Only recreate if userId changes
 
   // Fetch saved jobs when userId changes
   useEffect(() => {
@@ -43,39 +41,36 @@ export const TabProvider = ({ children }) => {
   }, [getSavedJobs]);
 
  // In TabProvider.js
-const saveJob = async (job) => {
+ const saveJob = async (job) => {
   try {
-    const response = await fetch("http://localhost:5000/api/savedJobs/save", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ userId, jobId: job._id }),
-    });
+    const { data } = await axios.post("/api/savedJobs/save", { userId, jobId: job._id });
 
-    const savedJob = await response.json();
-    
+    // Ensure jobId exists in response, or manually structure it
     setSavedJobs(prev => [
       ...prev, 
-      savedJob?.jobId ? savedJob : { ...savedJob, jobId: job } // Handle population
+      data?.jobId ? data : { ...data, jobId: job }
     ]);
   } catch (error) {
-    console.error("Error saving job:", error);
+    console.error("❌ Error saving job:", error.response?.data || error.message);
   }
 };
 
-  const removeJob = async (jobId) => {
-    try {
-      setSavedJobs((prevJobs) =>
-        prevJobs.filter((job) => {
-          const jobToCheck = job.savedJob || job; // Normalize the job object
-          return jobToCheck.jobId?._id !== jobId && jobToCheck._id !== jobId;
-        })
-      );
-  
-      await axios.delete(`http://localhost:5000/api/savedJobs/remove/${userId}/${jobId}`);
-    } catch (error) {
-      console.error("❌ Error removing job:", error.response?.data || error.message);
-    }
-  };
+const removeJob = async (jobId) => {
+  try {
+    await axios.delete(/api/savedJobs/remove/${userId}/${jobId});
+
+    // Update state after successful deletion
+    setSavedJobs(prevJobs =>
+      prevJobs.filter(job => {
+        const jobToCheck = job.savedJob || job;
+        return jobToCheck.jobId?._id !== jobId && jobToCheck._id !== jobId;
+      })
+    );
+  } catch (error) {
+    console.error("❌ Error removing job:", error.response?.data || error.message);
+  }
+};
+
   return (
     <UserHomePageContext.Provider
       value={{
@@ -97,4 +92,4 @@ const saveJob = async (job) => {
 };
 
 export const useTabContext = () => useContext(UserHomePageContext);
-export { UserHomePageContext };
+export { UserHomePageContext };
