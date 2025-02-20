@@ -8,7 +8,11 @@ pipeline {
         BACKEND_REPO = "${ECR_REGISTRY}/skillnaav-backend"
         TEST_INSTANCE_IP = '13.52.211.131'
         REMOTE_WORKDIR = '/home/ubuntu/skillnaav-fullstack'
-        GIT_BRANCH = 'uday18-02-25'  // Ensure this is updated dynamically if needed
+        GIT_BRANCH = 'uday18-02-25'
+    }
+
+    triggers {
+        githubPush()
     }
 
     stages {
@@ -20,7 +24,7 @@ pipeline {
                         branches: [[name: "*/${GIT_BRANCH}"]], 
                         userRemoteConfigs: [[
                             url: 'https://github.com/saipraneethEdutechex/skillnaav-fullstack.git', 
-                            credentialsId: 'github-access'  // Updated to use stored credentials
+                            credentialsId: 'github-access'
                         ]]
                     ])
                 }
@@ -39,6 +43,15 @@ pipeline {
             }
         }
 
+        stage('Cleanup Docker Volumes') {
+            steps {
+                script {
+                    echo '🧹 Cleaning up unused Docker volumes...'
+                    sh 'docker volume prune -f'
+                }
+            }
+        }
+
         stage('Build and Push Docker Images') {
             parallel {
                 stage('Build and Push Frontend') {
@@ -50,10 +63,6 @@ pipeline {
                                 ssh -i $SSH_KEY -o StrictHostKeyChecking=no ubuntu@${TEST_INSTANCE_IP} '
                                     set -e
                                     cd ${REMOTE_WORKDIR}
-
-                                    echo "🔄 Syncing with remote branch..."
-                                    git fetch origin
-                                    git reset --hard origin/${GIT_BRANCH}
 
                                     echo "📉 Stopping existing containers..."
                                     docker-compose down || true
@@ -109,7 +118,7 @@ pipeline {
                             cd ${REMOTE_WORKDIR}
 
                             echo "📊 Restarting Docker containers..."
-                            docker-compose up --build -d  # Ensures containers are rebuilt with latest changes
+                            docker-compose up --build -d
                         '
                         """
                     }
