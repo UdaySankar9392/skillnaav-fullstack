@@ -73,6 +73,9 @@ pipeline {
                                     echo "🛳 Tagging Frontend image..."
                                     docker tag skillnaav-fullstack_frontend:latest ${FRONTEND_REPO}:latest
 
+                                    echo "🔐 Re-authenticating with AWS ECR..."
+                                    aws ecr get-login-password --region ${AWS_REGION} | docker login --username AWS --password-stdin ${ECR_REGISTRY}
+
                                     echo "🚀 Pushing Frontend to AWS ECR..."
                                     docker push ${FRONTEND_REPO}:latest
                                 '
@@ -81,6 +84,7 @@ pipeline {
                         }
                     }
                 }
+
                 stage('Build and Push Backend') {
                     steps {
                         script {
@@ -96,6 +100,9 @@ pipeline {
 
                                     echo "🛳 Tagging Backend image..."
                                     docker tag skillnaav-fullstack_backend:latest ${BACKEND_REPO}:latest
+
+                                    echo "🔐 Re-authenticating with AWS ECR..."
+                                    aws ecr get-login-password --region ${AWS_REGION} | docker login --username AWS --password-stdin ${ECR_REGISTRY}
 
                                     echo "🚀 Pushing Backend to AWS ECR..."
                                     docker push ${BACKEND_REPO}:latest
