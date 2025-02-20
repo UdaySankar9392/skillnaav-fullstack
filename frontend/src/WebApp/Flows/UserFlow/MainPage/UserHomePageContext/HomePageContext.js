@@ -23,7 +23,7 @@ export const TabProvider = ({ children }) => {
   
     setIsLoadingSavedJobs(true);
     try {
-      const { data } = await axios.get(/api/savedJobs/getSavedJobs/${userId});
+      const { data } = await axios.get(`/api/savedJobs/getSavedJobs/${userId}`);
       console.log("✅ Fetched saved jobs:", data);
       setSavedJobs(Array.isArray(data) ? data : []);
     } catch (err) {
@@ -57,7 +57,7 @@ export const TabProvider = ({ children }) => {
 
 const removeJob = async (jobId) => {
   try {
-    await axios.delete(/api/savedJobs/remove/${userId}/${jobId});
+    await axios.delete(`/api/savedJobs/remove/${userId}/${jobId}`);
 
     // Update state after successful deletion
     setSavedJobs(prevJobs =>
@@ -92,4 +92,4 @@ const removeJob = async (jobId) => {
 };
 
 export const useTabContext = () => useContext(UserHomePageContext);
-export { UserHomePageContext };
+export { UserHomePageContext };
