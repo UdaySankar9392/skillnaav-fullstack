@@ -36,10 +36,10 @@ const YourJobPosts = () => {
         console.error("Error fetching internships:", error);
       }
     };
-  
+
     fetchInternships();
   }, [partnerId]);
-  
+
 
 
   const handleReadMore = (internship) => {
@@ -50,9 +50,6 @@ const YourJobPosts = () => {
   const closeModal = () => {
     setIsModalOpen(false);
   };
-
-
-
   const updateField = (field, value) => {
     setSelectedInternship((prev) => {
       const fields = field.split('.'); // Split the field into an array (e.g., "contactInfo.name" -> ["contactInfo", "name"])
@@ -101,8 +98,6 @@ const YourJobPosts = () => {
       console.error("Error updating internship:", error);
     }
   };
-
-
   // Sorting logic
   const sortInternships = (internships) => {
     return internships.sort((a, b) => {
@@ -175,9 +170,40 @@ const YourJobPosts = () => {
             <p className="mb-1">
               <strong>Location:</strong> {internship.location}
             </p>
+            {/* Internship Type */}
             <p className="mb-1">
-              <strong>Stipend/Salary:</strong> {internship.salaryDetails}
+              <strong>Internship Type:</strong>
+              {internship.internshipType === "PAID" ? (
+                <span className="text-green-600 font-semibold">Paid</span>
+              ) : internship.internshipType === "STIPEND" ? (
+                <span className="text-blue-600 font-semibold">Stipend</span>
+              ) : (
+                <span className="text-gray-600 font-semibold">Free</span>
+              )}
             </p>
+            <p className="mb-1">
+              <strong>Stipend/Salary:</strong>{" "}
+              {internship.internshipType === "STIPEND" ? (
+                <span className="text-blue-600 font-semibold">
+                  {internship.compensationDetails && internship.compensationDetails.amount ? (
+                    `${internship.compensationDetails.amount} ${internship.compensationDetails.currency} (${internship.compensationDetails.frequency})`
+                  ) : (
+                    "Stipend Amount Not Specified"
+                  )}
+                </span>
+              ) : internship.internshipType === "PAID" ? (
+                <span className="text-green-600 font-semibold">
+                  {internship.compensationDetails && internship.compensationDetails.amount ? (
+                    `${internship.compensationDetails.amount} ${internship.compensationDetails.currency} (${internship.compensationDetails.frequency})`
+                  ) : (
+                    "Salary Not Specified"
+                  )}
+                </span>
+              ) : (
+                <span className="text-gray-600 font-semibold">Unpaid / Free</span>
+              )}
+            </p>
+
             <p className="mb-1">
               <strong>Duration:</strong> {internship.duration}
             </p>
@@ -185,10 +211,10 @@ const YourJobPosts = () => {
               <strong>Status:</strong>{" "}
               <span
                 className={`inline-block px-2 py-1 rounded-full font-bold ${internship.adminReviewed
-                    ? "bg-yellow-200 text-yellow-800"  // In review status
-                    : internship.adminApproved
-                      ? "bg-green-200 text-green-800"   // Approved status
-                      : "bg-red-200 text-red-800"       // Not approved status
+                  ? "bg-yellow-200 text-yellow-800"  // In review status
+                  : internship.adminApproved
+                    ? "bg-green-200 text-green-800"   // Approved status
+                    : "bg-red-200 text-red-800"       // Not approved status
                   }`}
               >
                 {internship.adminReviewed
@@ -245,7 +271,6 @@ const YourJobPosts = () => {
           {selectedInternship && (
             <form onSubmit={handleUpdateJob}>
               <h2 className="text-2xl font-semibold mb-4">Update Internship Details</h2>
-
               {/* Job Title */}
               <div className="mb-4">
                 <label className="block font-medium mb-1">Job Title</label>
@@ -279,16 +304,22 @@ const YourJobPosts = () => {
                 />
               </div>
 
-              {/* Job Type */}
               <div className="mb-4">
-                <label className="block font-medium mb-1">Job Type</label>
-                <input
-                  type="text"
-                  value={selectedInternship.jobType || ""}
-                  onChange={(e) => updateField("jobType", e.target.value)}
-                  className="p-2 border rounded w-full"
-                />
-              </div>
+  <label className="block font-medium mb-1">Job Type</label>
+  <input
+    type="text"
+    value={
+      selectedInternship.internshipType === "PAID"
+        ? "Paid"
+        : selectedInternship.internshipType === "STIPEND"
+        ? "Stipend"
+        : "Free"
+    }
+    onChange={(e) => updateField("internshipType", e.target.value)}
+    className="p-2 border rounded w-full"
+    readOnly
+  />
+</div>
 
               {/* Job Description */}
               <div className="mb-4">
@@ -301,45 +332,71 @@ const YourJobPosts = () => {
                 />
               </div>
 
-              {/* Start Date */}
-              <div className="mb-4">
-                <label className="block font-medium mb-1">Start Date</label>
-                <input
-                  type="date"
-                  value={selectedInternship.startDate || ""}
-                  onChange={(e) => updateField("startDate", e.target.value)}
-                  className="p-2 border rounded w-full"
-                />
-              </div>
+      {/* Start Date */}
+<div className="mb-4">
+  <label className="block font-medium mb-1">Start Date</label>
+  {selectedInternship.startDate?.match(/^\d{4}-\d{2}-\d{2}$/) ? (
+    // Show Date Input if it's an actual Date
+    <input
+      type="date"
+      value={selectedInternship.startDate || ""}
+      onChange={(e) => updateField("startDate", e.target.value)}
+      className="p-2 border rounded w-full"
+    />
+  ) : (
+    // Show Text Input if it's a Duration
+    <input
+      type="text"
+      value={selectedInternship.startDate || ""}
+      onChange={(e) => updateField("startDate", e.target.value)}
+      className="p-2 border rounded w-full"
+    />
+  )}
+</div>
 
-              {/* End Date / Duration */}
-              <div className="mb-4">
-                <label className="block font-medium mb-1">End Date / Duration</label>
-                <input
-                  type="date"
-                  value={selectedInternship.endDateOrDuration || ""}
-                  onChange={(e) => updateField("endDateOrDuration", e.target.value)}
-                  className="p-2 border rounded w-full"
-                />
-              </div>
+{/* End Date / Duration */}
+<div className="mb-4">
+  <label className="block font-medium mb-1">End Date / Duration</label>
+  {selectedInternship.endDateOrDuration?.match(/^\d{4}-\d{2}-\d{2}$/) ? (
+    // Show Date Input if it's an actual Date
+    <input
+      type="date"
+      value={selectedInternship.endDateOrDuration || ""}
+      onChange={(e) => updateField("endDateOrDuration", e.target.value)}
+      className="p-2 border rounded w-full"
+    />
+  ) : (
+    // Show Text Input if it's a Duration
+    <input
+      type="text"
+      value={selectedInternship.endDateOrDuration || ""}
+      onChange={(e) => updateField("endDateOrDuration", e.target.value)}
+      className="p-2 border rounded w-full"
+    />
+  )}
+</div>
 
-              {/* Duration */}
-              <div className="mb-4">
-                <label className="block font-medium mb-1">Duration</label>
-                <input
-                  type="text"
-                  value={selectedInternship.duration || ""}
-                  onChange={(e) => updateField("duration", e.target.value)}
-                  className="p-2 border rounded w-full"
-                />
-              </div>
+{/* Duration */}
+<div className="mb-4">
+  <label className="block font-medium mb-1">Duration</label>
+  <input
+    type="text"
+    value={selectedInternship.duration || ""}
+    onChange={(e) => updateField("duration", e.target.value)}
+    className="p-2 border rounded w-full"
+  />
+</div>
 
-              {/* Stipend/Salary */}
+               {/* Stipend/Salary */}
               <div className="mb-4">
                 <label className="block font-medium mb-1">Stipend/Salary</label>
                 <input
                   type="text"
-                  value={selectedInternship.salaryDetails || ""}
+                  value= {selectedInternship.compensationDetails && selectedInternship.compensationDetails.amount ? (
+                    `${selectedInternship.compensationDetails.amount} ${selectedInternship.compensationDetails.currency} (${selectedInternship.compensationDetails.frequency})`
+                  ) : (
+                    "Stipend Amount Not Specified"
+                  )}
                   onChange={(e) => updateField("salaryDetails", e.target.value)}
                   className="p-2 border rounded w-full"
                 />

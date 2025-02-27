@@ -23,7 +23,7 @@ const InternshipList = () => {
           setError("Partner ID not found");
         }
       } catch (err) {
-        setError("Error fetching internships");
+        setError("No internships posted by partner");
         console.error("Error fetching internships:", err);
       } finally {
         setLoading(false);
@@ -58,8 +58,8 @@ const InternshipList = () => {
       return differenceInHours === 0
         ? "Just now"
         : differenceInHours === 1
-        ? "1 hour ago"
-        : `${differenceInHours} hours ago`;
+          ? "1 hour ago"
+          : `${differenceInHours} hours ago`;
     } else if (differenceInDays === 1) {
       return "Yesterday";
     } else {
@@ -100,18 +100,18 @@ const InternshipList = () => {
           >
             {/* Job Image and Company Info */}
             <div className="flex items-center mb-4">
-  <img
-    src={internship.imgUrl || "https://via.placeholder.com/150"}
-    alt={internship.companyName}
-    className="w-16 h-16 rounded-full mr-4"
-  />
-  <div>
-    <h3 className="text-xl font-semibold">{internship.jobTitle}</h3>
-    <p className="text-gray-600">
-      {internship.companyName} • {calculateDaysAgo(internship.createdAt)}
-    </p>
-  </div>
-</div>
+              <img
+                src={internship.imgUrl || "https://via.placeholder.com/150"}
+                alt={internship.companyName}
+                className="w-16 h-16 rounded-full mr-4"
+              />
+              <div>
+                <h3 className="text-xl font-semibold">{internship.jobTitle}</h3>
+                <p className="text-gray-600">
+                  {internship.companyName} • {calculateDaysAgo(internship.createdAt)}
+                </p>
+              </div>
+            </div>
 
 
             {/* Job Details */}
@@ -124,7 +124,14 @@ const InternshipList = () => {
                 {new Date(internship.startDate).toLocaleDateString()} - {internship.endDateOrDuration}
               </p>
               <p className="flex items-center mb-2">
-                <FontAwesomeIcon icon={faDollarSign} className="mr-2" /> {internship.salaryDetails}
+                <FontAwesomeIcon icon={faDollarSign} className="mr-2" /> {internship.internshipType === "STIPEND"
+                  ? `${internship.compensationDetails?.amount} ${internship.compensationDetails?.currency} per ${internship.compensationDetails?.frequency?.toLowerCase()}`
+                  : internship.internshipType === "FREE"
+                    ? "Unpaid / Free"
+                    : internship.internshipType === "PAID"
+                      ? `Student Pays: ${internship.compensationDetails?.amount} ${internship.compensationDetails?.currency}`
+                      : "N/A"
+                }
               </p>
             </div>
 
