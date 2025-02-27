@@ -278,7 +278,16 @@ const PartnerManagement = () => {
                 <td className="px-4 py-2">{internship.jobTitle}</td>
                 <td className="px-4 py-2">{internship.companyName}</td>
                 <td className="px-4 py-2">{internship.location}</td>
-                <td className="px-4 py-2">{internship.salaryDetails}</td>
+                <td className="px-4 py-2">
+  {internship.internshipType === "STIPEND"
+    ? `${internship.compensationDetails?.amount} ${internship.compensationDetails?.currency} per ${internship.compensationDetails?.frequency?.toLowerCase()}`
+    : internship.internshipType === "FREE"
+    ? "Free"
+    : internship.internshipType === "PAID"
+    ? `Student Pays: ${internship.compensationDetails?.amount} ${internship.compensationDetails?.currency}`
+    : "N/A"}
+</td>
+ 
                 <td className="px-4 py-2 flex space-x-2">
                   <button
                     className={`px-3 py-1 rounded-md text-white ${internship.adminApproved ? "bg-green-500" : "bg-blue-500 hover:bg-blue-700"}`}

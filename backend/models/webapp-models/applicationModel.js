@@ -37,6 +37,7 @@ const applicationSchema = new mongoose.Schema({
     type: String, 
     required: true
   },
+  
 });
 
 // Model for Application

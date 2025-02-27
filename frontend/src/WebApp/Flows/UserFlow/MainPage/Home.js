@@ -18,20 +18,45 @@ const Home = () => {
   const [showLimitPopup, setShowLimitPopup] = useState(false);
   const [showSavedJobPopup, setShowSavedJobPopup] = useState(false);
   const [isPremium, setIsPremium] = useState(false);
+
   const navigate = useNavigate();
 
   // Fetch job data and user profile only once on mount
   useEffect(() => {
     const fetchJobData = async () => {
       try {
-        const response = await fetch("/api/interns/");
+        // Parse userInfo safely
+        const userInfo = JSON.parse(localStorage.getItem("userInfo")) || {};
+        const isPremiumUser = userInfo.isPremium ? "true" : "false"; // Ensure correct boolean check
+
+        console.log("Fetching jobs with isPremium:", isPremiumUser); // Debugging log
+
+        const response = await fetch(`/api/interns?isPremium=${isPremiumUser}`);
+
+        if (!response.ok) {
+          const errorText = await response.text();
+          throw new Error(`Failed to fetch internships: ${errorText}`);
+        }
+
         const data = await response.json();
-        const approvedJobs = data.filter((job) => job.adminApproved);
-        setJobData(approvedJobs);
+
+        if (!Array.isArray(data)) {
+          console.error("Unexpected response format:", data);
+          return;
+        }
+
+        console.log("Received internships:", data.map(i => ({ title: i.jobTitle, type: i.internshipType })));
+
+        setJobData(data);
       } catch (error) {
-        console.error("Error fetching job data:", error);
+        console.error("Error fetching job data:", error.message);
       }
     };
+
+    const savedPosition = sessionStorage.getItem("scrollPosition");
+    if (savedPosition) {
+      window.scrollTo(0, parseInt(savedPosition, 10)); // Restore scroll position
+    }
 
     const fetchUserProfile = async () => {
       try {
@@ -67,15 +92,15 @@ const Home = () => {
   // Handle View Details (with application limit check)
   const handleViewDetails = async (job) => {
     try {
+      sessionStorage.setItem("scrollPosition", window.scrollY); // Store current scroll position
       const userInfo = JSON.parse(localStorage.getItem("userInfo"));
       if (!userInfo) return;
 
       const { data: countData } = await axios.get(`/api/applications/count/${userInfo._id}`);
       setApplicationCount(countData.count);
 
-      // Check if the user has reached the free application limit
       if (!isPremium && countData.count >= MAX_FREE_APPLICATIONS) {
-        setShowLimitPopup(true); // Show the application limit popup
+        setShowLimitPopup(true);
       } else {
         setSelectedJob(job);
       }
@@ -84,8 +109,17 @@ const Home = () => {
     }
   };
 
-  // Handle Back to Job List
-  const handleBack = () => setSelectedJob(null);
+  // Restore scroll position after returning to Home
+  const handleBack = () => {
+    setSelectedJob(null);
+    setTimeout(() => {
+      const savedPosition = sessionStorage.getItem("scrollPosition");
+      if (savedPosition) {
+        window.scrollTo(0, parseInt(savedPosition, 10)); // Restore scroll position
+      }
+    }, 0);
+  };
+
 
   // Toggle Save Job Logic (check saved job limit)
   const toggleSaveJob = async (job) => {
@@ -133,6 +167,7 @@ const Home = () => {
             <img src={Homeimage} alt="Finding Your Dream Job" className="w-full h-full object-cover" />
           </div>
 
+
           {/* Jobs Listing */}
           <section className="py-10 px-6">
             <h2 className="text-3xl font-bold mb-2">Find your next role</h2>
@@ -141,18 +176,28 @@ const Home = () => {
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-6">
               {jobData.map((job, index) => (
                 <div key={index} className="relative border rounded-lg p-6 shadow-sm">
+
+                  {/* Internship Type Badge */}
+                  {job.internshipType && (
+                    <span className={`absolute top-2 right-2 px-3 py-1 text-xs font-semibold uppercase rounded-full
+                        ${job.internshipType === "FREE" ? "bg-green-100 text-green-700" :
+                          job.internshipType === "STIPEND" ? "bg-blue-100 text-blue-700" :
+                          job.internshipType === "PAID" ? "bg-red-100 text-red-700" : ""}`}>
+                          {job.internshipType}
+                    </span>
+                  )}
+
                   {/* Save Button */}
-                  <div className="absolute top-2 right-2">
+                  <div className="absolute top-10 right-2">
                     <button onClick={() => toggleSaveJob(job)} className="text-gray-500 hover:text-red-500">
-                    <FontAwesomeIcon
-  icon={faHeart}
-  className={`w-6 h-6 ${
-    savedJobs.some(savedJob => 
-      savedJob.jobId?._id === job._id || // For populated jobs
-      savedJob.jobId === job._id         // For non-populated jobs
-    ) ? "text-red-500" : "text-gray-500"
-  }`}
-/>
+                      <FontAwesomeIcon
+                        icon={faHeart}
+                        className={`w-6 h-6 ${savedJobs.some(savedJob =>
+                          savedJob.jobId?._id === job._id ||
+                          savedJob.jobId === job._id
+                        ) ? "text-red-500" : "text-gray-500"
+                          }`}
+                      />
                     </button>
                   </div>
 
@@ -168,7 +213,17 @@ const Home = () => {
                   <div className="text-gray-600 mb-4">
                     <p><FontAwesomeIcon icon={faMapMarkerAlt} /> {job.location} • {job.jobType}</p>
                     <p><FontAwesomeIcon icon={faClock} /> {new Date(job.startDate).toLocaleDateString()} - {job.endDateOrDuration}</p>
-                    <p><FontAwesomeIcon icon={faDollarSign} /> {job.salaryDetails}</p>
+                    <p>
+                      <FontAwesomeIcon icon={faDollarSign} />
+                      {job.internshipType === "STIPEND"
+                        ? `${job.compensationDetails?.amount} ${job.compensationDetails?.currency} per ${job.compensationDetails?.frequency?.toLowerCase()}`
+                        : job.internshipType === "FREE"
+                          ? "Unpaid / Free"
+                          : job.internshipType === "PAID"
+                            ? `Student Pays: ${job.compensationDetails?.amount} ${job.compensationDetails?.currency}`
+                            : "N/A"
+                      }
+                    </p>
                   </div>
 
                   {/* Qualifications and View Details */}
@@ -187,6 +242,7 @@ const Home = () => {
                 </div>
               ))}
             </div>
+
           </section>
         </>
       )}

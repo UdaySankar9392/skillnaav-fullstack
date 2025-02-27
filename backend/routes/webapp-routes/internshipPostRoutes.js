@@ -2,55 +2,115 @@ const express = require("express");
 const InternshipPosting = require("../../models/webapp-models/internshipPostModel.js");
 const notifyUser = require("../../utils/notifyUser.js");
 const router = express.Router();
+const mongoose = require("mongoose");
+const Application = require("../../models/webapp-models/applicationModel.js"); // Adjust path if needed
+const SavedJob = require("../../models/webapp-models/SavedJobModel.js"); // Adjust path if needed
+
 
 // GET all internship postings (excluding deleted)
 router.get("/", async (req, res) => {
   try {
-    // Filter internships to exclude those that are soft-deleted
-    const internships = await InternshipPosting.find({ deleted: false });
+    let { isPremium } = req.query;
+
+    console.log("Received request with isPremium:", isPremium);
+
+    const isPremiumUser = isPremium === "true";
+
+    let internships = await InternshipPosting.find({ deleted: false }).lean();
+
+    if (!internships.length) {
+      return res.json([]);
+    }
+
+    console.log("Before sorting:", internships.map(i => ({ title: i.jobTitle, type: i.internshipType })));
+
+    // Define sorting priorities
+    const premiumPriority = { PAID: 3, STIPEND: 2, FREE: 1 };
+    const nonPremiumPriority = { FREE: 3, STIPEND: 2, PAID: 1 };
+
+    // Normalize internshipType to uppercase
+    internships.forEach(internship => {
+      internship.internshipType = (internship.internshipType || "UNPAID").toUpperCase();
+    });
+
+    // Apply sorting based on user type
+    const priority = isPremiumUser ? premiumPriority : nonPremiumPriority;
+    
+    internships.sort((a, b) => {
+      return (priority[b.internshipType] || 0) - (priority[a.internshipType] || 0);
+    });
+
+    // **Introduce controlled randomness (20% chance per internship to swap)**
+    for (let i = internships.length - 1; i > 0; i--) {
+      if (Math.random() < 0.2) { // 20% chance to swap
+        let j = Math.floor(Math.random() * (i + 1));
+        [internships[i], internships[j]] = [internships[j], internships[i]];
+      }
+    }
+
+    console.log("After sorting & shuffling:", internships.map(i => ({ title: i.jobTitle, type: i.internshipType })));
+
     res.json(internships);
   } catch (error) {
-    res.status(500).json({ message: "Server Error: Unable to fetch internships" });
+    console.error("Error fetching internships:", error);
+    res.status(500).json({ message: "Server error", error: error.message });
   }
 });
+
 
 
 // POST create a new internship posting
 router.post("/", async (req, res) => {
   try {
+    const { 
+      jobTitle, companyName, location, jobDescription, startDate, 
+      endDateOrDuration, duration, internshipType, qualifications, 
+      contactInfo, imgUrl, partnerId, compensationDetails 
+    } = req.body;
+
+    // Default compensation details based on internshipType
+    let finalCompensationDetails = { type: internshipType };
+
+    if (internshipType === "PAID" || internshipType === "STIPEND") {
+      finalCompensationDetails.amount = compensationDetails?.amount || 0;
+      finalCompensationDetails.currency = compensationDetails?.currency || "USD";
+      finalCompensationDetails.frequency = compensationDetails?.frequency || "Monthly";
+    } else {
+      finalCompensationDetails.amount = 0; // No salary for unpaid
+      finalCompensationDetails.currency = null;
+      finalCompensationDetails.frequency = null;
+    }
+
     const newInternship = new InternshipPosting({
-      jobTitle: req.body.jobTitle,
-      companyName: req.body.companyName,
-      location: req.body.location,
-      jobType: req.body.jobType,
-      jobDescription: req.body.jobDescription,
-      startDate: req.body.startDate,
-      endDateOrDuration: req.body.endDateOrDuration,
-      duration: req.body.duration,
-      salaryDetails: req.body.salaryDetails,
-      qualifications: req.body.qualifications,
-      // currency: req.body.currency,
-      // time: req.body.time,
-      
-      contactInfo: req.body.contactInfo,
-      
-      imgUrl: req.body.imgUrl,
-      studentApplied: req.body.studentApplied || false,
-      adminApproved: req.body.adminApproved || false,
-      adminReviewed: req.body.adminReviewed || false,
-      partnerId: req.body.partnerId,
-      deleted: req.body.admindeleted || false 
+      jobTitle,
+      companyName,
+      location,
+      jobType: "Internship", // Set default as "Internship"
+      jobDescription,
+      startDate,
+      endDateOrDuration,
+      duration,
+      internshipType,
+      compensationDetails: finalCompensationDetails,
+      qualifications,
+      contactInfo,
+      imgUrl,
+      studentApplied: false, // Default value
+      adminApproved: false, // Default value
+      adminReviewed: false, // Default value
+      partnerId,
+      deleted: false // Default value
     });
 
     const createdInternship = await newInternship.save();
     res.status(201).json(createdInternship);
   } catch (error) {
     console.error("Error: ", error);
-    res
-      .status(400)
-      .json({ message: "Error: Unable to create internship post" });
+    res.status(400).json({ message: "Error: Unable to create internship post", error: error.message });
   }
 });
+
+
 // GET all deleted internship postings (soft deleted)
 router.get("/bin", async (req, res) => {
   try {
@@ -71,24 +131,30 @@ router.get("/bin", async (req, res) => {
 });
 
 
-
 // Soft delete an internship posting by ID (mark as deleted)
 router.delete("/:id", async (req, res) => {
   try {
     const { id } = req.params;
 
-    // Find the internship by ID
+    // Validate MongoDB ID format
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({ message: "Invalid internship ID" });
+    }
+
     const internship = await InternshipPosting.findById(id);
 
     if (!internship) {
       return res.status(404).json({ message: "Internship not found" });
     }
 
-    // Mark the internship as deleted (soft delete)
-    internship.deleted = true;  // Set the 'deleted' field to true
-    await internship.save();  // Save the updated internship document
+    internship.deleted = true;
+    await internship.save();
 
-    res.json({ message: "Internship marked as deleted successfully" });
+    await Application.updateMany({ internshipId: id }, { deleted: true });
+    // Remove saved job references from SavedJobs schema
+    await SavedJob.deleteMany({ jobId: id });
+
+    res.json({ message: "Internship and applications soft deleted" });
   } catch (error) {
     console.error("Error during deletion:", error);
     res.status(500).json({
@@ -136,11 +202,24 @@ router.delete("/:id/permanent", async (req, res) => {
   try {
     const { id } = req.params;
 
-    const deletedInternship = await InternshipPosting.findByIdAndDelete(id);
+    // Validate ID format
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({ message: "Invalid internship ID" });
+    }
 
-    if (!deletedInternship) {
+    const internship = await InternshipPosting.findById(id);
+    if (!internship) {
       return res.status(404).json({ message: "Internship not found" });
     }
+
+    // Delete applications first
+    await Application.deleteMany({ internshipId: id });
+
+    // Then delete the internship
+    await InternshipPosting.deleteOne({ _id: id });
+
+    // Delete all related saved job entries
+    await SavedJob.deleteMany({ jobId: id });
 
     res.json({ message: "Internship permanently deleted" });
   } catch (error) {
@@ -151,6 +230,7 @@ router.delete("/:id/permanent", async (req, res) => {
     });
   }
 });
+
 
 // GET a single internship posting by ID
 // router.get("/:id", async (req, res) => {

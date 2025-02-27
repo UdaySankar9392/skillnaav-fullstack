@@ -13,6 +13,7 @@ const ApplyCards = ({ job, onBack }) => {
   const [applicationCount, setApplicationCount] = useState(0);
   const [showLimitPopup, setShowLimitPopup] = useState(false);
   const [isPremium, setIsPremium] = useState(false); // Add state for premium status
+  const [showResumePopup, setShowResumePopup] = useState(false); 
 
   useEffect(() => {
     const fetchApplicationData = async () => {
@@ -63,7 +64,12 @@ const ApplyCards = ({ job, onBack }) => {
 
   const handleApply = async () => {
     if (isApplied) return;
-    if (!resume) return alert("Please upload your resume before applying!");
+    
+    // 🔴 Instead of alert, show popup if no resume is uploaded
+    if (!resume) {
+      setShowResumePopup(true);
+      return;
+    }
   
     const userInfo = JSON.parse(localStorage.getItem("userInfo"));
     const studentId = userInfo ? userInfo._id : null;
@@ -182,6 +188,23 @@ const ApplyCards = ({ job, onBack }) => {
             </button>
           </div>
         </div>
+
+          {/* Resume Upload Popup */}
+          {showResumePopup && (
+        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
+          <div className="bg-white p-6 rounded-lg shadow-lg text-center">
+            <h2 className="text-xl font-semibold mb-2">Resume Required</h2>
+            <p className="text-gray-600">Please upload your resume before applying.</p>
+            <button
+              onClick={() => setShowResumePopup(false)}
+              className="mt-4 px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600"
+            >
+              Close
+            </button>
+          </div>
+        </div>
+      )}
+    
         <div className="flex flex-wrap gap-2 md:gap-4">
           <FaHeart
             className={`text-gray-400 hover:text-red-400 cursor-pointer ${

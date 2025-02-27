@@ -49,25 +49,38 @@ const SavedJobs = () => {
                   </button>
                 </div>
 
-                {/* Job Details */}
-                <div className="flex items-center mb-4">
-                  <img
-                    src={job.jobId?.imgUrl || "/default-image.png"}
-                    alt="Company Logo"
-                    className="w-12 h-12 rounded-full mr-4"
-                  />
-                  <div>
-                    <h3 className="text-xl font-semibold">{job.jobId?.jobTitle || "Unknown Title"}</h3>
-                    <p className="text-gray-600">{job.jobId?.companyName || "Unknown Company"}</p>
-                  </div>
-                </div>
+   {/* Job Details */}
+<div className="flex items-center mb-4">
+  <img
+    src={job.jobId?.imgUrl || "/default-image.png"}
+    alt="Company Logo"
+    className="w-12 h-12 rounded-full mr-4"
+  />
+  <div>
+    <h3 className="text-xl font-semibold">{job.jobId?.jobTitle || "Unknown Title"}</h3>
+    <p className="text-gray-600">{job.jobId?.companyName || "Unknown Company"}</p>
+  </div>
+</div>
 
-                {/* Job Info */}
-                <div className="text-gray-600 mb-4">
-                  <p><FontAwesomeIcon icon={faMapMarkerAlt} /> {job.jobId?.location || "Unknown Location"} • {job.jobId?.type || "N/A"}</p>
-                  <p><FontAwesomeIcon icon={faClock} /> {job.jobId?.duration || "N/A"}</p>
-                  <p><FontAwesomeIcon icon={faDollarSign} /> {job.jobId?.salaryDetails || "N/A"}</p>
-                </div>
+{/* Job Info */}
+<div className="text-gray-600 mb-4">
+  <p>
+    <FontAwesomeIcon icon={faMapMarkerAlt} /> {job.jobId?.location || "Unknown Location"} • {job.jobId?.type || "N/A"}
+  </p>
+ <p><FontAwesomeIcon icon={faClock} /> {new Date(job.jobId?.startDate).toLocaleDateString()} - {job.jobId?.endDateOrDuration}</p>
+  <p>
+    <FontAwesomeIcon icon={faDollarSign} /> 
+    {job.jobId?.internshipType === "STIPEND"
+      ? `$${job.jobId?.compensationDetails?.amount} ${job.jobId?.compensationDetails?.currency} per ${job.jobId?.compensationDetails?.frequency?.toLowerCase()}`
+      : job.jobId?.internshipType === "FREE"
+      ? "Unpaid / Free"
+      : job.jobId?.internshipType === "PAID"
+      ? `Student Pays: $${job.jobId?.compensationDetails?.amount} ${job.jobId?.compensationDetails?.currency}`
+      : "N/A"
+    }
+  </p>
+</div>
+
 
                 {/* Qualifications */}
                 <div className="flex items-center justify-between">
