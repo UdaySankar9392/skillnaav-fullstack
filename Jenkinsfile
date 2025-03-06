@@ -31,18 +31,6 @@ pipeline {
             }
         }
 
-        stage('Login to AWS ECR') {
-            steps {
-                script {
-                    echo '🔐 Logging in to AWS ECR...'
-                    sh """
-                        aws ecr get-login-password --region ${AWS_REGION} | \
-                        docker login --username AWS --password-stdin ${ECR_REGISTRY}
-                    """
-                }
-            }
-        }
-
         stage('Build and Push Docker Images') {
             parallel {
                 stage('Build and Push Frontend') {
@@ -65,12 +53,12 @@ pipeline {
                                     echo "🔧 Building Frontend Image..."
                                     docker-compose build frontend
 
-                                    echo "🛳 Tagging Frontend image..."
-                                    docker tag skillnaav-fullstack_frontend:latest ${FRONTEND_REPO}:latest
-                                    
                                     echo "🔐 Logging in to AWS ECR..."
                                     aws ecr get-login-password --region ${AWS_REGION} | docker login --username AWS --password-stdin ${ECR_REGISTRY}
 
+                                    echo "🛳 Tagging Frontend image..."
+                                    docker tag skillnaav-fullstack_frontend:latest ${FRONTEND_REPO}:latest
+                                    
                                     echo "🚀 Pushing Frontend to AWS ECR..."
                                     docker push ${FRONTEND_REPO}:latest
                                 '
@@ -92,12 +80,12 @@ pipeline {
                                     echo "🔧 Building Backend Image..."
                                     docker-compose build backend
 
-                                    echo "🛳 Tagging Backend image..."
-                                    docker tag skillnaav-fullstack_backend:latest ${BACKEND_REPO}:latest
-                                    
                                     echo "🔐 Logging in to AWS ECR..."
                                     aws ecr get-login-password --region ${AWS_REGION} | docker login --username AWS --password-stdin ${ECR_REGISTRY}
 
+                                    echo "🛳 Tagging Backend image..."
+                                    docker tag skillnaav-fullstack_backend:latest ${BACKEND_REPO}:latest
+                                    
                                     echo "🚀 Pushing Backend to AWS ECR..."
                                     docker push ${BACKEND_REPO}:latest
                                 '
