@@ -8,7 +8,7 @@ pipeline {
         BACKEND_REPO = "${ECR_REGISTRY}/skillnaav-backend"
         TEST_INSTANCE_IP = '13.52.211.131'
         REMOTE_WORKDIR = '/home/ubuntu/skillnaav-fullstack'
-        GIT_BRANCH = 'uday18-02-25'
+        GIT_BRANCH = 'uday27-02-25'
     }
 
     triggers {
