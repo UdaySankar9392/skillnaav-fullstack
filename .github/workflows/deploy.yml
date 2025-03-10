@@ -3,7 +3,7 @@ name: Deploy to Server
 on:
   push:
     branches:
-      - udaysai6-02-25  # Updated default branch
+      - uday27-02-25  # Updated default branch
 
 jobs:
   deploy:
