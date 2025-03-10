@@ -3,7 +3,8 @@ name: Deploy to Server
 on:
   push:
     branches:
-      - uday10-02-25  # Updated default branch
+      - uday10-03-25  # This workflow runs only when pushing to this branch
+  workflow_dispatch:  # Allows manual triggering from GitHub Actions UI
 
 jobs:
   deploy:
@@ -16,14 +17,14 @@ jobs:
       - name: Setup SSH
         uses: webfactory/ssh-agent@v0.5.3
         with:
-          ssh-private-key: ${{ secrets.EC2_SSH_KEY }}  # Ensure this matches your GitHub secret
+          ssh-private-key: ${{ secrets.EC2_SSH_KEY }}
 
       - name: Get Branch Name
-        id: branch
-        run: echo "BRANCH_NAME=${GITHUB_REF#refs/heads/}" >> $GITHUB_ENV  # Extracts the branch name dynamically
+        run: echo "BRANCH_NAME=${GITHUB_REF##*/}" >> $GITHUB_ENV  # Extract branch name
 
       - name: Run deployment script on EC2
         run: |
-          ssh -o StrictHostKeyChecking=no ubuntu@www.skillnaav.com << EOF
+          ssh -o StrictHostKeyChecking=no ubuntu@www.skillnaav.com << 'EOF'
             cd /home/ubuntu/skillnaav-fullstack
-            ./deploy.sh "$BRANCH_NAME"  # Passes the branch dynamically
+            ./deploy.sh "$BRANCH_NAME"
+          EOF
