@@ -10,6 +10,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { HideLoading, SetSkillNaavData } from "./redux/rootSlice";
 import Admin from "./pages/Admin";
 import Login from "./pages/Admin/Login";
+
 import UserCreateAccount from "./WebApp/Flows/UserFlow/SignUpLogin/UserCreateAccount";
 import UserLogin from "./WebApp/Flows/UserFlow/SignUpLogin/UserLogin";
 import UserFlow from "./WebApp/Flows/UserFlow/UserFlow";
@@ -20,6 +21,7 @@ import UserforgotPassword from "./WebApp/Flows/UserFlow/SignUpLogin/UserforgotPa
 import GoogleUserProfileForm from "./WebApp/Flows/UserFlow/SignUpLogin/UserProfileBuilding/GoogleUserProfileForm";
 import GoogleUserProfilePicture from "./WebApp/Flows/UserFlow/SignUpLogin/UserProfileBuilding/GoogleUserProfilePicture";
 import PremiumPage from "./WebApp/Flows/UserFlow/MainPage/PremiumPage";
+import SkillnaavAnalysis from "./WebApp/Flows/UserFlow/MainPage/SkillnaavAnalysis";
 
 import PartnerFlow from "./WebApp/Flows/PartnerFlow/PartnerFlow";
 import PartnerCreateAccount from "./WebApp/Flows/PartnerFlow/SignUpLogin/PartnerCreateAccount";
@@ -77,6 +79,9 @@ function App() {
         <Route path="/user-forgot-password" element={<UserforgotPassword />} />
         <Route path="/google-user-profileform" element={<GoogleUserProfileForm />} />
         <Route path="/user-premiumpage" element={<PremiumPage />} />
+        
+        <Route path="/skillnaav-analysis" element={<SkillnaavAnalysis />} />
+        
 
 
         {/* Partner Flow */}

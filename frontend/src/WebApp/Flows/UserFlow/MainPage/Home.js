@@ -6,6 +6,7 @@ import ApplyCards from "./ApplyCards";
 import { useTabContext } from "./UserHomePageContext/HomePageContext";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
+import Skillnaavlogo from "../../../../assets-webapp/Skillnaavlogo.png";
 
 const MAX_FREE_APPLICATIONS = 5;
 const MAX_SAVED_JOBS = 3;
@@ -181,9 +182,9 @@ const Home = () => {
                   {job.internshipType && (
                     <span className={`absolute top-2 right-2 px-3 py-1 text-xs font-semibold uppercase rounded-full
                         ${job.internshipType === "FREE" ? "bg-green-100 text-green-700" :
-                          job.internshipType === "STIPEND" ? "bg-blue-100 text-blue-700" :
+                        job.internshipType === "STIPEND" ? "bg-blue-100 text-blue-700" :
                           job.internshipType === "PAID" ? "bg-red-100 text-red-700" : ""}`}>
-                          {job.internshipType}
+                      {job.internshipType}
                     </span>
                   )}
 
@@ -246,6 +247,14 @@ const Home = () => {
           </section>
         </>
       )}
+      <div className="fixed bottom-6 right-6 z-50">
+        <button
+          onClick={() => navigate("/skillnaav-analysis")}
+          className=" text-white rounded-full shadow-lg p-4 hover:bg-blue-700 transition duration-300"
+        >
+          <img src={Skillnaavlogo} alt="Skillnaav Analysis" className="w-12 h-12" />
+        </button>
+      </div>
 
       {/* Application Limit Reached Popup */}
       {showLimitPopup && (
