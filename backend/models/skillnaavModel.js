@@ -144,6 +144,10 @@ const pricingcardSchema = new mongoose.Schema({
     type: String,
     required: true,
   },
+  duration: {
+    type: String,
+    required: true,
+  },
   pricepoint2: {
     type: String,
     required: true,

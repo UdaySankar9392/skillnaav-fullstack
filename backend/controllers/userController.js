@@ -34,6 +34,7 @@ const getUserProfile = asyncHandler(async (req, res) => {
     gradePercentage: user.gradePercentage,
     profileImage: user.profileImage,  // Include the profile image in the response
     isPremium: user.isPremium,
+    premiumExpiration: user.premiumExpiration,
   });
 });
 
@@ -165,6 +166,7 @@ const registerUser = asyncHandler(async (req, res) => {
     portfolio,
     profileImage: profilePicUrl, // Save the profile picture URL (aligned with model)
     adminApproved: false, // Default to false
+    premiumExpiration: null, 
   });
 
   if (user) {
@@ -213,8 +215,9 @@ const authUser = asyncHandler(async (req, res) => {
       portfolio: user.portfolio,
       profileImage: user.profileImage,
       isPremium: user.isPremium,
-      token, // Generate token here
-      adminApproved: user.adminApproved // Include admin approval status
+      premiumExpiration: user.premiumExpiration, // Add this line
+      token,
+      adminApproved: user.adminApproved
     });
   } else {
     res.status(400);
@@ -346,6 +349,25 @@ const rejectUser = asyncHandler(async (req, res) => {
   res.status(200).json({ message: "User rejected successfully." });
 });
 
+const getPremiumStatus = asyncHandler(async (req, res) => {
+  try {
+    const user = await Userwebapp.findById(req.user._id); // req.user is set by the protect middleware
+
+    if (!user) {
+      res.status(404);
+      throw new Error("User not found");
+    }
+
+    res.status(200).json({
+      isPremium: user.isPremium,
+      premiumExpiration: user.premiumExpiration,
+    });
+  } catch (error) {
+    console.error("Error fetching premium status:", error);
+    res.status(500).json({ message: "Error fetching premium status" });
+  }
+});
+
 module.exports = { 
    registerUser, 
    authUser, 
@@ -357,4 +379,5 @@ module.exports = {
    requestPasswordReset,
    verifyOTPAndResetPassword,
    getUserProfile,
+   getPremiumStatus,
 };

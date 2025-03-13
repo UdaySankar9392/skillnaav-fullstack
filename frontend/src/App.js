@@ -67,6 +67,7 @@ function App() {
         <Route path="/admin" element={<Admin />} />
         <Route path="/admin-login" element={<Login />} />
         <Route path="*" element={<Navigate to="/" replace />} />
+        
 
         {/* Skillnaav Web App Routes */}
         {/* User Flow */}
@@ -78,7 +79,7 @@ function App() {
         <Route path="/user-main-page" element={<UserMainPage />} />
         <Route path="/user-forgot-password" element={<UserforgotPassword />} />
         <Route path="/google-user-profileform" element={<GoogleUserProfileForm />} />
-        <Route path="/user-premiumpage" element={<PremiumPage />} />
+  
         
         <Route path="/skillnaav-analysis" element={<SkillnaavAnalysis />} />
         

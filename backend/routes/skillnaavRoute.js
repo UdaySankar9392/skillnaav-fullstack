@@ -204,32 +204,31 @@ updateRoute("/update-teammember", TeamMember);
 deleteRoute("/delete-teammember", TeamMember);
 
 router.post(
-  "/update-priceheading",
+  "/update-pricingcard",
   asyncHandler(async (req, res) => {
-    const { _id, priceheading } = req.body;
+    const { _id, duration, price, plantype, plantypesubhead, pricepoint1, pricepoint2, pricepoint3, pricebtn, bgcolor, color } = req.body;
 
     try {
-      const updatedPricing = await Pricing.findByIdAndUpdate(
+      const updatedPricingCard = await PricingCard.findByIdAndUpdate(
         _id,
-        { priceheading },
+        { duration, price, plantype, plantypesubhead, pricepoint1, pricepoint2, pricepoint3, pricebtn, bgcolor, color },
         { new: true }
       );
 
-      if (!updatedPricing) {
+      if (!updatedPricingCard) {
         return res.status(404).json({
           success: false,
-          message: "Pricing not found",
+          message: "Pricing card not found",
         });
       }
 
-      cache.flushAll();
       res.status(200).json({
         success: true,
-        message: "Price heading updated successfully",
-        data: updatedPricing,
+        message: "Pricing card updated successfully",
+        data: updatedPricingCard,
       });
     } catch (error) {
-      console.error("Error updating price heading:", error);
+      console.error("Error updating pricing card:", error);
       res.status(500).json({
         success: false,
         message: "Server Error",
@@ -238,6 +237,7 @@ router.post(
     }
   })
 );
+
 
 createRoute("/add-pricing", Pricing);
 updateRoute("/update-pricing", Pricing);

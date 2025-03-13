@@ -5,6 +5,8 @@ const cors = require("cors");
 const axios = require("axios"); // Add axios for making HTTP requests
 const connectDB = require("./config/dbConfig");
 const { notFound, errorHandler } = require("./middlewares/errorMiddleware");
+const cron = require("node-cron");
+const checkPremiumExpiration = require("./utils/checkpremiumExipiration");
 
 // Load environment variables
 dotenv.config();
@@ -36,6 +38,8 @@ const googleUserRoutes = require("./routes/webapp-routes/GoogleUserRoutes"); // 
 const applicationRoutes = require("./routes/webapp-routes/applicationRoutes"); // Import Application routes
 const savedJobRoutes = require("./routes/webapp-routes/SavedJobRoutes");
 const personalityRoutes = require("./routes/webapp-routes/PersonalityRoutes"); // Import Personality routes
+const paymentRoutes = require("./routes/webapp-routes/paymentRoutes"); // Import Payment routes
+
 
 // Define routes
 app.use("/api/users", userRoutes); // User Web App routes
@@ -49,6 +53,12 @@ app.use("/api/google-users", googleUserRoutes); // Google User routes
 app.use("/api/applications", applicationRoutes); // Application routes (this should now work)
 app.use("/api/savedJobs", savedJobRoutes);
 app.use("/api/personality", personalityRoutes); // Personality related routes
+app.use("/api/payments", paymentRoutes); // Payment routes
+app.use(
+  "/api/payments/razorpay-webhook",
+  express.raw({ type: "application/json" })
+);
+
 
 // New route for skill gap analysis
 app.post("/api/analyze-skills", async (req, res) => {

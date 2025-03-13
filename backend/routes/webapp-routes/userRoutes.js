@@ -12,6 +12,8 @@ const {
   requestPasswordReset,
   verifyOTPAndResetPassword,
   getUserProfile,
+  getPremiumStatus,
+  
 } = require("../../controllers/userController");
 const { protect } = require("../../middlewares/authMiddleware");
 
@@ -27,5 +29,6 @@ router.get('/check-email', checkIfUserExists);
 router.post('/request-password-reset', requestPasswordReset);
 router.post('/verify-otp-reset-password', verifyOTPAndResetPassword);
 router.get("/profile", protect, getUserProfile);
+router.get("/premium-status", protect, getPremiumStatus);
 
 module.exports = router;

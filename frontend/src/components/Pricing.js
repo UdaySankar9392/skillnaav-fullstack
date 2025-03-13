@@ -1,8 +1,10 @@
 import React from "react";
 import Check from "../assets/check.svg";
 import { useSelector } from "react-redux";
+import { useNavigate } from "react-router-dom"; // Import useNavigate
 
 function Pricing() {
+  const navigate = useNavigate(); // Initialize navigate function
   const { skillnaavData } = useSelector((state) => state.root);
 
   if (!skillnaavData) {
@@ -45,7 +47,7 @@ function Pricing() {
 
   const getColorClass = (index) => {
     const colors = Object.values(colorClasses);
-    const colorIndex = index % colors.length; // Calculate color index based on card index
+    const colorIndex = index % colors.length;
     return colors[colorIndex];
   };
 
@@ -56,35 +58,29 @@ function Pricing() {
       </h1>
       <div className="flex flex-col gap-6 lg:flex-row">
         {pricingcard.map((card, index) => {
-          const colorClass = getColorClass(index); // Pass index to getColorClass
+          const colorClass = getColorClass(index);
 
           return (
             <div
               key={index}
               className={`w-full ${colorClass.bg} p-6 flex flex-col justify-between shadow-lg rounded-lg`}
-              style={{ marginTop: "20px" }} // Added margin top here
+              style={{ marginTop: "20px" }}
             >
               <div>
-                <h3
-                  className={`font-medium ${colorClass.text} text-xl lg:text-2xl`}
-                >
+                <h3 className={`font-medium ${colorClass.text} text-xl lg:text-2xl`}>
                   {card.plantype}
                 </h3>
                 <p className={`pt-3 ${colorClass.subtext} lg:text-lg`}>
                   {card.plantypesubhead}
                 </p>
-                <h2
-                  className={`pt-4 text-2xl font-medium ${colorClass.text} lg:text-3xl`}
-                >
+                <h2 className={`pt-4 text-2xl font-medium ${colorClass.text} lg:text-3xl`}>
                   {card.plantype === "Institutional (B2B)" ? (
                     <span className="text-orange-700">Contact Us</span>
                   ) : (
                     card.price
                   )}
                 </h2>
-                <ul
-                  className={`flex flex-col gap-2 pt-4 ${colorClass.subtext}`}
-                >
+                <ul className={`flex flex-col gap-2 pt-4 ${colorClass.subtext}`}>
                   <li className="flex items-center gap-2">
                     <img src={Check} alt="included" width={16} height={16} />
                     {card.pricepoint1}
@@ -110,6 +106,11 @@ function Pricing() {
               ) : (
                 <button
                   className={`mt-4 bg-white py-3 ${colorClass.text} font-medium rounded ${colorClass.hoverBg} transition`}
+                  onClick={() => {
+                    if (index < 2) {
+                      navigate("/choose-role"); // Navigate for first two buttons
+                    }
+                  }}
                 >
                   {card.pricebtn}
                 </button>

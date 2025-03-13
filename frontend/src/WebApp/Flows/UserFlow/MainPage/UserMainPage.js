@@ -6,6 +6,8 @@ import Sidebar from "./Sidebar";
 import BodyContent from "./BodyContent"; 
 import { TabProvider } from "./UserHomePageContext/HomePageContext";
 import axios from "axios"; 
+import PremiumPage from "./PremiumPage";
+
 
 const UserMainPage = () => {
   const [userInfo, setUserInfo] = useState(null);
@@ -14,6 +16,7 @@ const UserMainPage = () => {
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
   const [showUpgradePopup, setShowUpgradePopup] = useState(false); 
   const navigate = useNavigate(); // Initialize useNavigate
+  const [showPricingModal, setShowPricingModal] = useState(false);
 
   useEffect(() => {
     const handleResize = () => {
@@ -92,20 +95,36 @@ const UserMainPage = () => {
           )}
         </div>
       </div>
-
+     {/* Pricing Modal */}
+     {showPricingModal && (
+  <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
+    <div className="relative bg-white p-6 rounded-lg shadow-lg max-w-4xl w-full mx-4 max-h-[90vh] overflow-y-auto">
+      {/* Close Button */}
+      <button
+        className="absolute top-4 right-4 text-gray-500 hover:text-gray-700 bg-gray-200 hover:bg-gray-300 rounded-full p-2 transition duration-200"
+        onClick={() => setShowPricingModal(false)}
+        aria-label="Close modal"
+      >
+        ✕
+      </button>
+      <PremiumPage />
+    </div>
+  </div>
+)}
       {/* Premium Upgrade Modal */}
       <Modal
         open={showUpgradePopup}
         onCancel={() => setShowUpgradePopup(false)}
         footer={[
-          <Button 
-            key="upgrade" 
-            type="primary" 
-            className="bg-blue-500"
-            onClick={() => navigate("/user-premiumpage")} // Navigate to Premium Page
+          <button
+            className="bg-purple-500 text-white px-4 py-2 rounded-md hover:bg-purple-600"
+            onClick={() => {
+              setShowUpgradePopup(false);
+              setShowPricingModal(true);
+            }}
           >
             Upgrade Now
-          </Button>,
+          </button>
         ]}
       >
         <div className="text-center">
