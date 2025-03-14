@@ -40,7 +40,6 @@ const savedJobRoutes = require("./routes/webapp-routes/SavedJobRoutes");
 const personalityRoutes = require("./routes/webapp-routes/PersonalityRoutes"); // Import Personality routes
 const paymentRoutes = require("./routes/webapp-routes/paymentRoutes"); // Import Payment routes
 
-
 // Define routes
 app.use("/api/users", userRoutes); // User Web App routes
 app.use("/api/interns", internRoutes); // Partner to Admin Intern Posts
@@ -59,19 +58,17 @@ app.use(
   express.raw({ type: "application/json" })
 );
 
-
 // New route for skill gap analysis
 app.post("/api/analyze-skills", async (req, res) => {
   console.log("Received request:", req.body); // Log incoming request
   try {
-      const response = await axios.post("http://localhost:8000/api/analyze-skills", req.body);
-      res.json(response.data);
+    const response = await axios.post("http://localhost:8000/api/analyze-skills", req.body);
+    res.json(response.data);
   } catch (error) {
-      console.error("Error from FastAPI:", error.response?.data || error.message);
-      res.status(500).json({ error: "Internal Server Error" });
+    console.error("Error from FastAPI:", error.response?.data || error.message);
+    res.status(500).json({ error: "Internal Server Error" });
   }
 });
-
 
 // Serve static assets if in production
 if (process.env.NODE_ENV === "production") {

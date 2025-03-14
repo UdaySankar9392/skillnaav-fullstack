@@ -3,29 +3,20 @@ const multerS3 = require('multer-s3');
 const { S3Client } = require('@aws-sdk/client-s3');
 const path = require('path');
 
-// Initialize S3Client for resume uploads
+// Initialize S3 Clients (Using IAM Role, No Hardcoded Credentials)
 const s3Resume = new S3Client({
-  region: process.env.AWS_REGION_RESUME, // Region for resume bucket
-  credentials: {
-    accessKeyId: process.env.AWS_ACCESS_KEY_ID,
-    secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
-  },
+  region: "us-west-1", // Resume bucket region
 });
 
-// Initialize S3Client for profile picture uploads
 const s3ProfilePic = new S3Client({
-  region: process.env.AWS_REGION_PROFILE_PIC, // Region for profile picture bucket
-  credentials: {
-    accessKeyId: process.env.AWS_ACCESS_KEY_ID,
-    secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
-  },
+  region: "us-west-1", // Profile picture bucket region
 });
 
 // Multer configuration for resume uploads
 const resumeUpload = multer({
   storage: multerS3({
     s3: s3Resume,
-    bucket: process.env.AWS_S3_BUCKET_RESUME, // Bucket for resumes
+    bucket: "skillnaavres", // Resume bucket name
     metadata: function (req, file, cb) {
       cb(null, { fieldName: file.fieldname });
     },
@@ -52,7 +43,7 @@ const resumeUpload = multer({
 const profilePicUpload = multer({
   storage: multerS3({
     s3: s3ProfilePic,
-    bucket: process.env.AWS_S3_BUCKET_PROFILE_PIC,
+    bucket: "skillnaavres", // Using the same bucket for profile pictures
     metadata: function (req, file, cb) {
       cb(null, { fieldName: file.fieldname });
     },
@@ -79,6 +70,5 @@ const profilePicUpload = multer({
   },
   limits: { fileSize: 2 * 1024 * 1024 }, // 2MB limit
 });
-
 
 module.exports = { resumeUpload, profilePicUpload };
