@@ -9,6 +9,7 @@ import SavedJobs from "./SavedJobs";
 import Applications from "./Applications";
 import Support from "./Support";
 import Profile from "./Profile"; // Import the Profile component
+import PremiumPage from "./PremiumPage"; // Import the PremiumPage component
 
 const BodyContent = () => {
   const { selectedTab, handleSelectTab } = useTabContext();
@@ -49,6 +50,13 @@ const BodyContent = () => {
       break;
     default:
       content = <div>Select a tab</div>;
+
+  }
+  switch (selectedTab) {
+    case "premium":
+      content = <PremiumPage />;
+      break;
+
   }
 
   return (

@@ -194,92 +194,98 @@ function AdminPricing() {
           Add Pricing Card
         </Button>
       </div>
+      <Modal
+  title="Edit Pricing Card"
+  visible={modalVisible.editPricingCard}
+  onCancel={() =>
+    setModalVisible({ ...modalVisible, editPricingCard: false })
+  }
+  footer={null}
+>
+  <Form form={editPricingCardForm} onFinish={onFinishEdit}>
+    <Form.Item name="_id" hidden={true}>
+      <Input />
+    </Form.Item>
+    <Form.Item name="plantype" label="Plan Type">
+      <Input />
+    </Form.Item>
+    <Form.Item name="plantypesubhead" label="Sub Heading">
+      <Input />
+    </Form.Item>
+    <Form.Item name="price" label="Price">
+      <Input />
+    </Form.Item>
+    <Form.Item name="duration" label="Duration">
+      <Input />
+    </Form.Item>
+    <Form.Item name="pricepoint1" label="Price Point 1">
+      <Input />
+    </Form.Item>
+    <Form.Item name="pricepoint2" label="Price Point 2">
+      <Input />
+    </Form.Item>
+    <Form.Item name="pricepoint3" label="Price Point 3">
+      <Input />
+    </Form.Item>
+    <Form.Item name="pricebtn" label="Button Text">
+      <Input />
+    </Form.Item>
+    <Form.Item>
+      <Button type="primary" htmlType="submit">
+        Update
+      </Button>
+    </Form.Item>
+  </Form>
+</Modal>
+
 
       <Modal
-        title="Edit Pricing Card"
-        visible={modalVisible.editPricingCard}
-        onCancel={() =>
-          setModalVisible({ ...modalVisible, editPricingCard: false })
-        }
-        footer={null}
-      >
-        <Form form={editPricingCardForm} onFinish={onFinishEdit}>
-          <Form.Item name="_id" hidden={true}>
-            <Input />
-          </Form.Item>
-          <Form.Item name="plantype" label="Plan Type">
-            <Input />
-          </Form.Item>
-          <Form.Item name="plantypesubhead" label="Sub Heading">
-            <Input />
-          </Form.Item>
-          <Form.Item name="price" label="Price">
-            <Input />
-          </Form.Item>
-          <Form.Item name="pricepoint1" label="Price Point 1">
-            <Input />
-          </Form.Item>
-          <Form.Item name="pricepoint2" label="Price Point 2">
-            <Input />
-          </Form.Item>
-          <Form.Item name="pricepoint3" label="Price Point 3">
-            <Input />
-          </Form.Item>
-          <Form.Item name="pricebtn" label="Button Text">
-            <Input />
-          </Form.Item>
+  title="Add Pricing Card"
+  visible={modalVisible.addPricingCard}
+  onCancel={() =>
+    setModalVisible({ ...modalVisible, addPricingCard: false })
+  }
+  footer={null}
+>
+  <Form form={addPricingCardForm} onFinish={onFinishAdd}>
+    <Form.Item name="plantype" label="Plan Type">
+      <Input />
+    </Form.Item>
+    <Form.Item name="plantypesubhead" label="Sub Heading">
+      <Input />
+    </Form.Item>
+    <Form.Item name="price" label="Price">
+      <Input />
+    </Form.Item>
+    <Form.Item name="duration" label="Duration">
+      <Input />
+    </Form.Item>
+    <Form.Item name="pricepoint1" label="Price Point 1">
+      <Input />
+    </Form.Item>
+    <Form.Item name="pricepoint2" label="Price Point 2">
+      <Input />
+    </Form.Item>
+    <Form.Item name="pricepoint3" label="Price Point 3">
+      <Input />
+    </Form.Item>
+    <Form.Item name="pricebtn" label="Button Text">
+      <Input />
+    </Form.Item>
+    <Form.Item name="bgcolor" label="Background Color">
+      <Input />
+    </Form.Item>
+    <Form.Item name="color" label="Text Color">
+      <Input />
+    </Form.Item>
+    <Form.Item>
+      <Button type="primary" htmlType="submit">
+        Add
+      </Button>
+    </Form.Item>
+  </Form>
+</Modal>
 
-          <Form.Item>
-            <Button type="primary" htmlType="submit">
-              Update
-            </Button>
-          </Form.Item>
-        </Form>
-      </Modal>
-
-      <Modal
-        title="Add Pricing Card"
-        visible={modalVisible.addPricingCard}
-        onCancel={() =>
-          setModalVisible({ ...modalVisible, addPricingCard: false })
-        }
-        footer={null}
-      >
-        <Form form={addPricingCardForm} onFinish={onFinishAdd}>
-          <Form.Item name="plantype" label="Plan Type">
-            <Input />
-          </Form.Item>
-          <Form.Item name="plantypesubhead" label="Sub Heading">
-            <Input />
-          </Form.Item>
-          <Form.Item name="price" label="Price">
-            <Input />
-          </Form.Item>
-          <Form.Item name="pricepoint1" label="Price Point 1">
-            <Input />
-          </Form.Item>
-          <Form.Item name="pricepoint2" label="Price Point 2">
-            <Input />
-          </Form.Item>
-          <Form.Item name="pricepoint3" label="Price Point 3">
-            <Input />
-          </Form.Item>
-          <Form.Item name="pricebtn" label="Button Text">
-            <Input />
-          </Form.Item>
-          <Form.Item name="bgcolor" label="Background Color">
-            <Input />
-          </Form.Item>
-          <Form.Item name="color" label="Text Color">
-            <Input />
-          </Form.Item>
-          <Form.Item>
-            <Button type="primary" htmlType="submit">
-              Add
-            </Button>
-          </Form.Item>
-        </Form>
-      </Modal>
 
       <Modal
         title="Edit Pricing Heading"

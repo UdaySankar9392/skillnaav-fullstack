@@ -7,6 +7,11 @@ import { useTabContext } from "./UserHomePageContext/HomePageContext";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 
+import Skillnaavlogo from "../../../../assets-webapp/Skillnaavlogo.png";
+import PremiumPage from "./PremiumPage";
+
+
+
 const MAX_FREE_APPLICATIONS = 5;
 const MAX_SAVED_JOBS = 3;
 
@@ -18,18 +23,68 @@ const Home = () => {
   const [showLimitPopup, setShowLimitPopup] = useState(false);
   const [showSavedJobPopup, setShowSavedJobPopup] = useState(false);
   const [isPremium, setIsPremium] = useState(false);
+
+  const [showPricingModal, setShowPricingModal] = useState(false);
+
+  
+
+  const navigate = useNavigate();
+
+
   const navigate = useNavigate();
 
   // Fetch job data and user profile only once on mount
   useEffect(() => {
     const fetchJobData = async () => {
       try {
-        const response = await fetch("/api/interns/");
+        // Parse userInfo safely
+        const userInfo = JSON.parse(localStorage.getItem("userInfo")) || {};
+        const isPremiumUser = userInfo.isPremium ? "true" : "false"; // Ensure correct boolean check
+
+        console.log("Fetching jobs with isPremium:", isPremiumUser); // Debugging log
+
+        const response = await fetch(`/api/interns?isPremium=${isPremiumUser}`);
+
+        if (!response.ok) {
+          const errorText = await response.text();
+          throw new Error(`Failed to fetch internships: ${errorText}`);
+        }
+
         const data = await response.json();
-        const approvedJobs = data.filter((job) => job.adminApproved);
-        setJobData(approvedJobs);
+
+        if (!Array.isArray(data)) {
+          console.error("Unexpected response format:", data);
+          return;
+        }
+
+        console.log("Received internships:", data.map(i => ({ title: i.jobTitle, type: i.internshipType })));
+
+        setJobData(data);
       } catch (error) {
-        console.error("Error fetching job data:", error);
+        console.error("Error fetching job data:", error.message);
+      }
+    };
+
+    const savedPosition = sessionStorage.getItem("scrollPosition");
+    if (savedPosition) {
+      window.scrollTo(0, parseInt(savedPosition, 10)); // Restore scroll position
+    }
+
+    const fetchUserProfile = async () => {
+      try {
+        const userInfo = JSON.parse(localStorage.getItem("userInfo"));
+        const token = userInfo?.token;
+        if (!token) return console.error("No token found in userInfo");
+
+        const { data } = await axios.get("/api/users/profile", {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        setIsPremium(data.isPremium);
+
+        const { data: countData } = await axios.get(`/api/applications/count/${userInfo._id}`);
+        setApplicationCount(countData.count);
+      } catch (error) {
+        console.error("Error fetching user profile or application count:", error);
       }
     };
 
@@ -63,6 +118,54 @@ const Home = () => {
     }));
     console.log("Normalized jobs:", normalized);
   }, [savedJobs]);
+
+
+  // Handle View Details (with application limit check)
+  const handleViewDetails = async (job) => {
+    try {
+      sessionStorage.setItem("scrollPosition", window.scrollY); // Store current scroll position
+      const userInfo = JSON.parse(localStorage.getItem("userInfo"));
+      if (!userInfo) return;
+
+      const { data: countData } = await axios.get(`/api/applications/count/${userInfo._id}`);
+      setApplicationCount(countData.count);
+
+      if (!isPremium && countData.count >= MAX_FREE_APPLICATIONS) {
+        setShowLimitPopup(true);
+      } else {
+        setSelectedJob(job);
+      }
+    } catch (error) {
+      console.error("Error fetching updated application count:", error);
+    }
+  };
+
+  // Restore scroll position after returning to Home
+  const handleBack = () => {
+    setSelectedJob(null);
+    setTimeout(() => {
+      const savedPosition = sessionStorage.getItem("scrollPosition");
+      if (savedPosition) {
+        window.scrollTo(0, parseInt(savedPosition, 10)); // Restore scroll position
+      }
+    }, 0);
+  };
+
+
+  // Toggle Save Job Logic (check saved job limit)
+  const toggleSaveJob = async (job) => {
+    try {
+      if (!isPremium && savedJobs.length >= MAX_SAVED_JOBS) {
+        setShowSavedJobPopup(true); // Show saved job limit popup
+        return;
+      }
+
+      const jobExists = savedJobs.some((savedJob) => {
+        const jobToCheck = savedJob.savedJob || savedJob;
+        return jobToCheck.jobId?._id === job._id || jobToCheck._id === job._id;
+      });
+
+
 
   // Handle View Details (with application limit check)
   const handleViewDetails = async (job) => {
@@ -100,6 +203,7 @@ const Home = () => {
         return jobToCheck.jobId?._id === job._id || jobToCheck._id === job._id;
       });
 
+
       if (jobExists) {
         await removeJob(job._id);
       } else {
@@ -133,6 +237,8 @@ const Home = () => {
             <img src={Homeimage} alt="Finding Your Dream Job" className="w-full h-full object-cover" />
           </div>
 
+
+
           {/* Jobs Listing */}
           <section className="py-10 px-6">
             <h2 className="text-3xl font-bold mb-2">Find your next role</h2>
@@ -141,6 +247,30 @@ const Home = () => {
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-6">
               {jobData.map((job, index) => (
                 <div key={index} className="relative border rounded-lg p-6 shadow-sm">
+
+
+                  {/* Internship Type Badge */}
+                  {job.internshipType && (
+                    <span className={`absolute top-2 right-2 px-3 py-1 text-xs font-semibold uppercase rounded-full
+                        ${job.internshipType === "FREE" ? "bg-green-100 text-green-700" :
+                        job.internshipType === "STIPEND" ? "bg-blue-100 text-blue-700" :
+                          job.internshipType === "PAID" ? "bg-red-100 text-red-700" : ""}`}>
+                      {job.internshipType}
+                    </span>
+                  )}
+
+                  {/* Save Button */}
+                  <div className="absolute top-10 right-2">
+                    <button onClick={() => toggleSaveJob(job)} className="text-gray-500 hover:text-red-500">
+                      <FontAwesomeIcon
+                        icon={faHeart}
+                        className={`w-6 h-6 ${savedJobs.some(savedJob =>
+                          savedJob.jobId?._id === job._id ||
+                          savedJob.jobId === job._id
+                        ) ? "text-red-500" : "text-gray-500"
+                          }`}
+                      />
+
                   {/* Save Button */}
                   <div className="absolute top-2 right-2">
                     <button onClick={() => toggleSaveJob(job)} className="text-gray-500 hover:text-red-500">
@@ -153,6 +283,7 @@ const Home = () => {
     ) ? "text-red-500" : "text-gray-500"
   }`}
 />
+
                     </button>
                   </div>
 
@@ -168,7 +299,21 @@ const Home = () => {
                   <div className="text-gray-600 mb-4">
                     <p><FontAwesomeIcon icon={faMapMarkerAlt} /> {job.location} • {job.jobType}</p>
                     <p><FontAwesomeIcon icon={faClock} /> {new Date(job.startDate).toLocaleDateString()} - {job.endDateOrDuration}</p>
+
+                    <p>
+                      <FontAwesomeIcon icon={faDollarSign} />
+                      {job.internshipType === "STIPEND"
+                        ? `${job.compensationDetails?.amount} ${job.compensationDetails?.currency} per ${job.compensationDetails?.frequency?.toLowerCase()}`
+                        : job.internshipType === "FREE"
+                          ? "Unpaid / Free"
+                          : job.internshipType === "PAID"
+                            ? `Student Pays: ${job.compensationDetails?.amount} ${job.compensationDetails?.currency}`
+                            : "N/A"
+                      }
+                    </p>
+
                     <p><FontAwesomeIcon icon={faDollarSign} /> {job.salaryDetails}</p>
+
                   </div>
 
                   {/* Qualifications and View Details */}
@@ -187,9 +332,37 @@ const Home = () => {
                 </div>
               ))}
             </div>
+
           </section>
         </>
       )}
+
+      <div className="fixed bottom-6 right-6 z-50">
+        <button
+          onClick={() => navigate("/skillnaav-analysis")}
+          className=" text-white rounded-full shadow-lg p-4 hover:bg-blue-700 transition duration-300"
+        >
+          <img src={Skillnaavlogo} alt="Skillnaav Analysis" className="w-12 h-12" />
+        </button>
+      </div>
+
+       {/* Pricing Modal */}
+      {showPricingModal && (
+  <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
+    <div className="relative bg-white p-6 rounded-lg shadow-lg max-w-4xl w-full mx-4 max-h-[90vh] overflow-y-auto">
+      {/* Close Button */}
+      <button
+        className="absolute top-4 right-4 text-gray-500 hover:text-gray-700 bg-gray-200 hover:bg-gray-300 rounded-full p-2 transition duration-200"
+        onClick={() => setShowPricingModal(false)}
+        aria-label="Close modal"
+      >
+        ✕
+      </button>
+      <PremiumPage />
+    </div>
+  </div>
+)}
+
 
       {/* Application Limit Reached Popup */}
       {showLimitPopup && (
@@ -210,11 +383,22 @@ const Home = () => {
                 Close
               </button>
               <button
+
+            className="bg-purple-500 text-white px-4 py-2 rounded-md hover:bg-purple-600"
+            onClick={() => {
+              setShowLimitPopup(false);
+              setShowPricingModal(true);
+            }}
+          >
+            Upgrade Now
+          </button>
+
                 className="bg-purple-500 text-white px-4 py-2 rounded-md hover:bg-purple-600"
                 onClick={() => navigate("/user-premiumpage")}
               >
                 Upgrade Now
               </button>
+
             </div>
           </div>
         </div>
@@ -236,11 +420,22 @@ const Home = () => {
                 Close
               </button>
               <button
+
+            className="bg-purple-500 text-white px-4 py-2 rounded-md hover:bg-purple-600"
+            onClick={() => {
+              setShowSavedJobPopup(false);
+              setShowPricingModal(true);
+            }}
+          >
+            Upgrade Now
+          </button>
+
                 className="bg-purple-500 text-white px-4 py-2 rounded-md hover:bg-purple-600"
                 onClick={() => navigate("/user-premiumpage")}
               >
                 Upgrade Now
               </button>
+
             </div>
           </div>
         </div>

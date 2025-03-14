@@ -2,8 +2,11 @@ const express = require("express");
 const dotenv = require("dotenv");
 const path = require("path");
 const cors = require("cors");
+const axios = require("axios"); // Add axios for making HTTP requests
 const connectDB = require("./config/dbConfig");
 const { notFound, errorHandler } = require("./middlewares/errorMiddleware");
+const cron = require("node-cron");
+const checkPremiumExpiration = require("./utils/checkpremiumExipiration");
 
 // Load environment variables
 dotenv.config();
@@ -34,8 +37,14 @@ const chatRoutes = require("./routes/webapp-routes/ChatRoutes");
 const googleUserRoutes = require("./routes/webapp-routes/GoogleUserRoutes"); // Import Google User routes
 const applicationRoutes = require("./routes/webapp-routes/applicationRoutes"); // Import Application routes
 const savedJobRoutes = require("./routes/webapp-routes/SavedJobRoutes");
+
+const personalityRoutes = require("./routes/webapp-routes/PersonalityRoutes"); // Import Personality routes
+const paymentRoutes = require("./routes/webapp-routes/paymentRoutes"); // Import Payment routes
+
+
 // Import Personality routes
 const personalityRoutes = require("./routes/webapp-routes/PersonalityRoutes"); // Import Personality routes
+
 
 // Define routes
 app.use("/api/users", userRoutes); // User Web App routes
@@ -48,6 +57,27 @@ app.use("/api/chats", chatRoutes); // Chat routes
 app.use("/api/google-users", googleUserRoutes); // Google User routes
 app.use("/api/applications", applicationRoutes); // Application routes (this should now work)
 app.use("/api/savedJobs", savedJobRoutes);
+
+app.use("/api/personality", personalityRoutes); // Personality related routes
+app.use("/api/payments", paymentRoutes); // Payment routes
+app.use(
+  "/api/payments/razorpay-webhook",
+  express.raw({ type: "application/json" })
+);
+
+
+// New route for skill gap analysis
+app.post("/api/analyze-skills", async (req, res) => {
+  console.log("Received request:", req.body); // Log incoming request
+  try {
+      const response = await axios.post("http://localhost:8000/api/analyze-skills", req.body);
+      res.json(response.data);
+  } catch (error) {
+      console.error("Error from FastAPI:", error.response?.data || error.message);
+      res.status(500).json({ error: "Internal Server Error" });
+  }
+});
+
 
 // Add Personality routes for handling questions and responses
 app.use("/api/personality", personalityRoutes); // Personality related routes
@@ -66,6 +96,10 @@ app.use(errorHandler);
 
 // Start the server
 const PORT = process.env.PORT || 5000;
+
+app.listen(PORT, "0.0.0.0", () => {
+
 app.listen(PORT,'0.0.0.0',() => {
+
   console.log(`Server running on port ${PORT}`);
 });

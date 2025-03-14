@@ -1,17 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { FaMapMarkerAlt, FaClock, FaDollarSign, FaHeart } from "react-icons/fa";
 import axios from "axios";
-import AeroImage from "../../../../assets-webapp/Aero-image.png";
-import code from "../../../../assets-webapp/code.png";
-import denside from "../../../../assets-webapp/denside.png";
-import gradient from "../../../../assets-webapp/gradient.png";
-import tech from "../../../../assets-webapp/tech.png";
-
-const images = [AeroImage, code, denside, gradient, tech];
-
-const getRandomImage = () => {
-  return images[Math.floor(Math.random() * images.length)];
-};
 
 const JobCard = ({ searchTerm }) => {
   const [jobs, setJobs] = useState([]);
@@ -49,14 +38,48 @@ const JobCard = ({ searchTerm }) => {
     return <p>{error}</p>;
   }
 
+  const calculatePostedTime = (date) => {
+    const postedDate = new Date(date);
+    const currentDate = new Date();
+    const differenceInTime = currentDate - postedDate;
+    const differenceInDays = Math.floor(differenceInTime / (1000 * 60 * 60 * 24));
+
+    if (differenceInDays === 0) return "Today";
+    if (differenceInDays === 1) return "Yesterday";
+    return `${differenceInDays}d ago`;
+  };
+
   return (
     <div className="flex flex-col md:flex-row flex-wrap gap-4">
       {filteredJobs.length > 0 ? (
         filteredJobs.map((job, index) => (
           <div
             key={index}
-            className="w-full max-w-sm p-4 border rounded-lg shadow-md"
+            className="w-full max-w-sm p-4 border rounded-lg shadow-md relative"
           >
+            {/* Internship Type Badge and Heart Icon on Top Right */}
+            <div className="absolute top-2 right-2 flex items-center gap-2">
+              
+              {job.internshipType === "STIPEND" && (
+                <span className="text-xs font-semibold text-green-700 bg-blue-200 px-2 py-1 rounded-full">
+                  STIPEND
+                </span>
+              )}
+              {job.internshipType === "FREE" && (
+                <span className="text-xs font-semibold text-gray-700 bg-green-200 px-2 py-1 rounded-full">
+                  FREE
+                </span>
+              )}
+              {job.internshipType === "PAID" && (
+                <span className="text-xs font-semibold text-red-700 bg-red-200 px-2 py-1 rounded-full">
+                  PAID
+                </span>
+              )}
+              <button className="text-gray-400 hover:text-red-500">
+                <FaHeart />
+              </button>
+            </div>
+
             <div className="flex items-start gap-4">
               <img
                 src={job.imgUrl}
@@ -65,35 +88,43 @@ const JobCard = ({ searchTerm }) => {
               />
               <div className="flex-grow">
                 <h5 className="text-lg font-medium">{job.jobTitle}</h5>
-                <p className="text-sm text-gray-500">{job.companyName}</p>
-                <p className="text-xs text-gray-400">5d ago</p>
+                <p className="text-sm text-gray-500">
+                  {job.companyName} • {calculatePostedTime(job.createdAt)}
+                </p>
               </div>
-              <button className="text-gray-400 hover:text-black">
-                <FaHeart />
-              </button>
+             
             </div>
+
             <div className="mt-4">
               <p className="flex items-center text-sm text-gray-500">
                 <FaMapMarkerAlt className="mr-2" />
-                {job.location} • {job.jobType}
+                {job.location}
               </p>
               <p className="flex items-center mt-2 text-sm text-gray-500">
                 <FaClock className="mr-2" />
-                {job.endDateOrDuration}
+                {new Date(job.startDate).toLocaleDateString()} - {job.endDateOrDuration}
               </p>
               <p className="flex items-center mt-2 text-sm text-gray-500">
                 <FaDollarSign className="mr-2" />
-                {job.stipendOrSalary}
+                {job.internshipType === "STIPEND"
+                  ? `${job.compensationDetails?.amount} ${job.compensationDetails?.currency} per ${job.compensationDetails?.frequency?.toLowerCase()}`
+                  : job.internshipType === "FREE"
+                    ? "Unpaid / Free"
+                    : job.internshipType === "PAID"
+                      ? `Student Pays: ${job.compensationDetails?.amount} ${job.compensationDetails?.currency}`
+                      : "N/A"
+                }
               </p>
             </div>
-            <div className="flex gap-2 mt-4">
-              <span className="px-3 py-1 text-xs text-gray-500 bg-gray-200 rounded-full">
-                {job.field}
-              </span>
-              <span className="px-3 py-1 text-xs text-gray-500 bg-gray-200 rounded-full">
-                +2
-              </span>
+
+            <div className="flex gap-2 mt-4 flex-wrap">
+              {job.qualifications.map((qualification, index) => (
+                <span key={index} className="text-sm bg-gray-200 text-gray-800 py-1 px-3 rounded-full">
+                  {qualification}
+                </span>
+              ))}
             </div>
+
             <div className="mt-4">
               <a href="#" className="text-purple-600 text-sm font-medium">
                 View details
