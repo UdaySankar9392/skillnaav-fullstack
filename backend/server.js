@@ -37,8 +37,13 @@ const chatRoutes = require("./routes/webapp-routes/ChatRoutes");
 const googleUserRoutes = require("./routes/webapp-routes/GoogleUserRoutes"); // Import Google User routes
 const applicationRoutes = require("./routes/webapp-routes/applicationRoutes"); // Import Application routes
 const savedJobRoutes = require("./routes/webapp-routes/SavedJobRoutes");
+
 const personalityRoutes = require("./routes/webapp-routes/PersonalityRoutes"); // Import Personality routes
 const paymentRoutes = require("./routes/webapp-routes/paymentRoutes"); // Import Payment routes
+
+
+// Import Personality routes
+const personalityRoutes = require("./routes/webapp-routes/PersonalityRoutes"); // Import Personality routes
 
 
 // Define routes
@@ -52,6 +57,7 @@ app.use("/api/chats", chatRoutes); // Chat routes
 app.use("/api/google-users", googleUserRoutes); // Google User routes
 app.use("/api/applications", applicationRoutes); // Application routes (this should now work)
 app.use("/api/savedJobs", savedJobRoutes);
+
 app.use("/api/personality", personalityRoutes); // Personality related routes
 app.use("/api/payments", paymentRoutes); // Payment routes
 app.use(
@@ -73,6 +79,9 @@ app.post("/api/analyze-skills", async (req, res) => {
 });
 
 
+// Add Personality routes for handling questions and responses
+app.use("/api/personality", personalityRoutes); // Personality related routes
+
 // Serve static assets if in production
 if (process.env.NODE_ENV === "production") {
   app.use(express.static(path.join(__dirname, "client/build")));
@@ -87,6 +96,10 @@ app.use(errorHandler);
 
 // Start the server
 const PORT = process.env.PORT || 5000;
+
 app.listen(PORT, "0.0.0.0", () => {
+
+app.listen(PORT,'0.0.0.0',() => {
+
   console.log(`Server running on port ${PORT}`);
 });

@@ -79,6 +79,32 @@ const SavedJobs = () => {
                           : "N/A"
                     }
                   </p>
+                  <p><FontAwesomeIcon icon={faMapMarkerAlt} /> {job.jobId?.location || "Unknown Location"} • {job.jobId?.type || "N/A"}</p>
+                  <p><FontAwesomeIcon icon={faClock} /> {job.jobId?.duration || "N/A"}</p>
+                  <p><FontAwesomeIcon icon={faDollarSign} /> {job.jobId?.salaryDetails || "N/A"}</p>
+                </div>
+
+                {/* Qualifications */}
+                <div className="flex items-center justify-between">
+                  <div className="flex flex-wrap gap-2">
+                    {job.jobId?.qualifications?.length > 0 ? (
+                      job.jobId.qualifications.map((qualification, idx) => (
+                        <span key={idx} className="text-sm bg-gray-200 text-gray-800 py-1 px-3 rounded-full">
+                          {qualification}
+                        </span>
+                      ))
+                    ) : (
+                      <span className="text-sm text-gray-500">No qualifications listed</span>
+                    )}
+                  </div>
+
+                  {/* View Details Button */}
+                  <button
+                    className="text-purple-600 hover:underline"
+                    onClick={() => alert("View details coming soon!")}
+                  >
+                    View details
+                  </button>
                 </div>
 
 

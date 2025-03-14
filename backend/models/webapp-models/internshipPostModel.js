@@ -7,6 +7,7 @@ const internshipPostingSchema = mongoose.Schema(
     location: { type: String, required: true },
     jobDescription: { type: String, required: true },
     startDate: { type: Date, required: true },
+
     endDateOrDuration: { type: String, required: true }, // Can be a date or duration string
     duration: { type: String, required: true }, // E.g., "2 months and 13 days"
     
@@ -40,11 +41,19 @@ const internshipPostingSchema = mongoose.Schema(
     partnerId: { type: mongoose.Schema.Types.ObjectId, ref: "Partner", required: true }, 
     qualifications: { type: [String], required: true },
     
+
+    endDateOrDuration: { type: String, required: true },
+    salaryDetails: { type: String, required: true },
+    partnerId: { type: mongoose.Schema.Types.ObjectId, ref: "Partner", required: true }, 
+    duration: { type: String, required: true },
+    qualifications: { type: [String], required: true },
+
     contactInfo: {
       name: { type: String, required: true },
       email: { type: String, required: true },
       phone: { type: String, required: true },
     },
+
 
     imgUrl: { 
       type: String, 
@@ -57,6 +66,18 @@ const internshipPostingSchema = mongoose.Schema(
     deleted: { type: Boolean, default: false }
   },
   { timestamps: true } // Automatically adds createdAt and updatedAt fields
+);
+
+
+    imgUrl: { type: String, default: "https://default-image-url.com/image.png" },
+    studentApplied: { type: Boolean, default: false },
+    adminApproved: { type: Boolean, default: false },
+    adminReviewed: { type: Boolean, default: false },
+    deleted: { type: Boolean, default: false },
+    
+    
+  },
+  { timestamps: true } // Automatically adds createdAt and updatedAt
 );
 
 

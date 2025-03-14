@@ -100,6 +100,7 @@ const InternshipList = () => {
           >
             {/* Job Image and Company Info */}
             <div className="flex items-center mb-4">
+
               <img
                 src={internship.imgUrl || "https://via.placeholder.com/150"}
                 alt={internship.companyName}
@@ -112,6 +113,21 @@ const InternshipList = () => {
                 </p>
               </div>
             </div>
+
+  <img
+    src={internship.imgUrl || "https://via.placeholder.com/150"}
+    alt={internship.companyName}
+    className="w-16 h-16 rounded-full mr-4"
+  />
+  <div>
+    <h3 className="text-xl font-semibold">{internship.jobTitle}</h3>
+    <p className="text-gray-600">
+      {internship.companyName} • {calculateDaysAgo(internship.createdAt)}
+    </p>
+  </div>
+</div>
+
+
 
 
             {/* Job Details */}

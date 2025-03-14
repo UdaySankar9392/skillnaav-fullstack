@@ -34,7 +34,9 @@ const getUserProfile = asyncHandler(async (req, res) => {
     gradePercentage: user.gradePercentage,
     profileImage: user.profileImage,  // Include the profile image in the response
     isPremium: user.isPremium,
+
     premiumExpiration: user.premiumExpiration,
+
   });
 });
 
@@ -215,9 +217,14 @@ const authUser = asyncHandler(async (req, res) => {
       portfolio: user.portfolio,
       profileImage: user.profileImage,
       isPremium: user.isPremium,
+
       premiumExpiration: user.premiumExpiration, // Add this line
       token,
       adminApproved: user.adminApproved
+
+      token, // Generate token here
+      adminApproved: user.adminApproved // Include admin approval status
+
     });
   } else {
     res.status(400);

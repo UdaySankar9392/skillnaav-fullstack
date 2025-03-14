@@ -6,8 +6,10 @@ import ApplyCards from "./ApplyCards";
 import { useTabContext } from "./UserHomePageContext/HomePageContext";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
+
 import Skillnaavlogo from "../../../../assets-webapp/Skillnaavlogo.png";
 import PremiumPage from "./PremiumPage";
+
 
 
 const MAX_FREE_APPLICATIONS = 5;
@@ -21,9 +23,13 @@ const Home = () => {
   const [showLimitPopup, setShowLimitPopup] = useState(false);
   const [showSavedJobPopup, setShowSavedJobPopup] = useState(false);
   const [isPremium, setIsPremium] = useState(false);
+
   const [showPricingModal, setShowPricingModal] = useState(false);
 
   
+
+  const navigate = useNavigate();
+
 
   const navigate = useNavigate();
 
@@ -82,6 +88,24 @@ const Home = () => {
       }
     };
 
+    const fetchUserProfile = async () => {
+      try {
+        const userInfo = JSON.parse(localStorage.getItem("userInfo"));
+        const token = userInfo?.token;
+        if (!token) return console.error("No token found in userInfo");
+
+        const { data } = await axios.get("/api/users/profile", {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        setIsPremium(data.isPremium);
+
+        const { data: countData } = await axios.get(`/api/applications/count/${userInfo._id}`);
+        setApplicationCount(countData.count);
+      } catch (error) {
+        console.error("Error fetching user profile or application count:", error);
+      }
+    };
+
     fetchJobData();
     fetchUserProfile();
   }, []);
@@ -94,6 +118,7 @@ const Home = () => {
     }));
     console.log("Normalized jobs:", normalized);
   }, [savedJobs]);
+
 
   // Handle View Details (with application limit check)
   const handleViewDetails = async (job) => {
@@ -140,6 +165,45 @@ const Home = () => {
         return jobToCheck.jobId?._id === job._id || jobToCheck._id === job._id;
       });
 
+
+
+  // Handle View Details (with application limit check)
+  const handleViewDetails = async (job) => {
+    try {
+      const userInfo = JSON.parse(localStorage.getItem("userInfo"));
+      if (!userInfo) return;
+
+      const { data: countData } = await axios.get(`/api/applications/count/${userInfo._id}`);
+      setApplicationCount(countData.count);
+
+      // Check if the user has reached the free application limit
+      if (!isPremium && countData.count >= MAX_FREE_APPLICATIONS) {
+        setShowLimitPopup(true); // Show the application limit popup
+      } else {
+        setSelectedJob(job);
+      }
+    } catch (error) {
+      console.error("Error fetching updated application count:", error);
+    }
+  };
+
+  // Handle Back to Job List
+  const handleBack = () => setSelectedJob(null);
+
+  // Toggle Save Job Logic (check saved job limit)
+  const toggleSaveJob = async (job) => {
+    try {
+      if (!isPremium && savedJobs.length >= MAX_SAVED_JOBS) {
+        setShowSavedJobPopup(true); // Show saved job limit popup
+        return;
+      }
+
+      const jobExists = savedJobs.some((savedJob) => {
+        const jobToCheck = savedJob.savedJob || savedJob;
+        return jobToCheck.jobId?._id === job._id || jobToCheck._id === job._id;
+      });
+
+
       if (jobExists) {
         await removeJob(job._id);
       } else {
@@ -174,6 +238,7 @@ const Home = () => {
           </div>
 
 
+
           {/* Jobs Listing */}
           <section className="py-10 px-6">
             <h2 className="text-3xl font-bold mb-2">Find your next role</h2>
@@ -182,6 +247,7 @@ const Home = () => {
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-6">
               {jobData.map((job, index) => (
                 <div key={index} className="relative border rounded-lg p-6 shadow-sm">
+
 
                   {/* Internship Type Badge */}
                   {job.internshipType && (
@@ -204,6 +270,20 @@ const Home = () => {
                         ) ? "text-red-500" : "text-gray-500"
                           }`}
                       />
+
+                  {/* Save Button */}
+                  <div className="absolute top-2 right-2">
+                    <button onClick={() => toggleSaveJob(job)} className="text-gray-500 hover:text-red-500">
+                    <FontAwesomeIcon
+  icon={faHeart}
+  className={`w-6 h-6 ${
+    savedJobs.some(savedJob => 
+      savedJob.jobId?._id === job._id || // For populated jobs
+      savedJob.jobId === job._id         // For non-populated jobs
+    ) ? "text-red-500" : "text-gray-500"
+  }`}
+/>
+
                     </button>
                   </div>
 
@@ -219,6 +299,7 @@ const Home = () => {
                   <div className="text-gray-600 mb-4">
                     <p><FontAwesomeIcon icon={faMapMarkerAlt} /> {job.location} • {job.jobType}</p>
                     <p><FontAwesomeIcon icon={faClock} /> {new Date(job.startDate).toLocaleDateString()} - {job.endDateOrDuration}</p>
+
                     <p>
                       <FontAwesomeIcon icon={faDollarSign} />
                       {job.internshipType === "STIPEND"
@@ -230,6 +311,9 @@ const Home = () => {
                             : "N/A"
                       }
                     </p>
+
+                    <p><FontAwesomeIcon icon={faDollarSign} /> {job.salaryDetails}</p>
+
                   </div>
 
                   {/* Qualifications and View Details */}
@@ -252,6 +336,7 @@ const Home = () => {
           </section>
         </>
       )}
+
       <div className="fixed bottom-6 right-6 z-50">
         <button
           onClick={() => navigate("/skillnaav-analysis")}
@@ -278,6 +363,7 @@ const Home = () => {
   </div>
 )}
 
+
       {/* Application Limit Reached Popup */}
       {showLimitPopup && (
         <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
@@ -297,6 +383,7 @@ const Home = () => {
                 Close
               </button>
               <button
+
             className="bg-purple-500 text-white px-4 py-2 rounded-md hover:bg-purple-600"
             onClick={() => {
               setShowLimitPopup(false);
@@ -305,6 +392,13 @@ const Home = () => {
           >
             Upgrade Now
           </button>
+
+                className="bg-purple-500 text-white px-4 py-2 rounded-md hover:bg-purple-600"
+                onClick={() => navigate("/user-premiumpage")}
+              >
+                Upgrade Now
+              </button>
+
             </div>
           </div>
         </div>
@@ -326,6 +420,7 @@ const Home = () => {
                 Close
               </button>
               <button
+
             className="bg-purple-500 text-white px-4 py-2 rounded-md hover:bg-purple-600"
             onClick={() => {
               setShowSavedJobPopup(false);
@@ -334,6 +429,13 @@ const Home = () => {
           >
             Upgrade Now
           </button>
+
+                className="bg-purple-500 text-white px-4 py-2 rounded-md hover:bg-purple-600"
+                onClick={() => navigate("/user-premiumpage")}
+              >
+                Upgrade Now
+              </button>
+
             </div>
           </div>
         </div>

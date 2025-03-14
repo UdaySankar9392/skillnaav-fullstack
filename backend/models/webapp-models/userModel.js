@@ -4,6 +4,7 @@ const crypto = require("crypto");
 
 const userwebappSchema = new mongoose.Schema(
   {
+
     name: { type: String, required: true, trim: true },
     email: {
       type: String,
@@ -73,6 +74,36 @@ const userwebappSchema = new mongoose.Schema(
     isActive: { type: Boolean, default: false },
     isPremium: { type: Boolean, default: false },
     premiumExpiration: { type: Date, default: null },
+
+    name: { type: String, required: true },
+    email: { type: String, required: true, unique: true, trim: true },
+    password: { type: String, required: true },
+    otp: { type: String },
+    otpExpiration: { type: Date },
+    universityName: { type: String, required: true },
+    dob: { type: String, required: true },
+    educationLevel: { type: String, required: true },
+    fieldOfStudy: { type: String, required: true },
+    desiredField: { type: String, required: true },
+    linkedin: { type: String, required: true },
+    portfolio: { type: String },
+
+    // ✅ Keep only one profileImage field
+    profileImage: { type: String, required: true },
+
+    // New fields added (optional)
+    financialStatus: { type: String },
+    state: { type: String },
+    country: { type: String },
+    city: { type: String },
+    postalCode: { type: String },
+    currentGrade: { type: String },
+    gradePercentage: { type: String },
+
+    adminApproved: { type: Boolean, default: false },
+    isActive: { type: Boolean, default: false },
+    isPremium: { type: Boolean, default: false },
+
   },
   { timestamps: true }
 );
@@ -123,6 +154,7 @@ userwebappSchema.methods.generatePasswordResetToken = function () {
   return resetToken;
 };
 
+
 // Static methods
 userwebappSchema.statics.findByEmail = function (email) {
   return this.findOne({ email });
@@ -134,3 +166,6 @@ userwebappSchema.statics.isPremiumUser = function (userId) {
 
 const Userwebapp = mongoose.model("Userwebapp", userwebappSchema);
 module.exports = Userwebapp;
+
+module.exports = Userwebapp;
+

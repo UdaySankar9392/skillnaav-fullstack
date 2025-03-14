@@ -50,11 +50,13 @@ const BodyContent = () => {
       break;
     default:
       content = <div>Select a tab</div>;
+
   }
   switch (selectedTab) {
     case "premium":
       content = <PremiumPage />;
       break;
+
   }
 
   return (

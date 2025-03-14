@@ -6,7 +6,9 @@ import Sidebar from "./Sidebar";
 import BodyContent from "./BodyContent"; 
 import { TabProvider } from "./UserHomePageContext/HomePageContext";
 import axios from "axios"; 
+
 import PremiumPage from "./PremiumPage";
+
 
 
 const UserMainPage = () => {
@@ -16,7 +18,9 @@ const UserMainPage = () => {
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
   const [showUpgradePopup, setShowUpgradePopup] = useState(false); 
   const navigate = useNavigate(); // Initialize useNavigate
+
   const [showPricingModal, setShowPricingModal] = useState(false);
+
 
   useEffect(() => {
     const handleResize = () => {
@@ -95,6 +99,7 @@ const UserMainPage = () => {
           )}
         </div>
       </div>
+
      {/* Pricing Modal */}
      {showPricingModal && (
   <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
@@ -111,11 +116,13 @@ const UserMainPage = () => {
     </div>
   </div>
 )}
+
       {/* Premium Upgrade Modal */}
       <Modal
         open={showUpgradePopup}
         onCancel={() => setShowUpgradePopup(false)}
         footer={[
+
           <button
             className="bg-purple-500 text-white px-4 py-2 rounded-md hover:bg-purple-600"
             onClick={() => {
@@ -125,6 +132,16 @@ const UserMainPage = () => {
           >
             Upgrade Now
           </button>
+
+          <Button 
+            key="upgrade" 
+            type="primary" 
+            className="bg-blue-500"
+            onClick={() => navigate("/user-premiumpage")} // Navigate to Premium Page
+          >
+            Upgrade Now
+          </Button>,
+
         ]}
       >
         <div className="text-center">
