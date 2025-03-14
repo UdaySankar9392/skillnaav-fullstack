@@ -1,0 +1,26 @@
+name: Deploy to Server
+
+on:
+  push:
+    branches:
+      -udaysai11-03-25  # Adjust the branch as necessary
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Setup SSH
+        uses: webfactory/ssh-agent@v0.5.3
+        with:
+          ssh-private-key: ${{ secrets.EC2_SSH_KEY }}  # Ensure this matches the secret name
+
+      - name: Run deployment script
+        run: |
+          ssh -o StrictHostKeyChecking=no ubuntu@www.skillnaav.com << 'EOF'
+            cd /home/ubuntu/skillnaav-fullstack
+            ./deploy.sh udaysai11-03-25  # Pass the branch name directly
+          EOF
