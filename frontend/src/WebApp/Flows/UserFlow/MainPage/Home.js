@@ -34,30 +34,30 @@ const Home = () => {
         // Parse userInfo safely
         const userInfo = JSON.parse(localStorage.getItem("userInfo")) || {};
         const isPremiumUser = userInfo.isPremium ? "true" : "false"; // Ensure correct boolean check
-
-        console.log("Fetching jobs with isPremium:", isPremiumUser); // Debugging log
-
-        const response = await fetch(`/api/interns?isPremium=${isPremiumUser}`);
-
-        if (!response.ok) {
-          const errorText = await response.text();
-          throw new Error(`Failed to fetch internships: ${errorText}`);
+    
+        console.log("Fetching approved internships with isPremium:", isPremiumUser); // Debugging log
+    
+        const response = await axios.get(`/api/interns/approved?isPremium=${isPremiumUser}`);
+    
+        if (response.status !== 200) {
+          throw new Error(`Failed to fetch internships: ${response.statusText}`);
         }
-
-        const data = await response.json();
-
+    
+        const data = response.data;
+    
         if (!Array.isArray(data)) {
           console.error("Unexpected response format:", data);
           return;
         }
-
-        console.log("Received internships:", data.map(i => ({ title: i.jobTitle, type: i.internshipType })));
-
+    
+        console.log("Received approved internships:", data.map(i => ({ title: i.jobTitle, type: i.internshipType })));
+    
         setJobData(data);
       } catch (error) {
         console.error("Error fetching job data:", error.message);
       }
     };
+    
 
     const savedPosition = sessionStorage.getItem("scrollPosition");
     if (savedPosition) {

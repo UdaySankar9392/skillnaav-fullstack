@@ -15,4 +15,8 @@ router.get('/responses/question/:questionId', personalityController.getQuestionR
 // Save bulk answers
 router.post('/responses/bulk', personalityController.saveBulkAnswers);
 
+router.get('/calculate-personality', personalityController.calculateUserPersonality);
+router.get('/calculate', personalityController.calculateUserPersonality);
+
+
 module.exports = router;

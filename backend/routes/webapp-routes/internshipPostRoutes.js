@@ -10,13 +10,26 @@ const SavedJob = require("../../models/webapp-models/SavedJobModel.js"); // Adju
 // GET all internship postings (excluding deleted)
 router.get("/", async (req, res) => {
   try {
+    // Filter internships to exclude those that are soft-deleted
+    const internships = await InternshipPosting.find({ deleted: false });
+    res.json(internships);
+  } catch (error) {
+    res.status(500).json({ message: "Server Error: Unable to fetch internships" });
+  }
+});
+
+
+// GET all approved internships (excluding deleted ones) with sorting
+router.get("/approved", async (req, res) => {
+  try {
     let { isPremium } = req.query;
 
     console.log("Received request with isPremium:", isPremium);
 
     const isPremiumUser = isPremium === "true";
 
-    let internships = await InternshipPosting.find({ deleted: false }).lean();
+    // Fetch only admin-approved internships
+    let internships = await InternshipPosting.find({ deleted: false, adminApproved: true }).lean();
 
     if (!internships.length) {
       return res.json([]);
@@ -30,12 +43,12 @@ router.get("/", async (req, res) => {
 
     // Normalize internshipType to uppercase
     internships.forEach(internship => {
-      internship.internshipType = (internship.internshipType || "UNPAID").toUpperCase();
+      internship.internshipType = (internship.internshipType || "FREE").toUpperCase();
     });
 
     // Apply sorting based on user type
     const priority = isPremiumUser ? premiumPriority : nonPremiumPriority;
-    
+
     internships.sort((a, b) => {
       return (priority[b.internshipType] || 0) - (priority[a.internshipType] || 0);
     });
@@ -52,8 +65,11 @@ router.get("/", async (req, res) => {
 
     res.json(internships);
   } catch (error) {
-    console.error("Error fetching internships:", error);
-    res.status(500).json({ message: "Server error", error: error.message });
+    console.error("Error fetching approved internships:", error);
+    res.status(500).json({
+      message: "Error fetching approved internships",
+      error: error.message,
+    });
   }
 });
 
@@ -420,22 +436,7 @@ router.patch("/:id/reject", async (req, res) => {
   }
 });
 
-// GET all approved internships (excluding deleted ones)
-router.get("/approved", async (req, res) => {
-  try {
-    const approvedInternships = await InternshipPosting.find({
-      adminApproved: true,
-      deleted: false, // Exclude soft-deleted internships
-    });
-    res.json(approvedInternships);
-  } catch (error) {
-    console.error("Error fetching approved internships:", error);
-    res.status(500).json({
-      message: "Error fetching approved internships",
-      error: error.message,
-    });
-  }
-});
+
 
 router.post("/:id/review", async (req, res) => {
   try {

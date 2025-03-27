@@ -3,26 +3,33 @@ const mongoose = require('mongoose');
 const personalityResponseSchema = new mongoose.Schema({
     questionId: { 
         type: mongoose.Schema.Types.ObjectId, 
-        ref: 'PersonalityQuestion', 
-        required: true 
-    },
-    response: { 
-        type: String, 
+        ref: "PersonalityQuestion", 
         required: true 
     },
     userId: { 
         type: mongoose.Schema.Types.ObjectId, 
-        ref: 'Userwebapp', 
+        ref: "User", 
         required: true 
+    },
+    response: { 
+        type: String, 
+        required: true,
+        enum: ["Dislike", "Slightly Dislike", "Neutral", "Slightly Enjoy", "Enjoy"]
     },
     points: { 
         type: Number, 
-        default: 0  // Adjust logic for points if needed
+        required: true,
+        min: 1,
+        max: 5
     },
-    status: { 
-        type: String, 
-        default: 'active' 
-    },
-}, { timestamps: true });
+    respondedAt: {
+        type: Date,
+        default: Date.now
+    }
+}, {
+    indexes: [
+        { fields: { userId: 1, questionId: 1 }, unique: true }
+    ]
+});
 
 module.exports = mongoose.model('PersonalityResponse', personalityResponseSchema);
