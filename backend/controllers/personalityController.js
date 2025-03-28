@@ -1,6 +1,10 @@
 const mongoose = require('mongoose');
 const PersonalityResponse = require('../models/webapp-models/personalityModel');
 const PersonalityQuestion = require('../models/webapp-models/profilequesModel');
+const OpenAI = require('openai');
+const openai = new OpenAI({
+  apiKey: process.env.OPENAI_API_KEY
+});
 
 // Mapping from response text to points (if needed)
 const responseMap = {
@@ -95,54 +99,119 @@ const saveBulkAnswers = async (req, res) => {
     }
 };
 
-// Calculate personality based on user responses
+// Calculate personality using the AI agent based on user responses
+// Calculate personality using the AI agent based on user responses
 const calculateUserPersonality = async (req, res) => {
     try {
         const { userId } = req.query;
 
         // Validate userId
         if (!userId || !mongoose.Types.ObjectId.isValid(userId)) {
+            console.error("Invalid or missing userId:", userId);
             return res.status(400).json({ message: "Invalid or missing userId" });
         }
 
-        // Fetch all user responses and populate question to access riasecTrait
+        // Fetch all user responses and populate question details
         const responses = await PersonalityResponse.find({ userId })
             .populate("questionId")
             .exec();
 
         if (!responses.length) {
+            console.error("No responses found for userId:", userId);
             return res.status(404).json({ message: "No responses found" });
         }
 
-        // Initialize trait scores for the 6 RIASEC traits
+        // Calculate scores locally first
         const traitScores = { R: 0, I: 0, A: 0, S: 0, E: 0, C: 0 };
-
-        // Tally points for each response using the question's riasecTrait
-        responses.forEach((response) => {
-            const trait = response.questionId && response.questionId.riasecTrait;
-            if (trait && traitScores.hasOwnProperty(trait)) {
-                traitScores[trait] += response.points;
-            } else {
-                console.warn(`Unknown or missing trait for response ${response._id}`);
+        responses.forEach(response => {
+            if (response.questionId?.riasecTrait && traitScores.hasOwnProperty(response.questionId.riasecTrait)) {
+                traitScores[response.questionId.riasecTrait] += response.points || 0;
             }
         });
 
-        // Sort traits by score in descending order
+        // Get top 3 traits
         const sortedTraits = Object.entries(traitScores)
             .sort((a, b) => b[1] - a[1])
             .map(([trait]) => trait);
+        const hollandCode = sortedTraits.slice(0, 3).join('');
 
-        // Take the top 3 for the Holland Code
-        const top3 = sortedTraits.slice(0, 3);
+        // Build a summary of responses for the prompt
+        const userResponsesSummary = responses.map(response => ({
+            question: response.questionId.question,
+            trait: response.questionId.riasecTrait,
+            response: response.response,
+            points: response.points
+        }));
 
-        res.status(200).json({
-            hollandCode: top3.join(""), // e.g. "RIA"
-            scores: traitScores,
-            dominantTraits: top3,
+        // Create the prompt for the AI agent to verify our calculation
+        const prompt = `
+You are a psychology expert specialized in RIASEC personality assessments.
+Below are the responses from a RIASEC test with calculated scores:
+
+Responses:
+${JSON.stringify(userResponsesSummary, null, 2)}
+
+Calculated Scores:
+${JSON.stringify(traitScores, null, 2)}
+
+Please verify these scores and return the full Holland Code (top 3 traits) in this exact JSON format:
+{
+    "hollandCode": "ABC",
+    "dominantTraits": ["A", "B", "C"],
+    "scores": {
+        "R": 0,
+        "I": 0,
+        "A": 0,
+        "S": 0,
+        "E": 0,
+        "C": 0
+    }
+}
+`;
+
+        // Call OpenAI API to verify our calculation
+        const aiResponse = await openai.chat.completions.create({
+            model: "gpt-4-turbo-preview",
+            messages: [
+                { role: "system", content: "You are a psychology expert verifying RIASEC test results." },
+                { role: "user", content: prompt }
+            ],
+            response_format: { type: "json_object" },
+            max_tokens: 4096,
+            temperature: 0.3  // Lower temperature for more consistent results
         });
+
+        // Parse the AI response
+        let aiResults;
+        try {
+            aiResults = JSON.parse(aiResponse.choices[0].message.content);
+        } catch (e) {
+            console.error("Failed to parse AI response:", e);
+            // Fall back to our calculation if parsing fails
+            aiResults = {
+                hollandCode,
+                dominantTraits: sortedTraits.slice(0, 3),
+                scores: traitScores
+            };
+        }
+
+        // Ensure we have all required fields
+        const finalResults = {
+            hollandCode: aiResults.hollandCode || hollandCode,
+            dominantTraits: aiResults.dominantTraits || sortedTraits.slice(0, 3),
+            scores: aiResults.scores || traitScores,
+            completed: true
+        };
+
+        return res.status(200).json(finalResults);
+
     } catch (error) {
         console.error("Error calculating personality:", error);
-        res.status(500).json({ message: "Calculation error", error: error.message });
+        return res.status(500).json({ 
+            message: "Calculation error", 
+            error: error.message,
+            stack: error.stack
+        });
     }
 };
 
