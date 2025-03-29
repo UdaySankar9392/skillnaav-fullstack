@@ -1,7 +1,8 @@
 from dotenv import load_dotenv
 load_dotenv()  # Load environment variables from .env file
 
-from fastapi import FastAPI, File, Form
+import asyncio
+from fastapi import FastAPI, Form
 from fastapi.middleware.cors import CORSMiddleware
 from pymongo import MongoClient
 import fitz  # PyMuPDF for PDF parsing
@@ -10,8 +11,7 @@ import openai
 import os
 import io
 import json
-import boto3 # type: ignore
-import numpy as np
+import boto3  # type: ignore
 from urllib.parse import urlparse
 from sklearn.feature_extraction.text import TfidfVectorizer  # type: ignore
 from sklearn.metrics.pairwise import cosine_similarity  # type: ignore
@@ -41,7 +41,7 @@ def convert_object_ids(obj):
 print(f"[{now()}] Loading spaCy model...")
 nlp = spacy.load('en_core_web_sm')
 
-# OpenAI API Key
+# OpenAI API Key (set globally)
 openai.api_key = os.getenv("OPENAI_API_KEY")
 print(f"[{now()}] OPENAI_API_KEY: {os.getenv('OPENAI_API_KEY')}")
 
@@ -73,7 +73,6 @@ def download_resume_from_s3(resume_url: str):
         parsed = urlparse(resume_url)
         bucket = parsed.netloc.split('.')[0]
         key = parsed.path.lstrip('/')
-        # Explicitly pass AWS credentials from environment variables
         s3_client = boto3.client(
             's3',
             aws_access_key_id=os.getenv("AWS_ACCESS_KEY_ID"),
@@ -115,48 +114,88 @@ def extract_resume_info(text):
     return {"text": text, "skills": skills}
 
 def get_readiness_score(resume_text, job_description, job_skills):
-    """Use OpenAI GPT to generate a readiness score."""
+    """Use OpenAI GPT to generate a readiness score using the new interface."""
     start = datetime.now()
     try:
-        # Create a client instance (or reuse a global one if available)
-        client = openai.OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
-        
-        response = client.chat.completions.create(
+        response = openai.ChatCompletion.create(
             model="gpt-4",
             messages=[
-                {"role": "system", "content": "You are a recruitment AI assessing candidate resumes."},
-                {"role": "user", "content": (
-                    f"Evaluate this resume against job details and provide a readiness score out of 100.\n\n"
-                    f"Resume: {resume_text}\n\nJob Description: {job_description}\n\nRequired Skills: {job_skills}"
-                )}
+                {
+                    "role": "system",
+                    "content": "You are a recruitment AI assessing candidate resumes."
+                },
+                {
+                    "role": "user",
+                    "content": (
+                        f"Evaluate this resume against job details and provide a readiness score out of 100.\n\n"
+                        f"Resume: {resume_text}\n\nJob Description: {job_description}\n\nRequired Skills: {job_skills}"
+                    )
+                }
             ]
         )
         score_text = response.choices[0].message.content
         print(f"[{now()}] OpenAI response: {score_text} (took {(datetime.now()-start).total_seconds()} sec)")
-        
-        # Extract the first number found in the response
         import re
         score_match = re.search(r'\d+', score_text)
         return int(score_match.group()) if score_match else 0
-        
     except Exception as e:
         print(f"[{now()}] Error generating readiness score with OpenAI: {e}")
         return 0
- 
+
 def calculate_similarity(resume_texts, job_description, job_skills):
     """Calculate TF-IDF similarity between resumes and job description + skills."""
     start = datetime.now()
     try:
+        if not resume_texts:
+            return []
         job_details = job_description + " " + " ".join(job_skills)
         documents = [job_details] + resume_texts
         vectorizer = TfidfVectorizer()
         tfidf_matrix = vectorizer.fit_transform(documents)
         similarity_scores = cosine_similarity(tfidf_matrix[0:1], tfidf_matrix[1:]).flatten()
         print(f"[{now()}] Similarity scores calculated: {similarity_scores} (took {(datetime.now()-start).total_seconds()} sec)")
-        return similarity_scores
+        return similarity_scores.tolist()
     except Exception as e:
         print(f"[{now()}] Error calculating similarity scores: {e}")
         return [0] * len(resume_texts)
+
+# Asynchronous helper function to process each resume concurrently
+async def process_resume(resume_url, job_description, job_skills_list):
+    loop = asyncio.get_event_loop()
+    resume_start = datetime.now()
+    print(f"[{now()}] Processing resume from URL: {resume_url}")
+
+    # Fetch application data (synchronously, assumed fast)
+    application = db.applications.find_one(
+        {"resumeUrl": resume_url},
+        {"userName": 1, "userEmail": 1, "appliedDate": 1, "_id": 0}
+    )
+    print(f"[{now()}] Found application for {resume_url}: {application}")
+
+    # Download resume (blocking I/O offloaded to executor)
+    file_stream = await loop.run_in_executor(None, download_resume_from_s3, resume_url)
+    if file_stream is None:
+        return None
+
+    # Extract text from PDF (blocking CPU-bound task)
+    text = await loop.run_in_executor(None, extract_text_from_pdf, file_stream)
+    # Process resume info with spaCy
+    extracted_info = await loop.run_in_executor(None, extract_resume_info, text)
+    # Get readiness score via OpenAI API (blocking network call)
+    readiness_score = await loop.run_in_executor(None, get_readiness_score, text, job_description, job_skills_list)
+    print(f"[{now()}] Readiness score for {resume_url}: {readiness_score} (Processed in {(datetime.now()-resume_start).total_seconds()} sec)")
+
+    if readiness_score > 60:
+        return {
+            "name": application.get("userName", "N/A") if application else "N/A",
+            "email": application.get("userEmail", "N/A") if application else "N/A",
+            "appliedDate": application.get("appliedDate", "N/A") if application else "N/A",
+            "resumeUrl": resume_url,
+            "readiness_score": readiness_score,
+            "text": extracted_info["text"],
+            "skills": extracted_info["skills"]
+        }
+    return None 
 
 @app.post("/partner/shortlist")
 async def shortlist_candidates(
@@ -167,9 +206,9 @@ async def shortlist_candidates(
     """
     Shortlist candidates by downloading resumes from S3, extracting text,
     calculating readiness score using OpenAI, and then performing ATS filtering.
+    Processing is done concurrently to reduce overall latency.
     """
     overall_start = datetime.now()
-    candidates = []
     print(f"[{now()}] Received request to shortlist candidates.")
     print(f"[{now()}] Job Description: {job_description}")
     print(f"[{now()}] Job Skills (raw): {job_skills}")
@@ -182,59 +221,31 @@ async def shortlist_candidates(
         print(f"[{now()}] Error parsing job_skills: {e}")
         job_skills_list = []
 
-    try:
-        for resume_url in resumes:
-            resume_start = datetime.now()
-            print(f"[{now()}] Processing resume from URL: {resume_url}")
+    # Create concurrent tasks for processing each resume
+    tasks = [process_resume(url, job_description, job_skills_list) for url in resumes]
+    results = await asyncio.gather(*tasks)
+    candidates = [res for res in results if res is not None]
 
-            # Fetch application data from MongoDB
-            application = db.applications.find_one(
-                {"resumeUrl": resume_url},
-                {"userName": 1, "userEmail": 1, "appliedDate": 1, "_id": 0}
-            )
-            print(f"[{now()}] Found application for {resume_url}: {application}")
-
-            # Download and process resume
-            file_stream = download_resume_from_s3(resume_url)
-            if file_stream is None:
-                continue
-            text = extract_text_from_pdf(file_stream)
-            extracted_info = extract_resume_info(text)
-            readiness_score = get_readiness_score(text, job_description, job_skills_list)
-            print(f"[{now()}] Readiness score for resume ({resume_url}): {readiness_score} (Processed in {(datetime.now()-resume_start).total_seconds()} sec)")
-
-            if readiness_score > 70:
-                candidates.append({
-                    "name": application.get("userName", "N/A") if application else "N/A",
-                    "email": application.get("userEmail", "N/A") if application else "N/A",
-                    "appliedDate": application.get("appliedDate", "N/A") if application else "N/A",
-                    "resumeUrl": resume_url,
-                    "readiness_score": readiness_score,
-                    "text": extracted_info["text"],
-                    "skills": extracted_info["skills"]
-                })
-
-        # Calculate similarity scores across all shortlisted candidates
+    # Calculate similarity scores if we have any shortlisted candidates
+    if candidates:
         similarity_scores = calculate_similarity([c["text"] for c in candidates], job_description, job_skills_list)
         for i, candidate in enumerate(candidates):
-            candidate["similarity_score"] = similarity_scores[i]
+            candidate["similarity_score"] = similarity_scores[i] if i < len(similarity_scores) else 0
+    else:
+        print(f"[{now()}] No candidates met the readiness score threshold.")
 
-        candidates = sorted(candidates, key=lambda x: (x["readiness_score"], x["similarity_score"]), reverse=True)
-        print(f"[{now()}] Shortlisted candidates: {candidates}")
-        print(f"[{now()}] Total processing time: {(datetime.now()-overall_start).total_seconds()} sec")
+    candidates = sorted(candidates, key=lambda x: (x["readiness_score"], x.get("similarity_score", 0)), reverse=True)
+    print(f"[{now()}] Shortlisted candidates: {candidates}")
+    print(f"[{now()}] Total processing time: {(datetime.now()-overall_start).total_seconds()} sec")
 
-        # Store in MongoDB if there are candidates
-        if candidates:
-            shortlist_collection.insert_many(candidates)
-            print(f"[{now()}] Shortlisted candidates stored in MongoDB.")
-        else:
-            print(f"[{now()}] No candidates met the readiness score threshold.")
+    # Store in MongoDB if there are candidates
+    if candidates:
+        shortlist_collection.insert_many(candidates)
+        print(f"[{now()}] Shortlisted candidates stored in MongoDB.")
+    else:
+        print(f"[{now()}] No candidates met the readiness score threshold.")
 
-        # Convert any remaining ObjectId's to strings (if present) before returning
-        return {"shortlisted_candidates": convert_object_ids(candidates)}
-    except Exception as e:
-        print(f"[{now()}] Error in shortlist_candidates endpoint: {e}")
-        return {"error": str(e)}
+    return {"shortlisted_candidates": convert_object_ids(candidates)}
 
 @app.get("/partner/shortlisted")
 async def get_shortlisted_candidates():

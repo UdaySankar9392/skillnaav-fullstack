@@ -5,7 +5,7 @@ python-dotenv==1.0.1
 pymupdf==1.25.4
 python-docx==1.1.2
 spacy==3.8.4
-openai==1.66.3
+openai==0.28.0
 requests==2.32.3
 loguru==0.7.3
 pydantic==2.10.6
