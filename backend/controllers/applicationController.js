@@ -204,6 +204,53 @@ const checkIfApplied = async (req, res) => {
   }
 };
 
+const getApplicationsCountForInternships = async (req, res) => {
+  try {
+    const { internshipIds } = req.query;
+    
+    if (!internshipIds) {
+      return res.status(400).json({ message: "Internship IDs are required" });
+    }
+
+    // Convert comma-separated string to array and validate IDs
+    const idsArray = internshipIds.split(',')
+      .map(id => id.trim())
+      .filter(id => mongoose.Types.ObjectId.isValid(id));
+
+    if (idsArray.length === 0) {
+      return res.status(400).json({ message: "No valid internship IDs provided" });
+    }
+
+    const counts = await Application.aggregate([
+      {
+        $match: {
+          internshipId: { $in: idsArray.map(id => new mongoose.Types.ObjectId(id)) }
+        }
+      },
+      {
+        $group: {
+          _id: "$internshipId",
+          count: { $sum: 1 }
+        }
+      }
+    ]);
+
+    // Convert array to object { internshipId: count }
+    const countsMap = counts.reduce((acc, curr) => {
+      acc[curr._id.toString()] = curr.count;
+      return acc;
+    }, {});
+
+    res.status(200).json({ counts: countsMap });
+  } catch (error) {
+    console.error("Error fetching application counts:", error);
+    res.status(500).json({ 
+      message: "Error fetching application counts",
+      error: error.message 
+    });
+  }
+};
+
 module.exports = {
   applyForInternship,
   getApplicationsForInternship,
@@ -212,4 +259,5 @@ module.exports = {
   checkIfApplied, // Add the new function to exports
   upgradeToPremium,
   getApplicationCount,
+  getApplicationsCountForInternships,
 };

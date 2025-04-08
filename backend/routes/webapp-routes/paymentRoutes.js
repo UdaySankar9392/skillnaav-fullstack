@@ -24,15 +24,18 @@ router.post("/order", async (req, res) => {
       return res.status(400).json({ success: false, message: "Invalid amount or duration" });
     }
 
+    // Convert amount from INR to paise (Razorpay expects paise)
+    const amountInPaise = Math.round(amount * 100);
+
     const options = {
-      amount: amount, // Amount is already in paise (e.g., 1000 for ₹10)
+      amount: amountInPaise,
       currency,
       receipt: `receipt_${Date.now()}`,
       notes: {
-        userId, // Include userId in notes
-        planType, // Include planType in notes
+        userId,     // Include userId in notes
+        planType,   // Include planType in notes
         email,
-        duration, // Include duration in notes
+        duration,   // Include duration in notes
       },
     };
 
@@ -42,7 +45,7 @@ router.post("/order", async (req, res) => {
     res.json({
       success: true,
       order_id: order.id,
-      amount: order.amount, // Return amount in paise
+      amount: order.amount, // This is in paise
       currency: order.currency,
     });
   } catch (error) {
@@ -77,25 +80,25 @@ router.post("/verify", async (req, res) => {
 
     // Calculate premiumExpiration based on duration (in months)
     const premiumExpiration = new Date();
-    premiumExpiration.setMonth(premiumExpiration.getMonth() + parseInt(duration)); // Add duration in months
+    premiumExpiration.setMonth(premiumExpiration.getMonth() + parseInt(duration));
 
     // Save payment details
     const payment = new Payment({
       userId,
       planType,
       email,
-      amount,
+      amount, // Storing the amount in INR
       paymentId: razorpay_payment_id,
       orderId: razorpay_order_id,
       status: "Success",
-      premiumExpiration, // Save calculated expiration date
+      premiumExpiration,
     });
     await payment.save();
 
     // Update User's premium status
     const updatedUser = await User.findByIdAndUpdate(
       userId,
-      { isPremium: true, premiumExpiration }, // Save expiration in User model
+      { isPremium: true, premiumExpiration },
       { new: true }
     );
 
@@ -110,11 +113,11 @@ router.post("/verify", async (req, res) => {
 router.post("/razorpay-webhook", async (req, res) => {
   try {
     const razorpaySignature = req.headers["x-razorpay-signature"];
-    const rawBody = req.body; // Now using raw JSON body
+    const rawBody = req.body; // Using raw JSON body
 
     const expectedSignature = crypto
       .createHmac("sha256", WEBHOOK_SECRET)
-      .update(JSON.stringify(rawBody)) // Fix: Use JSON.stringify()
+      .update(JSON.stringify(rawBody))
       .digest("hex");
 
     if (razorpaySignature !== expectedSignature) {
@@ -132,7 +135,7 @@ router.post("/razorpay-webhook", async (req, res) => {
     }
 
     const paymentId = paymentEntity.id;
-    const userId = paymentEntity.notes?.userId; // Fix: Use optional chaining
+    const userId = paymentEntity.notes?.userId;
     if (!userId) {
       console.error("❌ User ID missing in payment notes");
       return res.status(400).json({ success: false, message: "User ID missing" });
@@ -142,7 +145,7 @@ router.post("/razorpay-webhook", async (req, res) => {
       case "payment.captured":
         console.log(`✅ Payment captured for User: ${userId}, Payment ID: ${paymentId}`);
 
-        // Fix: Prevent updating if already marked "Success"
+        // Prevent updating if already marked "Success"
         const existingPayment = await Payment.findOne({ paymentId });
         if (existingPayment?.status === "Success") {
           console.log("⚠️ Payment already processed");
@@ -188,7 +191,7 @@ cron.schedule("0 0 * * *", async () => {
     // Find users whose premiumExpiration date has passed
     const expiredUsers = await User.find({
       isPremium: true,
-      premiumExpiration: { $lte: currentDate }, // Check if expiration date is less than or equal to current date
+      premiumExpiration: { $lte: currentDate },
     });
 
     // Update isPremium to false for expired users
@@ -196,7 +199,7 @@ cron.schedule("0 0 * * *", async () => {
       const userIds = expiredUsers.map((user) => user._id);
       await User.updateMany(
         { _id: { $in: userIds } },
-        { isPremium: false, premiumExpiration: null } // Reset premium status and expiration date
+        { isPremium: false, premiumExpiration: null }
       );
 
       console.log(`Updated ${expiredUsers.length} users' premium status to false.`);
@@ -209,6 +212,7 @@ cron.schedule("0 0 * * *", async () => {
 });
 
 module.exports = router;
+
 // 3️⃣ Get Payment Status API (Optional)
 // router.get("/status/:paymentId", async (req, res) => {
 //   try {

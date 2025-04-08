@@ -41,4 +41,8 @@ router.get("/student/:studentId/applications", getApplicationsForStudent);
 // Route to check if a specific job has been applied by the user
 router.get("/check-applied/:studentId/:internshipId", checkIfApplied);
 
+router.get('/counts', applicationController.getApplicationsCountForInternships);
+
+
+
 module.exports = router;

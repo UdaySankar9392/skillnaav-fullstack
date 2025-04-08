@@ -10,6 +10,7 @@ import {
   faChevronDown,
   faTrash,
   faBars,
+  faFileAlt, // New icon for Applications
 } from "@fortawesome/free-solid-svg-icons";
 import logo from "../../../../assets-webapp/Skillnaav-logo.png"; // Replace with your actual logo path
 import { useTabContext } from "./UserHomePageContext/HomePageContext"; // Adjust path as needed
@@ -139,6 +140,21 @@ const Sidebar = () => {
                   </li>
                 </ul>
               )}
+            </li>
+
+            {/* New Applications Item */}
+            <li>
+              <button
+                onClick={() => handleTabClick("applications")}
+                className={`flex items-center p-3 rounded-lg w-full text-left font-medium ${
+                  selectedTab === "applications"
+                    ? "bg-blue-100 text-blue-600"
+                    : "text-gray-700 hover:bg-gray-200"
+                }`}
+              >
+                <FontAwesomeIcon icon={faFileAlt} className="w-5 h-5 mr-3" />
+                <span>Applications</span>
+              </button>
             </li>
 
             <li>

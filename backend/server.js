@@ -39,6 +39,7 @@ const applicationRoutes = require("./routes/webapp-routes/applicationRoutes"); /
 const savedJobRoutes = require("./routes/webapp-routes/SavedJobRoutes");
 const personalityRoutes = require("./routes/webapp-routes/PersonalityRoutes"); // Import Personality routes
 const paymentRoutes = require("./routes/webapp-routes/paymentRoutes"); // Import Payment routes
+const dashboardRoutes = require("./routes/webapp-routes/dashboardRoutes"); // Import Dashboard routes
 
 // Define routes
 app.use("/api/users", userRoutes); // User Web App routes
@@ -57,6 +58,7 @@ app.use(
   "/api/payments/razorpay-webhook",
   express.raw({ type: "application/json" })
 );
+app.use("/api/dashboard", dashboardRoutes); // Dashboard routes
 
 // New route for skill gap analysis
 app.post("/api/analyze-skills", async (req, res) => {

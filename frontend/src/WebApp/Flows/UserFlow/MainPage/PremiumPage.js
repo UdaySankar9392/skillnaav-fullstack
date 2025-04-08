@@ -5,13 +5,13 @@ import axios from "axios";
 
 function Pricing() {
   const { skillnaavData } = useSelector((state) => state.root);
-  const [alert, setAlert] = useState({ show: false, message: "", type: "" }); // State for alert
+  const [alert, setAlert] = useState({ show: false, message: "", type: "" });
   const [isPremium, setIsPremium] = useState(
     JSON.parse(localStorage.getItem("userInfo"))?.isPremium || false
-  ); // Local state for isPremium
+  );
 
   if (!skillnaavData) {
-    return <div>Loading...</div>; // Loading state
+    return <div>Loading...</div>;
   }
 
   const { pricing, pricingcard } = skillnaavData;
@@ -37,7 +37,7 @@ function Pricing() {
     setAlert({ show: true, message, type });
     setTimeout(() => {
       setAlert({ show: false, message: "", type: "" });
-    }, 5000); // Hide alert after 5 seconds
+    }, 5000);
   };
 
   const handlePayment = async (amountString, planType, duration) => {
@@ -46,15 +46,15 @@ function Pricing() {
     try {
       // Handle Free Trial plan
       if (planType === "Free Trial") {
-        window.location.hash = "#discover"; // Redirect to #discover section
+        window.location.hash = "#discover";
         return;
       }
 
+      // Remove conversion to paise: Use the amount as provided.
       const amount = parseFloat(amountString.replace(/[^0-9.]/g, ""));
-      const amountInPaise = Math.round(amount * 100);
 
       const orderResponse = await axios.post("/api/payments/order", {
-        amount: amountInPaise,
+        amount, // Send amount directly without converting to paise
         currency: "INR",
         planType,
         duration,
@@ -78,7 +78,7 @@ function Pricing() {
             razorpay_signature: response.razorpay_signature,
             userId: userInfo._id,
             planType,
-            amount: amountInPaise,
+            amount, // Using the original amount
             email: userInfo.email,
             duration,
           });
@@ -88,7 +88,7 @@ function Pricing() {
             // Update user info in localStorage and state
             userInfo.isPremium = true;
             localStorage.setItem("userInfo", JSON.stringify(userInfo));
-            setIsPremium(true); // Update local state
+            setIsPremium(true);
           } else {
             showAlert("Payment verification failed.", "error");
           }
@@ -160,7 +160,7 @@ function Pricing() {
                 <button
                   onClick={() => handlePayment(card.price, card.plantype, card.duration)}
                   className={`mt-4 bg-white py-3 ${colorClass.text} font-medium rounded ${colorClass.hoverBg} transition`}
-                  disabled={isPremium} // Disable button if user is already premium
+                  disabled={isPremium}
                 >
                   {isPremium ? "Subscribed" : card.pricebtn}
                 </button>
