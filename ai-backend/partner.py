@@ -7,7 +7,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from pymongo import MongoClient
 import fitz  # PyMuPDF for PDF parsing
 import spacy
-import openai
+# import openai   # Removed: using Amazon Bedrock instead of OpenAI
 import os
 import io
 import json
@@ -41,9 +41,21 @@ def convert_object_ids(obj):
 print(f"[{now()}] Loading spaCy model...")
 nlp = spacy.load('en_core_web_sm')
 
-# OpenAI API Key (set globally)
-openai.api_key = os.getenv("OPENAI_API_KEY")
-print(f"[{now()}] OPENAI_API_KEY: {os.getenv('OPENAI_API_KEY')}")
+# Setup AWS credentials and initialize Bedrock client
+aws_access_key_id = os.getenv("AWS_ACCESS_KEY_ID")
+aws_secret_access_key = os.getenv("AWS_SECRET_ACCESS_KEY")
+aws_region = os.getenv("AWS_REGION")
+if not all([aws_access_key_id, aws_secret_access_key, aws_region]):
+    raise ValueError("Missing AWS credentials or region in .env file!")
+bedrock_client = boto3.client(
+    service_name="bedrock-runtime",
+    region_name=aws_region,
+    aws_access_key_id=aws_access_key_id,
+    aws_secret_access_key=aws_secret_access_key
+)
+
+# For backward compatibility, printing the OPENAI_API_KEY variable (not used anymore)
+# print(f"[{now()}] OPENAI_API_KEY: {os.getenv('OPENAI_API_KEY')}")
 
 # MongoDB Connection
 client = MongoClient(os.getenv("MONGO_URI"))
@@ -63,6 +75,27 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# Function to invoke Amazon Bedrock
+def invoke_bedrock(prompt_text):
+    try:
+        body = {
+            "prompt": prompt_text,
+            "max_gen_len": 2048,  # Change to 2048 if desired
+            "temperature": 0.5,
+            "top_p": 0.9
+        }
+        response = bedrock_client.invoke_model(
+            modelId="meta.llama3-8b-instruct-v1:0",
+            body=json.dumps(body),
+            contentType="application/json",
+            accept="application/json"
+        )
+        response_body = json.loads(response['body'].read())
+        return response_body.get("generation", "")
+    except Exception as e:
+        print(f"[{now()}] Bedrock Error: {e}")
+        return ""
+
 def download_resume_from_s3(resume_url: str):
     """
     Download a resume file from S3 using its URL.
@@ -75,9 +108,9 @@ def download_resume_from_s3(resume_url: str):
         key = parsed.path.lstrip('/')
         s3_client = boto3.client(
             's3',
-            aws_access_key_id=os.getenv("AWS_ACCESS_KEY_ID"),
-            aws_secret_access_key=os.getenv("AWS_SECRET_ACCESS_KEY"),
-            region_name=os.getenv("AWS_DEFAULT_REGION")
+            aws_access_key_id=os.getenv("Resume_AWS_ACCESS_KEY_ID"),
+            aws_secret_access_key=os.getenv("Resume_AWS_SECRET_ACCESS_KEY"),
+            region_name=os.getenv("Resume_AWS_REGION")
         )
         file_stream = io.BytesIO()
         s3_client.download_fileobj(bucket, key, file_stream)
@@ -114,32 +147,20 @@ def extract_resume_info(text):
     return {"text": text, "skills": skills}
 
 def get_readiness_score(resume_text, job_description, job_skills):
-    """Use OpenAI GPT to generate a readiness score using the new interface."""
+    """Use Amazon Bedrock to generate a readiness score."""
     start = datetime.now()
     try:
-        response = openai.ChatCompletion.create(
-            model="gpt-4",
-            messages=[
-                {
-                    "role": "system",
-                    "content": "You are a recruitment AI assessing candidate resumes."
-                },
-                {
-                    "role": "user",
-                    "content": (
-                        f"Evaluate this resume against job details and provide a readiness score out of 100.\n\n"
-                        f"Resume: {resume_text}\n\nJob Description: {job_description}\n\nRequired Skills: {job_skills}"
-                    )
-                }
-            ]
+        prompt = (
+            f"Evaluate this resume against job details and provide a readiness score out of 100.\n\n"
+            f"Resume: {resume_text}\n\nJob Description: {job_description}\n\nRequired Skills: {job_skills}"
         )
-        score_text = response.choices[0].message.content
-        print(f"[{now()}] OpenAI response: {score_text} (took {(datetime.now()-start).total_seconds()} sec)")
+        score_text = invoke_bedrock(prompt)
+        print(f"[{now()}] Bedrock response: {score_text} (took {(datetime.now()-start).total_seconds()} sec)")
         import re
         score_match = re.search(r'\d+', score_text)
         return int(score_match.group()) if score_match else 0
     except Exception as e:
-        print(f"[{now()}] Error generating readiness score with OpenAI: {e}")
+        print(f"[{now()}] Error generating readiness score with Bedrock: {e}")
         return 0
 
 def calculate_similarity(resume_texts, job_description, job_skills):
@@ -181,7 +202,7 @@ async def process_resume(resume_url, job_description, job_skills_list):
     text = await loop.run_in_executor(None, extract_text_from_pdf, file_stream)
     # Process resume info with spaCy
     extracted_info = await loop.run_in_executor(None, extract_resume_info, text)
-    # Get readiness score via OpenAI API (blocking network call)
+    # Get readiness score via Bedrock API (blocking network call)
     readiness_score = await loop.run_in_executor(None, get_readiness_score, text, job_description, job_skills_list)
     print(f"[{now()}] Readiness score for {resume_url}: {readiness_score} (Processed in {(datetime.now()-resume_start).total_seconds()} sec)")
 
@@ -205,7 +226,7 @@ async def shortlist_candidates(
 ):
     """
     Shortlist candidates by downloading resumes from S3, extracting text,
-    calculating readiness score using OpenAI, and then performing ATS filtering.
+    calculating readiness score using Bedrock, and then performing ATS filtering.
     Processing is done concurrently to reduce overall latency.
     """
     overall_start = datetime.now()

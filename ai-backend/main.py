@@ -5,7 +5,7 @@ import fitz  # PyMuPDF for PDFs
 import docx  # python-docx for DOCX files
 import logging
 import spacy
-import openai
+import boto3 # type: ignore
 from dotenv import load_dotenv
 import time
 import json
@@ -15,12 +15,19 @@ from datetime import datetime  # For timestamp utility
 
 # Load environment variables
 load_dotenv()
-openai_api_key = os.getenv("OPENAI_API_KEY")
-if not openai_api_key:
-    raise ValueError("Missing OpenAI API key. Check your .env file!")
+aws_access_key_id = os.getenv("AWS_ACCESS_KEY_ID")
+aws_secret_access_key = os.getenv("AWS_SECRET_ACCESS_KEY")
+aws_region = os.getenv("AWS_REGION")
+if not all([aws_access_key_id, aws_secret_access_key, aws_region]):
+    raise ValueError("Missing AWS credentials or region. Check your .env file!")
 
-# Set the global API key (do not instantiate any OpenAI client)
-openai.api_key = openai_api_key
+# Initialize Bedrock client
+bedrock_client = boto3.client(
+    service_name="bedrock-runtime",
+    region_name=aws_region,
+    aws_access_key_id=aws_access_key_id,
+    aws_secret_access_key=aws_secret_access_key
+)
 
 # Logging
 logging.basicConfig(level=logging.INFO)
@@ -78,6 +85,29 @@ def normalize_skill_name(skill):
         return "react.js"
     return skill
 
+# Invoke Amazon Bedrock model using provided payload and model parameters
+def invoke_bedrock(prompt_text):
+    try:
+        # Format the prompt if needed (here we simply forward the text)
+        body = {
+            "prompt": prompt_text,
+            "max_gen_len": 2048,  # Change to 2048 if desired
+            "temperature": 0.5,
+            "top_p": 0.9
+        }
+        response = bedrock_client.invoke_model(
+            modelId="meta.llama3-8b-instruct-v1:0",
+            body=json.dumps(body),
+            contentType="application/json",
+            accept="application/json"
+        )
+        response_body = json.loads(response['body'].read())
+        return response_body.get("generation", "")
+    except Exception as e:
+        logger.error(f"Bedrock Error: {str(e)}")
+        logger.error(f"Full Traceback: {traceback.format_exc()}")
+        return ""
+
 # Extract skills from the resume text
 def extract_skills_from_resume(text):
     found_skills = set()
@@ -85,32 +115,23 @@ def extract_skills_from_resume(text):
         if re.search(rf"\b{re.escape(skill)}\b", text, re.IGNORECASE):
             found_skills.add(skill)
     
-    # Use OpenAI API to extract additional skills
+    # Use Bedrock to extract additional skills
     try:
         prompt = f"""
-        Extract technical skills from the following resume text. 
-        Focus on programming languages, frameworks, databases, tools, and methodologies.
-        Resume Text:
-        {text}
-        """
-        response = openai.ChatCompletion.create(
-            model="gpt-4",
-            messages=[
-                {"role": "system", "content": "You are a helpful assistant."},
-                {"role": "user", "content": prompt}
-            ],
-            max_tokens=2046
-        )
-        extracted_skills = response.choices[0].message.content.strip().split(", ")
+Extract technical skills from the following resume text. 
+Focus on programming languages, frameworks, databases, tools, and methodologies.
+Resume Text:
+{text}
+"""
+        response_text = invoke_bedrock(prompt)
+        extracted_skills = response_text.strip().split(", ")
         for skill in extracted_skills:
             normalized_skill = normalize_skill_name(skill)
             if normalized_skill in TECH_SKILLS:
                 found_skills.add(normalized_skill)
-        
-        token_usage = response.usage
-        logger.info(f"Token Usage (Extract Skills): {token_usage}")
+        logger.info("Additional skills extracted using Bedrock.")
     except Exception as e:
-        logger.error(f"OpenAI Error: {str(e)}")
+        logger.error(f"Bedrock Error (Extract Skills): {str(e)}")
         logger.error(f"Full Traceback: {traceback.format_exc()}")
     
     logger.info(f"Found Skills: {found_skills}")
@@ -133,7 +154,7 @@ def calculate_readiness_score(user_skills, job_skills):
     match_score = (len(user_skills_normalized & job_skills_normalized) / len(job_skills_normalized)) * 100
     return round(match_score, 2)
 
-# Generate AI-based Course Recommendations using OpenAI
+# Generate AI-based Course Recommendations using Bedrock
 def generate_course_recommendations(skill_gaps):
     if not skill_gaps:
         return {"message": "No skill gaps detected."}
@@ -141,82 +162,63 @@ def generate_course_recommendations(skill_gaps):
     prompt = f"Suggest 3 high-quality online courses for learning: {', '.join(skill_gaps)}. Provide platform name (Coursera, Udemy, edX) and course title."
     try:
         time.sleep(1)
-        response = openai.ChatCompletion.create(
-            model="gpt-4",
-            messages=[
-                {"role": "system", "content": "You are a helpful assistant."},
-                {"role": "user", "content": prompt}
-            ],
-            max_tokens=2046
-        )
-        courses = response.choices[0].message.content.strip().split("\n")
-        token_usage = response.usage
-        logger.info(f"Token Usage (Course Recommendations): {token_usage}")
-        logger.info(f"Raw OpenAI Response: {response.choices[0].message.content}")
+        response_text = invoke_bedrock(prompt)
+        courses = response_text.strip().split("\n")
+        logger.info(f"Raw Bedrock Response (Courses): {response_text}")
         return {"courses": courses}
     except Exception as e:
-        logger.error(f"OpenAI Error: {str(e)}")
+        logger.error(f"Bedrock Error (Course Recommendations): {str(e)}")
         logger.error(f"Full Traceback: {traceback.format_exc()}")
         return {
             "error": "An unexpected error occurred.",
             "suggestions": ["Coursera: https://www.coursera.org", "Udemy: https://www.udemy.com", "edX: https://www.edx.org"]
         }
 
-# Generate AI-based Quiz Questions using OpenAI
+# Generate AI-based Quiz Questions using Bedrock
 def generate_quizzes(skill_gaps):
     if not skill_gaps:
         return []
     
     prompt = f"""
-    Create 3 multiple-choice quiz questions to test knowledge in: {', '.join(skill_gaps)}.
-    Format as a JSON array where each object has the following fields:
-    - 'question': The multiple-choice question text.
-    - 'options': An array of strings, representing the answer options labeled A, B, C, and D.
-    - 'answer': A string indicating the correct answer option (e.g., 'A', 'B', 'C', or 'D').
+Create 3 multiple-choice quiz questions to test knowledge in: {', '.join(skill_gaps)}.
+Format as a JSON array where each object has the following fields:
+- 'question': The multiple-choice question text.
+- 'options': An array of strings, representing the answer options labeled A, B, C, and D.
+- 'answer': A string indicating the correct answer option (e.g., 'A', 'B', 'C', or 'D').
 
-    Example:
-    [
-      {{
-        "question": "What is the capital of France?",
-        "options": ["A. Berlin", "B. Paris", "C. Madrid", "D. Rome"],
-        "answer": "B"
-      }},
-      {{
-        "question": "What is the value of pi?",
-        "options": ["A. 3.14", "B. 3.16", "C. 3.18", "D. 3.20"],
-        "answer": "A"
-      }}
-    ]
-    """
+Example:
+[
+  {{
+    "question": "What is the capital of France?",
+    "options": ["A. Berlin", "B. Paris", "C. Madrid", "D. Rome"],
+    "answer": "B"
+  }},
+  {{
+    "question": "What is the value of pi?",
+    "options": ["A. 3.14", "B. 3.16", "C. 3.18", "D. 3.20"],
+    "answer": "A"
+  }}
+]
+"""
     try:
         time.sleep(1)
-        response = openai.ChatCompletion.create(
-            model="gpt-4",
-            messages=[
-                {"role": "system", "content": "You are a helpful assistant."},
-                {"role": "user", "content": prompt}
-            ],
-            max_tokens=2046
-        )
-        raw_text = response.choices[0].message.content
-        logger.info(f"Raw OpenAI Response: {raw_text}")
-        json_match = re.search(r'\[.*\]', raw_text, re.DOTALL)
+        response_text = invoke_bedrock(prompt)
+        logger.info(f"Raw Bedrock Response (Quiz): {response_text}")
+        json_match = re.search(r'\[.*\]', response_text, re.DOTALL)
         if json_match:
             json_text = json_match.group(0)
         else:
-            logger.error("JSON not found in OpenAI response.")
-            return {"error": "Could not find valid JSON in OpenAI response.", "raw": raw_text}
+            logger.error("JSON not found in Bedrock response.")
+            return {"error": "Could not find valid JSON in Bedrock response.", "raw": response_text}
         try:
             quizzes = json.loads(json_text)
             logger.info(f"Parsed Quizzes: {quizzes}")
-            token_usage = response.usage
-            logger.info(f"Token Usage (Generate Quizzes): {token_usage}")
             return quizzes
         except json.JSONDecodeError as e:
-            logger.error(f"JSON Decode Error: {str(e)} | Raw Response: {raw_text}")
-            return {"error": "Invalid JSON format from OpenAI API.", "raw": raw_text}
+            logger.error(f"JSON Decode Error: {str(e)} | Raw Response: {response_text}")
+            return {"error": "Invalid JSON format from Bedrock API.", "raw": response_text}
     except Exception as e:
-        logger.error(f"OpenAI Error: {str(e)}")
+        logger.error(f"Bedrock Error (Generate Quizzes): {str(e)}")
         logger.error(f"Full Traceback: {traceback.format_exc()}")
         return {"error": "An unexpected error occurred."}
 

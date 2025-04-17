@@ -28,7 +28,7 @@ const Applications = () => {
             
             // Fetch counts for these internships
             const countsResponse = await axios.get(
-              `http://localhost:3000/api/applications/counts`,
+              `/api/applications/counts`,
               {
                 params: { internshipIds },
                 paramsSerializer: params => {
