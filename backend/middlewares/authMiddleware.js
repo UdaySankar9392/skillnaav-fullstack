@@ -1,66 +1,70 @@
 const jwt = require("jsonwebtoken");
 const asyncHandler = require("express-async-handler");
-const Userwebapp = require("../models/webapp-models/userModel"); // Adjust path as necessary
-const Partnerwebapp = require("../models/webapp-models/partnerModel"); // Adjust path for partner model
+const Userwebapp = require("../models/webapp-models/userModel");
+const Partnerwebapp = require("../models/webapp-models/partnerModel");
 
-// Middleware to protect routes for both users and partners
-const protect = asyncHandler(async (req, res, next) => {
+// Middleware to authenticate both users and partners
+const authenticate = asyncHandler(async (req, res, next) => {
   let token;
 
-  // Check if authorization header is present
-  if (
-    req.headers.authorization &&
-    req.headers.authorization.startsWith("Bearer")
-  ) {
-    token = req.headers.authorization.split(" ")[1]; // Extract token from header
-    console.log("Verifying token:", token); // Log the token before verification
-
+  if (req.headers.authorization && req.headers.authorization.startsWith("Bearer")) {
     try {
-      // Verify token and decode it
-      const decoded = jwt.verify(token, process.env.JWT_SECRET); // Use your secret key
-      let user;
+      // Get token from header
+      token = req.headers.authorization.split(" ")[1];
 
-      // Check if the request is for a partner route
-      if (req.isPartner) {
-        // Lookup partner by decoded ID
-        user = await Partnerwebapp.findById(decoded.id).select("-password");
+      // Verify token
+      const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
-        // Log if the partner is found
-        console.log("Partner user found:", user);
-      } else {
-        // Lookup user by decoded ID
-        user = await Userwebapp.findById(decoded.id).select("-password");
-
-        // Log if the user is found
-        console.log("User found:", user);
-      }
-
-      // If user or partner is not found, return error
+      // Try to find user first
+      let user = await Userwebapp.findById(decoded.id).select("-password");
+      
+      // If not a user, try to find partner
       if (!user) {
-        return res.status(401).json({ message: "Not authorized, user not found" });
+        user = await Partnerwebapp.findById(decoded.id).select("-password");
+        if (user) {
+          req.isPartner = true; // Flag to indicate this is a partner
+        }
       }
 
-      // Attach the user or partner object to the request
-      req.user = user; // Attach user to the request object
-      next(); // Proceed to the next middleware or route handler
+      if (!user) {
+        return res.status(401).json({ message: "Not authorized" });
+      }
+
+      req.user = user;
+      next();
     } catch (error) {
-      console.error("Error verifying token:", error); // Log any errors
-      let message = "Not authorized, token failed";
-
-      // Handle specific JWT errors
-      if (error.name === "JsonWebTokenError") {
-        message = "Not authorized, token invalid";
-      } else if (error.name === "TokenExpiredError") {
-        message = "Not authorized, token expired";
-      }
-
-      // Send a response with the appropriate message
-      res.status(401).json({ message });
+      console.error(error);
+      res.status(401).json({ message: "Not authorized, token failed" });
     }
-  } else {
-    console.log("No token provided"); // Log if no token is found
+  }
+
+  if (!token) {
     res.status(401).json({ message: "Not authorized, no token" });
   }
 });
 
-module.exports = { protect }; // Export the middleware for use in routes
+// Middleware to authorize only partners
+const authorizePartner = asyncHandler(async (req, res, next) => {
+  if (!req.isPartner) {
+    return res.status(403).json({ 
+      message: "Not authorized as partner" 
+    });
+  }
+  next();
+});
+
+// Middleware to authorize only admin users
+const authorizeAdmin = asyncHandler(async (req, res, next) => {
+  if (!req.user.isAdmin) {
+    return res.status(403).json({ 
+      message: "Not authorized as admin" 
+    });
+  }
+  next();
+});
+
+module.exports = {
+  authenticate,
+  authorizePartner,
+  authorizeAdmin
+};

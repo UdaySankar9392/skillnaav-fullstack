@@ -2,7 +2,7 @@ const express = require("express");
 const dotenv = require("dotenv");
 const path = require("path");
 const cors = require("cors");
-const axios = require("axios"); // Add axios for making HTTP requests
+const axios = require("axios");
 const connectDB = require("./config/dbConfig");
 const { notFound, errorHandler } = require("./middlewares/errorMiddleware");
 const cron = require("node-cron");
@@ -18,6 +18,7 @@ connectDB(); // Establish MongoDB connection
 
 // Middleware
 app.use(express.json()); // For parsing application/json
+app.use(express.urlencoded({ extended: true }));
 
 app.use(
   cors({
@@ -27,42 +28,49 @@ app.use(
   })
 );
 
+
 // Routes
 const userRoutes = require("./routes/webapp-routes/userRoutes");
 const internRoutes = require("./routes/webapp-routes/internshipPostRoutes");
 const skillnaavRoute = require("./routes/skillnaavRoute");
-const partnerRoutes = require("./routes/webapp-routes/partnerRoutes"); // Import Partner routes
-const adminRoutes = require("./routes/webapp-routes/adminRoutes"); // Import Admin routes
+const partnerRoutes = require("./routes/webapp-routes/partnerRoutes");
+const adminRoutes = require("./routes/webapp-routes/adminRoutes");
 const chatRoutes = require("./routes/webapp-routes/ChatRoutes");
-const googleUserRoutes = require("./routes/webapp-routes/GoogleUserRoutes"); // Import Google User routes
-const applicationRoutes = require("./routes/webapp-routes/applicationRoutes"); // Import Application routes
+const googleUserRoutes = require("./routes/webapp-routes/GoogleUserRoutes");
+const applicationRoutes = require("./routes/webapp-routes/applicationRoutes");
 const savedJobRoutes = require("./routes/webapp-routes/SavedJobRoutes");
-const personalityRoutes = require("./routes/webapp-routes/PersonalityRoutes"); // Import Personality routes
-const paymentRoutes = require("./routes/webapp-routes/paymentRoutes"); // Import Payment routes
-const dashboardRoutes = require("./routes/webapp-routes/dashboardRoutes"); // Import Dashboard routes
+const personalityRoutes = require("./routes/webapp-routes/PersonalityRoutes");
+const paymentRoutes = require("./routes/webapp-routes/paymentRoutes");
+const dashboardRoutes = require("./routes/webapp-routes/dashboardRoutes");
+
+// NEW: Import Offer Routes
+const offerLetterRoutes = require("./routes/webapp-routes/offerLetterRoutes");
 
 // Define routes
-app.use("/api/users", userRoutes); // User Web App routes
-app.use("/api/interns", internRoutes); // Partner to Admin Intern Posts
-app.use("/api/skillnaav", skillnaavRoute); // Skillnaav routes
-app.use("/api/contact", skillnaavRoute); // Contact route (Verify if this is correct)
-app.use("/api/partners", partnerRoutes); // Partner routes for registration and login
-app.use("/api/admin", adminRoutes); // Admin Web app Routes
-app.use("/api/chats", chatRoutes); // Chat routes
-app.use("/api/google-users", googleUserRoutes); // Google User routes
-app.use("/api/applications", applicationRoutes); // Application routes (this should now work)
+app.use("/api/users", userRoutes);
+app.use("/api/interns", internRoutes);
+app.use("/api/skillnaav", skillnaavRoute);
+app.use("/api/contact", skillnaavRoute);
+app.use("/api/partners", partnerRoutes);
+app.use("/api/admin", adminRoutes);
+app.use("/api/chats", chatRoutes);
+app.use("/api/google-users", googleUserRoutes);
+app.use("/api/applications", applicationRoutes);
 app.use("/api/savedJobs", savedJobRoutes);
-app.use("/api/personality", personalityRoutes); // Personality related routes
-app.use("/api/payments", paymentRoutes); // Payment routes
+app.use("/api/personality", personalityRoutes);
+app.use("/api/payments", paymentRoutes);
 app.use(
   "/api/payments/razorpay-webhook",
   express.raw({ type: "application/json" })
 );
-app.use("/api/dashboard", dashboardRoutes); // Dashboard routes
+app.use("/api/dashboard", dashboardRoutes);
+
+// NEW: Add Offer Routes
+app.use('/api/offer-letters', offerLetterRoutes);
 
 // New route for skill gap analysis
 app.post("/api/analyze-skills", async (req, res) => {
-  console.log("Received request:", req.body); // Log incoming request
+  console.log("Received request:", req.body);
   try {
     const response = await axios.post("http://localhost:8000/api/analyze-skills", req.body);
     res.json(response.data);
