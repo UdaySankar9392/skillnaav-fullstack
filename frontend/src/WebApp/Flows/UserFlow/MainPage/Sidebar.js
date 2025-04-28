@@ -64,35 +64,37 @@ const Sidebar = () => {
 
         {/* Navigation Links */}
         <nav className="flex-1">
-          <ul className="space-y-2">
-            {[
-              { id: "home", icon: faHome, label: "HomePage" },
-              { id: "aeronautical-jobs", icon: faPlane, label: "Aeronautical jobs" },
-              { id: "searchbar", icon: faSearch, label: "Search" },
-              { id: "applications", icon: faFileAlt, label: "Applications" },
-              { id: "saved-jobs", icon: faHeart, label: "Savedjobs" },
-              { id: "profile", icon: faUser, label: "Profile" },
-            ].map(({ id, icon, label }) => (
-              <li key={id}>
-                <button
-                  onClick={() => handleTabClick(id)}
-                  className={`flex items-center p-3 rounded-lg w-full text-left font-medium ${
-                    selectedTab === id
-                      ? "bg-[#F0DEFD] text-[#7520A9]"
-                      : "text-gray-600 hover:bg-gray-100"
-                  }`}
-                >
-                  <FontAwesomeIcon
-                    icon={icon}
-                    className={`w-5 h-5 mr-3 ${
-                      selectedTab === id ? "text-[#7520A9]" : "text-gray-600"
-                    }`}
-                  />
-                  {label}
-                </button>
-              </li>
-            ))}
-          </ul>
+        <ul className="space-y-2">
+  {[
+    { id: "home", icon: faHome, label: "HomePage" },
+    { id: "aeronautical-jobs", icon: faPlane, label: "Aeronautical jobs" },
+    { id: "searchbar", icon: faSearch, label: "Search" },
+    { id: "applications", icon: faFileAlt, label: "Applications" },
+    { id: "offer-letter", icon: faFileAlt, label: "Offer Letter" }, // <- ADD THIS LINE
+    { id: "saved-jobs", icon: faHeart, label: "Savedjobs" },
+    { id: "profile", icon: faUser, label: "Profile" },
+  ].map(({ id, icon, label }) => (
+    <li key={id}>
+      <button
+        onClick={() => handleTabClick(id)}
+        className={`flex items-center p-3 rounded-lg w-full text-left font-medium ${
+          selectedTab === id
+            ? "bg-[#F0DEFD] text-[#7520A9]"
+            : "text-gray-600 hover:bg-gray-100"
+        }`}
+      >
+        <FontAwesomeIcon
+          icon={icon}
+          className={`w-5 h-5 mr-3 ${
+            selectedTab === id ? "text-[#7520A9]" : "text-gray-600"
+          }`}
+        />
+        {label}
+      </button>
+    </li>
+  ))}
+</ul>
+
         </nav>
 
         {/* Support and Logout Section */}

@@ -42,6 +42,7 @@ const savedJobRoutes = require("./routes/webapp-routes/SavedJobRoutes");
 const personalityRoutes = require("./routes/webapp-routes/PersonalityRoutes");
 const paymentRoutes = require("./routes/webapp-routes/paymentRoutes");
 const dashboardRoutes = require("./routes/webapp-routes/dashboardRoutes");
+const NotificationRoutes = require("./routes/webapp-routes/NotificatioRoutes");
 
 // NEW: Import Offer Routes
 const offerLetterRoutes = require("./routes/webapp-routes/offerLetterRoutes");
@@ -67,6 +68,7 @@ app.use("/api/dashboard", dashboardRoutes);
 
 // NEW: Add Offer Routes
 app.use('/api/offer-letters', offerLetterRoutes);
+app.use("/api/notifications", NotificationRoutes);
 
 // New route for skill gap analysis
 app.post("/api/analyze-skills", async (req, res) => {

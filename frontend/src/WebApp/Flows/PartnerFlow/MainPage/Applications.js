@@ -1,3 +1,4 @@
+// src/components/InternshipList.js
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
@@ -5,6 +6,9 @@ import {
   faMapMarkerAlt,
   faClock,
   faDollarSign,
+  faEye,
+  faStar,
+  faDownload,
 } from "@fortawesome/free-solid-svg-icons";
 import Modal from "./Modal";
 import { ApplicationsTable, ShortlistedTable } from "./Tables";
@@ -196,12 +200,12 @@ const InternshipList = () => {
     );
 
   return (
-    <div className="max-w-7xl mx-auto p-6 bg-white shadow-lg rounded-lg">
-      {/* Offer‑letter overlay */}
+    <div className="font-poppins max-w-7xl mx-auto p-6 bg-white shadow-lg rounded-lg">
+      {/* Offer-letter overlay */}
       {selectedStudent && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white p-6 rounded shadow-md w-[400px]">
-            <h2 className="text-lg font-bold mb-4">
+          <div className="bg-white p-6 rounded-lg shadow-xl w-[400px]">
+            <h2 className="text-lg font-medium mb-4">
               Send Offer to {selectedStudent.name}
             </h2>
             <label className="block mb-2">Joining Date:</label>
@@ -229,7 +233,7 @@ const InternshipList = () => {
             </select>
             <div className="flex justify-end gap-2">
               <button
-                className="px-4 py-2 bg-gray-300 rounded"
+                className="px-4 py-2 bg-gray-300 rounded hover:bg-gray-400"
                 onClick={() => setSelectedStudent(null)}
                 disabled={sendingOffer}
               >
@@ -250,7 +254,7 @@ const InternshipList = () => {
       )}
 
       {/* Main list */}
-      <h2 className="text-3xl font-bold text-gray-900 mb-6">
+      <h2 className="text-3xl font-semibold text-gray-900 mb-6">
         Internships Posted by Partner
       </h2>
       {internships.length === 0 ? (
@@ -307,14 +311,29 @@ const InternshipList = () => {
                   {internship.qualifications || "Not provided"}
                 </p>
               </div>
-              <div className="flex flex-wrap gap-4">
+
+              {/* Premium action buttons */}
+              <div className="flex flex-wrap gap-4 mt-4">
+                {/* View Applications */}
                 <button
                   onClick={() => fetchApplications(internship._id)}
                   disabled={loadingApplications[internship._id]}
-                  className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:bg-blue-400"
+                  className={`
+                    flex items-center gap-2
+                    px-5 py-2
+                    bg-gradient-to-r from-blue-500 to-indigo-600
+                    text-white font-semibold
+                    rounded-lg shadow-lg
+                    hover:from-blue-600 hover:to-indigo-700
+                    transform hover:scale-105
+                    transition duration-200
+                    ${loadingApplications[internship._id] ? "opacity-50 cursor-not-allowed" : ""}
+                  `}
                 >
-                  {loadingApplications[internship._id] ? "Loading..." : "View Applications"}
+                  <FontAwesomeIcon icon={faEye} /> View Applications
                 </button>
+
+                {/* Shortlist Candidates */}
                 <button
                   onClick={() =>
                     handleShortlist(
@@ -323,15 +342,35 @@ const InternshipList = () => {
                       internship.qualifications || []
                     )
                   }
-                  className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700"
+                  className="
+                    flex items-center gap-2
+                    px-5 py-2
+                    bg-gradient-to-r from-green-400 to-teal-500
+                    text-white font-semibold
+                    rounded-lg shadow-lg
+                    hover:from-green-500 hover:to-teal-600
+                    transform hover:scale-105
+                    transition duration-200
+                  "
                 >
-                  Shortlist Candidates
+                  <FontAwesomeIcon icon={faStar} /> Shortlist
                 </button>
+
+                {/* Shortlisted Resumes */}
                 <button
                   onClick={() => showShortlisted(internship._id)}
-                  className="px-4 py-2 bg-purple-600 text-white rounded hover:bg-purple-700"
+                  className="
+                    flex items-center gap-2
+                    px-5 py-2
+                    bg-gradient-to-r from-purple-500 to-pink-500
+                    text-white font-semibold
+                    rounded-lg shadow-lg
+                    hover:from-purple-600 hover:to-pink-600
+                    transform hover:scale-105
+                    transition duration-200
+                  "
                 >
-                  Shortlisted Resumes
+                  <FontAwesomeIcon icon={faDownload} /> Resumes
                 </button>
               </div>
             </div>
@@ -366,4 +405,5 @@ const InternshipList = () => {
     </div>
   );
 };
+
 export default InternshipList;

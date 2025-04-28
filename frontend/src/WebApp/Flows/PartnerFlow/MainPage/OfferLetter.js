@@ -61,7 +61,7 @@ const SendOfferLetter = ({ student, internshipId, onSuccess }) => {
       const response = await axios.post(
         "http://localhost:5000/api/offer-letters",
         {
-          studentId: student._id,
+          student_id: student.student_id,
           name: student.name,
           email: student.email,
           position: offerDetails.position,

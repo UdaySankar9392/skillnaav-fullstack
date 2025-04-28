@@ -8,6 +8,7 @@ import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import Skillnaavlogo from "../../../../assets-webapp/Skillnaavlogo.png";
 import PremiumPage from "./PremiumPage";
+import { format } from "date-fns";
 
 
 const MAX_FREE_APPLICATIONS = 5;
@@ -218,7 +219,11 @@ const Home = () => {
 
                   <div className="text-gray-600 mb-4">
                     <p><FontAwesomeIcon icon={faMapMarkerAlt} /> {job.location} • {job.jobType}</p>
-                    <p><FontAwesomeIcon icon={faClock} /> {new Date(job.startDate).toLocaleDateString()} - {job.endDateOrDuration}</p>
+                       <p className="flex items-center">
+                     <FontAwesomeIcon icon={faClock} className="mr-2" />
+                     {format(new Date(job.startDate), "dd MMM yyyy")} –{" "}
+                     {job.endDateOrDuration ? format(new Date(job.endDateOrDuration), "dd MMM yyyy") : "—"}
+                   </p>
                     <p>
                       <FontAwesomeIcon icon={faDollarSign} />
                       {job.internshipType === "STIPEND"

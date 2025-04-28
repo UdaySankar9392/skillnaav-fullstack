@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faUser, faSignOutAlt } from "@fortawesome/free-solid-svg-icons";
+import { faUser, faSignOutAlt, faBell } from "@fortawesome/free-solid-svg-icons"; // Import the FontAwesome bell icon
 import logo from "../../../../assets-webapp/Skillnaav-logo.png"; // Replace with your actual logo path
 import { useTabContext } from "./UserHomePageContext/HomePageContext"; // Adjust path as needed
 import { useNavigate } from "react-router-dom";
@@ -12,6 +12,8 @@ const Navbar = () => {
   const dropdownRef = useRef(null);
   const navigate = useNavigate();
 
+  const { selectedTab, handleSelectTab } = useTabContext();
+
   useEffect(() => {
     // Retrieve userInfo from localStorage and set it to state
     const storedUserInfo = JSON.parse(localStorage.getItem("userInfo"));
@@ -19,7 +21,6 @@ const Navbar = () => {
       setUserInfo(storedUserInfo); // Update the user info state
     }
   }, []);
-  //now the image is loading directly while login
 
   const handleUserClick = () => {
     setIsDropdownOpen(!isDropdownOpen); // Toggle dropdown visibility when profile image is clicked
@@ -28,7 +29,7 @@ const Navbar = () => {
   const handleLogout = () => {
     // Clear user information from localStorage
     localStorage.removeItem("userInfo");
-    // Redirect to partner login page
+    // Redirect to user login page
     navigate("/user/login");
   };
 
@@ -57,40 +58,51 @@ const Navbar = () => {
         />
       </div>
 
-      {/* Right side: User profile image and dropdown */}
-      <div className="relative ml-auto flex items-center">
-        {/* Display profile image */}
+      <div className="relative ml-auto flex items-center space-x-4">
+        {/* Notification bell icon - now moved left of profile */}
+        <div className="relative cursor-pointer">
+          <FontAwesomeIcon
+            icon={faBell}
+            className="w-5 h-5 text-gray-700"
+            onClick={() => handleSelectTab("notifications")}
+          />
+          <span className="absolute -top-1 -right-1 text-white text-xs rounded-full w-4 h-4 flex items-center justify-center">
+            {/* Notification count here if needed */}
+          </span>
+        </div>
+
+        {/* Display profile image or fallback icon */}
         {userInfo.profileImage ? (
           <img
             src={userInfo.profileImage}
             alt="User Profile"
-            className="w-8 h-8 rounded-full object-cover mr-2 cursor-pointer"
-            onClick={handleUserClick} // Open dropdown when profile image is clicked
+            className="w-8 h-8 rounded-full object-cover cursor-pointer"
+            onClick={handleUserClick}
           />
         ) : (
           <FontAwesomeIcon
             icon={faUser}
             className="w-8 h-8 text-gray-800 cursor-pointer"
-            onClick={handleUserClick} // Open dropdown when default user icon is clicked
+            onClick={handleUserClick}
           />
         )}
 
-        {/* Display user's name in the navbar */}
+        {/* Display user's name */}
         {userInfo.name && (
-          <span className="mr-2 text-gray-800 text-sm">{userInfo.name}</span>
+          <span className="text-gray-800 text-sm">{userInfo.name}</span>
         )}
 
+        {/* Dropdown */}
         {isDropdownOpen && (
           <div
             ref={dropdownRef}
-            className="absolute right-0 mt-2 w-48 bg-white shadow-lg rounded-md py-2 border border-gray-300"
+            className="absolute right-0 mt-12 w-48 bg-white shadow-lg rounded-md py-2 border border-gray-300"
           >
             {userInfo.email && (
               <div className="px-4 py-2 text-sm text-gray-800">
                 {userInfo.email}
               </div>
             )}
-
             <button
               onClick={handleLogout}
               className="w-full flex items-center px-4 py-2 text-sm text-red-600 hover:bg-red-100"
@@ -101,6 +113,7 @@ const Navbar = () => {
           </div>
         )}
       </div>
+
     </div>
   );
 };

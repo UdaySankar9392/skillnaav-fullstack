@@ -10,13 +10,14 @@ import Applications from "./Applications";
 import Support from "./Support";
 import Profile from "./Profile"; // Import the Profile component
 import PremiumPage from "./PremiumPage"; // Import the PremiumPage component
+import Notifications from "./Notifications"; // Import the Notifications component
+import OfferLetter from "./OfferLetter";
 
 const BodyContent = () => {
   const { selectedTab, handleSelectTab } = useTabContext();
   console.log("Selected Tab:", selectedTab);
 
   let content;
-
   switch (selectedTab) {
     case "home":
       content = <Home />;
@@ -48,14 +49,19 @@ const BodyContent = () => {
     case "filter":
       content = <Filter />;
       break;
-    default:
-      content = <div>Select a tab</div>;
-  }
-  switch (selectedTab) {
+    case "notifications":
+      content = <Notifications />;
+      break;
     case "premium":
       content = <PremiumPage />;
       break;
+      case "offer-letter":
+        content = <OfferLetter />;
+        break;
+    default:
+      content = <div>Select a tab</div>;
   }
+  
 
   return (
     <div className="flex flex-col lg:flex-row p-4 flex-1">
