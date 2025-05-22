@@ -106,7 +106,7 @@ const ProfileForm = () => {
         },
       };
   
-      const { data } = await axios.post("/api/users/profile", user, config);
+      const { data } = await axios.put("/api/users/profile", user, config);
   
       if (data) {
         localStorage.setItem("userInfo", JSON.stringify({ ...data, token }));

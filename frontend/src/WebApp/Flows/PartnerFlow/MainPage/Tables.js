@@ -2,6 +2,8 @@ import React from "react";
 import PropTypes from "prop-types";
 import { useState } from "react";
 import SendOfferLetter from "./OfferLetter";
+import ScheduleForm from "./ScheduleForm";
+import Modal from "./Modal";
 
 export const ApplicationsTable = ({ applications, onStatusUpdate }) => (
   <div className="overflow-x-auto">
@@ -54,11 +56,18 @@ ApplicationsTable.propTypes = {
 
 export const ShortlistedTable = ({ candidates, internshipId, onSendOffer }) => {
   const [selectedStudent, setSelectedStudent] = useState(null);
+  const [scheduleModalOpen, setScheduleModalOpen] = useState(false);
+  const [studentToSchedule, setStudentToSchedule] = useState(null);
 
   if (!Array.isArray(candidates)) {
     console.error("ShortlistedTable: candidates is not an array:", candidates);
     return <p className="text-gray-600">No candidates to display.</p>;
   }
+
+  // const handleScheduleClick = (student) => {
+  //   setStudentToSchedule(student);
+  //   setScheduleModalOpen(true);
+  // };
 
   return (
     <div className="space-y-4">
@@ -82,21 +91,27 @@ export const ShortlistedTable = ({ candidates, internshipId, onSendOffer }) => {
                     View Resume
                   </a>
                 </td>
-                <td className="px-6 py-4">
+                <td className="px-6 py-4 space-x-2">
                   <button
                     onClick={() => setSelectedStudent(student)}
-                    className="text-white bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded transition"
+                    className="text-white bg-blue-600 hover:bg-blue-700 px-3 py-1 rounded"
                   >
                     Send Offer
                   </button>
+                  {/* <button
+                    onClick={() => handleScheduleClick(student)}
+                    className="text-white bg-green-600 hover:bg-green-700 px-3 py-1 rounded"
+                  >
+                    Schedule
+                  </button> */}
                 </td>
               </tr>
             ))}
           </tbody>
         </table>
-
       </div>
 
+      {/* Offer Letter Section */}
       {selectedStudent && (
         <div className="mt-6 p-4 border rounded-lg bg-gray-50">
           <SendOfferLetter
@@ -105,6 +120,21 @@ export const ShortlistedTable = ({ candidates, internshipId, onSendOffer }) => {
             onSuccess={() => setSelectedStudent(null)}
           />
         </div>
+      )}
+
+      {/* Schedule Modal */}
+      {scheduleModalOpen && (
+        <Modal
+          isOpen={scheduleModalOpen}
+          onClose={() => setScheduleModalOpen(false)}
+          title="Schedule Internship Interview"
+        >
+          <ScheduleForm
+            student={studentToSchedule}
+            internshipId={internshipId}
+            onClose={() => setScheduleModalOpen(false)}
+          />
+        </Modal>
       )}
     </div>
   );

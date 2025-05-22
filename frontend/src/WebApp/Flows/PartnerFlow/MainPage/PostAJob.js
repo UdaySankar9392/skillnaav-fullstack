@@ -20,13 +20,14 @@ const PostAJob = () => {
     startDate: "",
     endDateOrDuration: "",
     duration: "",
-    internshipType: "FREE", // Default
+    internshipType: "FREE",
     compensationDetails: {
       type: "FREE",
       amount: null,
       currency: "USD",
       frequency: "MONTHLY",
     },
+    mode: "Online", // New field: mode of internship
     qualifications: [],
     contactInfo: {
       name: "",
@@ -151,6 +152,7 @@ const PostAJob = () => {
     });
   };
 
+
   const handleQualificationsChange = (e) => {
     const { value } = e.target;
     setFormData((prev) => ({
@@ -183,9 +185,8 @@ const PostAJob = () => {
 
     const durationText =
       months > 0
-        ? `${months} month${months > 1 ? "s" : ""}${
-            days > 0 ? ` and ${days} day${days > 1 ? "s" : ""}` : ""
-          }`
+        ? `${months} month${months > 1 ? "s" : ""}${days > 0 ? ` and ${days} day${days > 1 ? "s" : ""}` : ""
+        }`
         : `${days} day${days > 1 ? "s" : ""}`;
 
     setFormData((prev) => ({ ...prev, duration: durationText }));
@@ -228,28 +229,28 @@ const PostAJob = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-  
+
     const partnerId = localStorage.getItem("partnerId");
     if (!partnerId) {
       console.error("No partner ID found in localStorage.");
       return;
     }
-  
+
     const completeFormData = {
       ...formData,
       location: `${formData.city}, ${formData.country}`,
       partnerId: partnerId,
     };
-  
+
     console.log("Complete form data being sent:", completeFormData);
-  
+
     try {
       const response = await axios.post("/api/interns", completeFormData);
       console.log("Internship posted successfully:", response.data);
       saveJob(response.data);
       setSuccessMessage("Internship posted successfully!");
       resetForm();
-  
+
       // Hide success message after 3 seconds
       setTimeout(() => setSuccessMessage(""), 3000);
     } catch (error) {
@@ -259,7 +260,7 @@ const PostAJob = () => {
       );
     }
   };
-  
+
 
   const handleFileUpload = async (event) => {
     const selectedFile = event.target.files[0];
@@ -439,6 +440,22 @@ const PostAJob = () => {
             readOnly
           />
         </div>
+        <div>
+          <label className="block text-gray-700 font-medium mb-2">
+            Mode of Internship
+          </label>
+          <select
+            name="mode"
+            value={formData.mode}
+            onChange={handleChange}
+            className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring focus:ring-teal-500"
+            required
+          >
+            <option value="Online">Online</option>
+            <option value="Offline">Offline</option>
+            <option value="Hybrid">Hybrid</option>
+          </select>
+        </div>
 
         <div>
           <label className="block text-gray-700 font-medium mb-2">
@@ -591,10 +608,10 @@ const PostAJob = () => {
           </button>
         </div>
         {successMessage && (
-  <div className="fixed top-10 right-10 bg-green-500 text-white py-3 px-6 rounded-lg shadow-lg transition-all duration-300">
-    {successMessage}
-  </div>
-)}
+          <div className="fixed top-10 right-10 bg-green-500 text-white py-3 px-6 rounded-lg shadow-lg transition-all duration-300">
+            {successMessage}
+          </div>
+        )}
 
       </form>
     </div>

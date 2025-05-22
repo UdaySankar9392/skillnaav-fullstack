@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   TextField,
   IconButton,
@@ -14,6 +14,7 @@ import {
 import SearchIcon from "@mui/icons-material/Search";
 import FilterListIcon from "@mui/icons-material/FilterList";
 import ClearIcon from "@mui/icons-material/Clear";
+import { Skeleton } from "antd"; // Import Skeleton from Ant Design
 import Card from "./Card";
 
 const FilterDialog = ({ open, onClose, onApply }) => {
@@ -58,6 +59,7 @@ const SearchBar = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [appliedFilters, setAppliedFilters] = useState([]);
+  const [loading, setLoading] = useState(true);
 
   const handleSearch = (event) => {
     setSearchTerm(event.target.value);
@@ -85,6 +87,15 @@ const SearchBar = () => {
       appliedFilters.filter((_, index) => index !== filterIndex)
     );
   };
+
+  // Simulate loading of data with setTimeout
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setLoading(false); // Simulating data fetching delay
+    }, 2000);
+
+    return () => clearTimeout(timer);
+  }, []);
 
   return (
     <Box sx={{ padding: 2, fontFamily: "Poppins, sans-serif" }}>
@@ -122,7 +133,6 @@ const SearchBar = () => {
               backgroundColor: "white",
               border: "none",
               boxShadow: "none",
-              //    borderRadius: "4px",
             },
             "& .MuiInputBase-input": {
               padding: "10px 14px",
@@ -164,9 +174,18 @@ const SearchBar = () => {
         </Box>
       )}
 
-      {/* Cards */}
+      {/* Cards or Skeletons */}
       <Box>
-        <Card searchTerm={searchTerm} />
+        {loading ? (
+          // Skeleton loading effect from Ant Design
+          <Box sx={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 2 }}>
+            <Skeleton active paragraph={{ rows: 3 }} />
+            <Skeleton active paragraph={{ rows: 3 }} />
+            <Skeleton active paragraph={{ rows: 3 }} />
+          </Box>
+        ) : (
+          <Card searchTerm={searchTerm} />
+        )}
       </Box>
 
       {/* Filter Dialog */}

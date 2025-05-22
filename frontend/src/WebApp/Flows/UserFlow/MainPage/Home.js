@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import Homeimage from "../../../../assets-webapp/Home-Image.png";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faMapMarkerAlt, faClock, faDollarSign, faHeart } from "@fortawesome/free-solid-svg-icons";
+import { faMapMarkerAlt, faClock, faDollarSign, faHeart, faGlobe } from "@fortawesome/free-solid-svg-icons";
 import ApplyCards from "./ApplyCards";
 import { useTabContext } from "./UserHomePageContext/HomePageContext";
 import axios from "axios";
@@ -24,7 +24,7 @@ const Home = () => {
   const [isPremium, setIsPremium] = useState(false);
   const [showPricingModal, setShowPricingModal] = useState(false);
 
-  
+
 
   const navigate = useNavigate();
 
@@ -35,30 +35,30 @@ const Home = () => {
         // Parse userInfo safely
         const userInfo = JSON.parse(localStorage.getItem("userInfo")) || {};
         const isPremiumUser = userInfo.isPremium ? "true" : "false"; // Ensure correct boolean check
-    
+
         console.log("Fetching approved internships with isPremium:", isPremiumUser); // Debugging log
-    
+
         const response = await axios.get(`/api/interns/approved?isPremium=${isPremiumUser}`);
-    
+
         if (response.status !== 200) {
           throw new Error(`Failed to fetch internships: ${response.statusText}`);
         }
-    
+
         const data = response.data;
-    
+
         if (!Array.isArray(data)) {
           console.error("Unexpected response format:", data);
           return;
         }
-    
+
         console.log("Received approved internships:", data.map(i => ({ title: i.jobTitle, type: i.internshipType })));
-    
+
         setJobData(data);
       } catch (error) {
         console.error("Error fetching job data:", error.message);
       }
     };
-    
+
 
     const savedPosition = sessionStorage.getItem("scrollPosition");
     if (savedPosition) {
@@ -219,11 +219,11 @@ const Home = () => {
 
                   <div className="text-gray-600 mb-4">
                     <p><FontAwesomeIcon icon={faMapMarkerAlt} /> {job.location} • {job.jobType}</p>
-                       <p className="flex items-center">
-                     <FontAwesomeIcon icon={faClock} className="mr-2" />
-                     {format(new Date(job.startDate), "dd MMM yyyy")} –{" "}
-                     {job.endDateOrDuration ? format(new Date(job.endDateOrDuration), "dd MMM yyyy") : "—"}
-                   </p>
+                    <p className="flex items-center">
+                      <FontAwesomeIcon icon={faClock} className="mr-2" />
+                      {format(new Date(job.startDate), "dd MMM yyyy")} –{" "}
+                      {job.endDateOrDuration ? format(new Date(job.endDateOrDuration), "dd MMM yyyy") : "—"}
+                    </p>
                     <p>
                       <FontAwesomeIcon icon={faDollarSign} />
                       {job.internshipType === "STIPEND"
@@ -234,6 +234,18 @@ const Home = () => {
                             ? `Student Pays: ${job.compensationDetails?.amount} ${job.compensationDetails?.currency}`
                             : "N/A"
                       }
+                    </p>
+                    {/* ← Insert mode right here: */}
+                    <p className="flex items-center mt-0">
+                      <FontAwesomeIcon icon={faGlobe} className="mr-2 text-gray-600" />
+                      <span className="font-medium text-gray-600">
+                        {job.internshipMode === "ONLINE"
+                          ? "Online"
+                          : job.internshipMode === "OFFLINE"
+                            ? "Offline"
+                            : "Hybrid"
+                        }
+                      </span>
                     </p>
                   </div>
 
@@ -266,22 +278,22 @@ const Home = () => {
         </button>
       </div>
 
-       {/* Pricing Modal */}
+      {/* Pricing Modal */}
       {showPricingModal && (
-  <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
-    <div className="relative bg-white p-6 rounded-lg shadow-lg max-w-4xl w-full mx-4 max-h-[90vh] overflow-y-auto">
-      {/* Close Button */}
-      <button
-        className="absolute top-4 right-4 text-gray-500 hover:text-gray-700 bg-gray-200 hover:bg-gray-300 rounded-full p-2 transition duration-200"
-        onClick={() => setShowPricingModal(false)}
-        aria-label="Close modal"
-      >
-        ✕
-      </button>
-      <PremiumPage />
-    </div>
-  </div>
-)}
+        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
+          <div className="relative bg-white p-6 rounded-lg shadow-lg max-w-4xl w-full mx-4 max-h-[90vh] overflow-y-auto">
+            {/* Close Button */}
+            <button
+              className="absolute top-4 right-4 text-gray-500 hover:text-gray-700 bg-gray-200 hover:bg-gray-300 rounded-full p-2 transition duration-200"
+              onClick={() => setShowPricingModal(false)}
+              aria-label="Close modal"
+            >
+              ✕
+            </button>
+            <PremiumPage />
+          </div>
+        </div>
+      )}
 
       {/* Application Limit Reached Popup */}
       {showLimitPopup && (
@@ -302,14 +314,14 @@ const Home = () => {
                 Close
               </button>
               <button
-            className="bg-purple-500 text-white px-4 py-2 rounded-md hover:bg-purple-600"
-            onClick={() => {
-              setShowLimitPopup(false);
-              setShowPricingModal(true);
-            }}
-          >
-            Upgrade Now
-          </button>
+                className="bg-purple-500 text-white px-4 py-2 rounded-md hover:bg-purple-600"
+                onClick={() => {
+                  setShowLimitPopup(false);
+                  setShowPricingModal(true);
+                }}
+              >
+                Upgrade Now
+              </button>
             </div>
           </div>
         </div>
@@ -331,14 +343,14 @@ const Home = () => {
                 Close
               </button>
               <button
-            className="bg-purple-500 text-white px-4 py-2 rounded-md hover:bg-purple-600"
-            onClick={() => {
-              setShowSavedJobPopup(false);
-              setShowPricingModal(true);
-            }}
-          >
-            Upgrade Now
-          </button>
+                className="bg-purple-500 text-white px-4 py-2 rounded-md hover:bg-purple-600"
+                onClick={() => {
+                  setShowSavedJobPopup(false);
+                  setShowPricingModal(true);
+                }}
+              >
+                Upgrade Now
+              </button>
             </div>
           </div>
         </div>

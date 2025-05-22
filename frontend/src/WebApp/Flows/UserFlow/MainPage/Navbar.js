@@ -4,6 +4,8 @@ import { faUser, faSignOutAlt, faBell } from "@fortawesome/free-solid-svg-icons"
 import logo from "../../../../assets-webapp/Skillnaav-logo.png"; // Replace with your actual logo path
 import { useTabContext } from "./UserHomePageContext/HomePageContext"; // Adjust path as needed
 import { useNavigate } from "react-router-dom";
+import axios from "axios";
+
 
 const Navbar = () => {
   const { fine } = useTabContext();
@@ -11,16 +13,36 @@ const Navbar = () => {
   const [userInfo, setUserInfo] = useState({ name: "", email: "", profileImage: "" });
   const dropdownRef = useRef(null);
   const navigate = useNavigate();
+  const [notifications, setNotifications] = useState([]);
+const [unreadCount, setUnreadCount] = useState(0);
+
 
   const { selectedTab, handleSelectTab } = useTabContext();
+useEffect(() => {
+  // Fetch user info
+  const storedUserInfo = JSON.parse(localStorage.getItem("userInfo"));
+  if (storedUserInfo) {
+    setUserInfo(storedUserInfo);
+    const studentId = storedUserInfo._id;
 
-  useEffect(() => {
-    // Retrieve userInfo from localStorage and set it to state
-    const storedUserInfo = JSON.parse(localStorage.getItem("userInfo"));
-    if (storedUserInfo) {
-      setUserInfo(storedUserInfo); // Update the user info state
-    }
-  }, []);
+    // Then fetch notifications
+    const fetchNotifications = async () => {
+      try {
+        const { data } = await axios.get(`/api/notifications/${studentId}`);
+        if (data.success) {
+          setNotifications(data.notifications);
+          const unread = data.notifications.filter(n => !n.isRead).length;
+          setUnreadCount(unread);
+        }
+      } catch (err) {
+        console.error("Failed to fetch notifications:", err);
+      }
+    };
+
+    fetchNotifications();
+  }
+}, []);
+
 
   const handleUserClick = () => {
     setIsDropdownOpen(!isDropdownOpen); // Toggle dropdown visibility when profile image is clicked
@@ -60,16 +82,15 @@ const Navbar = () => {
 
       <div className="relative ml-auto flex items-center space-x-4">
         {/* Notification bell icon - now moved left of profile */}
-        <div className="relative cursor-pointer">
-          <FontAwesomeIcon
-            icon={faBell}
-            className="w-5 h-5 text-gray-700"
-            onClick={() => handleSelectTab("notifications")}
-          />
-          <span className="absolute -top-1 -right-1 text-white text-xs rounded-full w-4 h-4 flex items-center justify-center">
-            {/* Notification count here if needed */}
-          </span>
-        </div>
+       <div className="relative cursor-pointer" onClick={() => handleSelectTab("notifications")}>
+  <FontAwesomeIcon icon={faBell} className="w-5 h-5 text-gray-700" />
+  {unreadCount > 0 && (
+    <span className="absolute -top-1 -right-1 bg-red-600 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full leading-none">
+      {unreadCount}
+    </span>
+  )}
+</div>
+
 
         {/* Display profile image or fallback icon */}
         {userInfo.profileImage ? (

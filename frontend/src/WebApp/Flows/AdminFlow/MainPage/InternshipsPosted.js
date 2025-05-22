@@ -18,6 +18,7 @@ const PartnerManagement = () => {
   const [deletedInternships, setDeletedInternships] = useState([]);
   const [chatMessages, setChatMessages] = useState([]); // Chat messages for the review
   const [newMessage, setNewMessage] = useState(""); // New message input
+  const [chatError, setChatError] = useState(null); // NEW
 
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
@@ -180,17 +181,32 @@ const PartnerManagement = () => {
 
   useEffect(() => {
     const fetchMessages = async () => {
-      if (!selectedInternship) return; // Avoid fetching if no internship is selected
-      console.log("Fetching messages for internshipId:", selectedInternship._id); // Log the internshipId
+      if (!selectedInternship) return;
+
       try {
         const response = await axios.get(`/api/chats/${selectedInternship._id}`);
-        setChatMessages(response.data); // Set messages to state
+        const data = response.data;
+
+        if (Array.isArray(data) && data.length > 0) {
+          setChatMessages(data);
+          setChatError(null); // ✅ messages exist
+        } else {
+          setChatMessages([]); // ✅ no messages, but not an error
+          setChatError("No messages yet. Let’s review the internship.");
+        }
       } catch (error) {
+        setChatMessages([]);
+        setChatError("No messages yet. Let’s review the internship."); // ✅ shows this in UI
+
         console.error("Error fetching messages:", error);
       }
     };
+
     fetchMessages();
-  }, [selectedInternship]); // Trigger on selectedInternship change
+  }, [selectedInternship]);
+
+
+  // Trigger on selectedInternship change
 
   const sortInternships = (internships) => {
     return internships.sort((a, b) => {
@@ -279,15 +295,15 @@ const PartnerManagement = () => {
                 <td className="px-4 py-2">{internship.companyName}</td>
                 <td className="px-4 py-2">{internship.location}</td>
                 <td className="px-4 py-2">
-  {internship.internshipType === "STIPEND"
-    ? `${internship.compensationDetails?.amount} ${internship.compensationDetails?.currency} per ${internship.compensationDetails?.frequency?.toLowerCase()}`
-    : internship.internshipType === "FREE"
-    ? "Free"
-    : internship.internshipType === "PAID"
-    ? `Student Pays: ${internship.compensationDetails?.amount} ${internship.compensationDetails?.currency}`
-    : "N/A"}
-</td>
- 
+                  {internship.internshipType === "STIPEND"
+                    ? `${internship.compensationDetails?.amount} ${internship.compensationDetails?.currency} per ${internship.compensationDetails?.frequency?.toLowerCase()}`
+                    : internship.internshipType === "FREE"
+                      ? "Free"
+                      : internship.internshipType === "PAID"
+                        ? `Student Pays: ${internship.compensationDetails?.amount} ${internship.compensationDetails?.currency}`
+                        : "N/A"}
+                </td>
+
                 <td className="px-4 py-2 flex space-x-2">
                   <button
                     className={`px-3 py-1 rounded-md text-white ${internship.adminApproved ? "bg-green-500" : "bg-blue-500 hover:bg-blue-700"}`}
@@ -393,23 +409,33 @@ const PartnerManagement = () => {
           </h2>
 
           {/* Chat Messages */}
+          {/* Chat Messages */}
+          {/* Chat Messages */}
           <div className="overflow-y-auto max-h-[300px] bg-gray-50 p-4 rounded-lg shadow-sm space-y-4">
-            {chatMessages.map((message, index) => (
-              <div
-                key={index}
-                className={`flex ${message.sender === JSON.parse(localStorage.getItem("adminInfo")).id ? "justify-end" : "justify-start"}`}
-              >
+            {chatError ? (
+              <div className="text-center text-gray-500 text-sm">{chatError}</div>
+            ) : (
+              chatMessages.map((message, index) => (
                 <div
-                  className={`rounded-lg px-4 py-3 max-w-[70%] ${message.sender === JSON.parse(localStorage.getItem("adminInfo")).id
-                    ? "bg-blue-500 text-white"
-                    : "bg-gray-200 text-gray-700"}`}
+                  key={index}
+                  className={`flex ${message.sender === JSON.parse(localStorage.getItem("adminInfo")).id
+                      ? "justify-end"
+                      : "justify-start"
+                    }`}
                 >
-                  <p className="text-sm">{message.message}</p>
+                  <div
+                    className={`rounded-lg px-4 py-3 max-w-[70%] ${message.sender === JSON.parse(localStorage.getItem("adminInfo")).id
+                        ? "bg-blue-500 text-white"
+                        : "bg-gray-200 text-gray-700"
+                      }`}
+                  >
+                    <p className="text-sm">{message.message}</p>
+                  </div>
                 </div>
-              </div>
-            ))}
+              ))
+            )}
           </div>
-
+          
           {/* Message Input */}
           <div className="flex items-center space-x-3">
             <input

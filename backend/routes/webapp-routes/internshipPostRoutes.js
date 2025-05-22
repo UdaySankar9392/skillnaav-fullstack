@@ -79,21 +79,36 @@ router.get("/approved", async (req, res) => {
 router.post("/", async (req, res) => {
   try {
     const { 
-      jobTitle, companyName, location, jobDescription, startDate, 
-      endDateOrDuration, duration, internshipType, qualifications, 
-      contactInfo, imgUrl, partnerId, compensationDetails 
+      jobTitle,
+      companyName,
+      location,
+      jobDescription,
+      startDate,
+      endDateOrDuration,
+      duration,
+      internshipType,
+      // pull both possible names out
+      internshipMode,
+      mode,
+      qualifications,
+      contactInfo,
+      imgUrl,
+      partnerId,
+      compensationDetails
     } = req.body;
 
-    // Default compensation details based on internshipType
-    let finalCompensationDetails = { type: internshipType };
+    // decide final mode, preferring mode -> internshipMode -> default
+    const finalMode = (mode || internshipMode || "ONLINE").toUpperCase();
 
+    // Build compensation details based on internshipType
+    let finalCompensationDetails = { type: internshipType };
     if (internshipType === "PAID" || internshipType === "STIPEND") {
-      finalCompensationDetails.amount = compensationDetails?.amount || 0;
-      finalCompensationDetails.currency = compensationDetails?.currency || "USD";
-      finalCompensationDetails.frequency = compensationDetails?.frequency || "Monthly";
+      finalCompensationDetails.amount    = compensationDetails?.amount    ?? 0;
+      finalCompensationDetails.currency  = compensationDetails?.currency  ?? "USD";
+      finalCompensationDetails.frequency = compensationDetails?.frequency ?? "MONTHLY";
     } else {
-      finalCompensationDetails.amount = 0; // No salary for unpaid
-      finalCompensationDetails.currency = null;
+      finalCompensationDetails.amount    = 0;
+      finalCompensationDetails.currency  = null;
       finalCompensationDetails.frequency = null;
     }
 
@@ -101,28 +116,31 @@ router.post("/", async (req, res) => {
       jobTitle,
       companyName,
       location,
-      jobType: "Internship", // Set default as "Internship"
       jobDescription,
       startDate,
       endDateOrDuration,
       duration,
       internshipType,
+      internshipMode: finalMode,       // <-- use the finalMode here
       compensationDetails: finalCompensationDetails,
       qualifications,
       contactInfo,
       imgUrl,
-      studentApplied: false, // Default value
-      adminApproved: false, // Default value
-      adminReviewed: false, // Default value
+      studentApplied: false,
+      adminApproved: false,
+      adminReviewed: false,
       partnerId,
-      deleted: false // Default value
+      deleted: false
     });
 
     const createdInternship = await newInternship.save();
     res.status(201).json(createdInternship);
   } catch (error) {
-    console.error("Error: ", error);
-    res.status(400).json({ message: "Error: Unable to create internship post", error: error.message });
+    console.error("Error creating internship post:", error);
+    res.status(400).json({
+      message: "Error: Unable to create internship post",
+      error: error.message
+    });
   }
 });
 

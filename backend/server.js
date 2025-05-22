@@ -46,6 +46,7 @@ const NotificationRoutes = require("./routes/webapp-routes/NotificatioRoutes");
 
 // NEW: Import Offer Routes
 const offerLetterRoutes = require("./routes/webapp-routes/offerLetterRoutes");
+const scheduleRoutes = require("./routes/webapp-routes/scheduleRoutes");
 
 // Define routes
 app.use("/api/users", userRoutes);
@@ -69,6 +70,7 @@ app.use("/api/dashboard", dashboardRoutes);
 // NEW: Add Offer Routes
 app.use('/api/offer-letters', offerLetterRoutes);
 app.use("/api/notifications", NotificationRoutes);
+app.use("/api/schedule", scheduleRoutes);
 
 // New route for skill gap analysis
 app.post("/api/analyze-skills", async (req, res) => {

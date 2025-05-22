@@ -23,9 +23,10 @@ const getChatMessages = async (req, res) => {
 
     console.log(`Found ${messages.length} messages for partnerId ${partnerId}.`);
 
-    if (!messages.length) {
-      return res.status(404).json({ error: 'No messages found for this partner.' });
-    }
+  if (!messages.length) {
+  return res.status(200).json([]); // ✅ Return empty array instead of 404
+}
+
 
     const responseMessages = messages.map((msg) => ({
       sender: msg.sender,
@@ -110,9 +111,10 @@ const getMessages = async (req, res) => {
 
     console.log(`Found ${messages.length} messages for internshipId ${internshipId}.`);
 
-    if (!messages.length) {
-      return res.status(404).json({ error: 'No messages found for this internship.' });
-    }
+ if (!messages.length) {
+  return res.status(200).json([]); // ✅ Return empty array instead of 404
+}
+
 
     const responseMessages = messages.map((msg) => ({
       sender: msg.sender,

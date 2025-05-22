@@ -11,7 +11,7 @@ const YourJobPosts = () => {
 
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
-  const applicationsPerPage = 10;
+  const applicationsPerPage = 12;
 
   // Sorting state
   const [sortCriteria, setSortCriteria] = useState("jobTitle");
@@ -205,6 +205,18 @@ const YourJobPosts = () => {
             </p>
 
             <p className="mb-1">
+              <strong>Mode:</strong>{" "}
+              {internship.internshipMode === "ONLINE" ? (
+                <span className="text-teal-600 font-semibold">Online</span>
+              ) : internship.internshipMode === "OFFLINE" ? (
+                <span className="text-orange-600 font-semibold">Offline</span>
+              ) : (
+                <span className="text-purple-600 font-semibold">Hybrid</span>
+              )}
+            </p>
+
+
+            <p className="mb-1">
               <strong>Duration:</strong> {internship.duration}
             </p>
             <div className="mt-4">
@@ -261,202 +273,202 @@ const YourJobPosts = () => {
       </div>
       {/* Internship Detail Modal */}
       <Modal
-        isOpen={isModalOpen}
-        onRequestClose={closeModal}
-        contentLabel="Edit Internship Details"
-        className="fixed font-poppins inset-0 z-[1000] flex items-center justify-center overflow-hidden"
-        overlayClassName="fixed inset-0 bg-black bg-opacity-50 z-[999]"
-      >
-        <div className="bg-white p-6 rounded-lg shadow-lg max-w-2xl w-full z-[1000] overflow-y-auto max-h-[90vh]">
-          {selectedInternship && (
-            <form onSubmit={handleUpdateJob}>
-              <h2 className="text-2xl font-semibold mb-4">Update Internship Details</h2>
-              {/* Job Title */}
-              <div className="mb-4">
-                <label className="block font-medium mb-1">Job Title</label>
-                <input
-                  type="text"
-                  value={selectedInternship.jobTitle || ""}
-                  onChange={(e) => updateField("jobTitle", e.target.value)}
-                  className="p-2 border rounded w-full"
-                />
-              </div>
+  isOpen={isModalOpen}
+  onRequestClose={closeModal}
+  contentLabel="Edit Internship Details"
+  className="fixed inset-0 z-[1000] flex items-center justify-center"
+  overlayClassName="fixed inset-0 bg-black bg-opacity-50 z-[999]"
+>
+  <div className="bg-white p-8 rounded-2xl shadow-2xl max-w-3xl w-full max-h-[90vh] overflow-y-auto font-poppins">
+    {selectedInternship && (
+      <form onSubmit={handleUpdateJob} className="space-y-6">
+        <h2 className="text-3xl font-semibold text-gray-800 border-b pb-3">Update Internship Details</h2>
 
-              {/* Company Name */}
-              <div className="mb-4">
-                <label className="block font-medium mb-1">Company Name</label>
-                <input
-                  type="text"
-                  value={selectedInternship.companyName || ""}
-                  onChange={(e) => updateField("companyName", e.target.value)}
-                  className="p-2 border rounded w-full"
-                />
-              </div>
-
-              {/* Location */}
-              <div className="mb-4">
-                <label className="block font-medium mb-1">Location</label>
-                <input
-                  type="text"
-                  value={selectedInternship.location || ""}
-                  onChange={(e) => updateField("location", e.target.value)}
-                  className="p-2 border rounded w-full"
-                />
-              </div>
-
-              <div className="mb-4">
-  <label className="block font-medium mb-1">Job Type</label>
-  <input
-    type="text"
-    value={
-      selectedInternship.internshipType === "PAID"
-        ? "Paid"
-        : selectedInternship.internshipType === "STIPEND"
-        ? "Stipend"
-        : "Free"
-    }
-    onChange={(e) => updateField("internshipType", e.target.value)}
-    className="p-2 border rounded w-full"
-    readOnly
-  />
-</div>
-
-              {/* Job Description */}
-              <div className="mb-4">
-                <label className="block font-medium mb-1">Job Description</label>
-                <textarea
-                  value={selectedInternship.jobDescription || ""}
-                  onChange={(e) => updateField("jobDescription", e.target.value)}
-                  className="p-2 border rounded w-full"
-                  rows={3}
-                />
-              </div>
-
-      {/* Start Date */}
-<div className="mb-4">
-  <label className="block font-medium mb-1">Start Date</label>
-  {selectedInternship.startDate?.match(/^\d{4}-\d{2}-\d{2}$/) ? (
-    // Show Date Input if it's an actual Date
-    <input
-      type="date"
-      value={selectedInternship.startDate || ""}
-      onChange={(e) => updateField("startDate", e.target.value)}
-      className="p-2 border rounded w-full"
-    />
-  ) : (
-    // Show Text Input if it's a Duration
-    <input
-      type="text"
-      value={selectedInternship.startDate || ""}
-      onChange={(e) => updateField("startDate", e.target.value)}
-      className="p-2 border rounded w-full"
-    />
-  )}
-</div>
-
-{/* End Date / Duration */}
-<div className="mb-4">
-  <label className="block font-medium mb-1">End Date / Duration</label>
-  {selectedInternship.endDateOrDuration?.match(/^\d{4}-\d{2}-\d{2}$/) ? (
-    // Show Date Input if it's an actual Date
-    <input
-      type="date"
-      value={selectedInternship.endDateOrDuration || ""}
-      onChange={(e) => updateField("endDateOrDuration", e.target.value)}
-      className="p-2 border rounded w-full"
-    />
-  ) : (
-    // Show Text Input if it's a Duration
-    <input
-      type="text"
-      value={selectedInternship.endDateOrDuration || ""}
-      onChange={(e) => updateField("endDateOrDuration", e.target.value)}
-      className="p-2 border rounded w-full"
-    />
-  )}
-</div>
-
-{/* Duration */}
-<div className="mb-4">
-  <label className="block font-medium mb-1">Duration</label>
-  <input
-    type="text"
-    value={selectedInternship.duration || ""}
-    onChange={(e) => updateField("duration", e.target.value)}
-    className="p-2 border rounded w-full"
-  />
-</div>
-
-               {/* Stipend/Salary */}
-              <div className="mb-4">
-                <label className="block font-medium mb-1">Stipend/Salary</label>
-                <input
-                  type="text"
-                  value= {selectedInternship.compensationDetails && selectedInternship.compensationDetails.amount ? (
-                    `${selectedInternship.compensationDetails.amount} ${selectedInternship.compensationDetails.currency} (${selectedInternship.compensationDetails.frequency})`
-                  ) : (
-                    "Stipend Amount Not Specified"
-                  )}
-                  onChange={(e) => updateField("salaryDetails", e.target.value)}
-                  className="p-2 border rounded w-full"
-                />
-              </div>
-
-              {/* Qualifications */}
-              <div className="mb-4">
-                <label className="block font-medium mb-1">Qualifications</label>
-                <textarea
-                  value={selectedInternship.qualifications || ""}
-                  onChange={(e) => updateField("qualifications", e.target.value)}
-                  className="p-2 border rounded w-full"
-                  rows={3}
-                />
-              </div>
-
-              {/* Contact Info Fields */}
-              <h3 className="text-lg font-semibold mt-6 mb-2">Contact Info</h3>
-
-              <input
-                type="text"
-                value={selectedInternship.contactInfo?.name || ""}
-                onChange={(e) => updateField("contactInfo.name", e.target.value)} // Update nested field
-                className="p-2 border rounded w-full"
-              />
-
-              <input
-                type="email"
-                value={selectedInternship.contactInfo?.email || ""}
-                onChange={(e) => updateField("contactInfo.email", e.target.value)} // Update nested field
-                className="p-2 border rounded w-full"
-              />
-
-              <input
-                type="text"
-                value={selectedInternship.contactInfo?.phone || ""}
-                onChange={(e) => updateField("contactInfo.phone", e.target.value)} // Update nested field
-                className="p-2 border rounded w-full"
-              />
-
-              {/* Action Buttons */}
-              <div className="flex justify-end space-x-4">
-                <button
-                  type="button"
-                  onClick={closeModal}
-                  className="px-4 py-2 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  className="px-4 py-2 bg-indigo-500 text-white rounded-md hover:bg-indigo-600"
-                >
-                  Save
-                </button>
-              </div>
-            </form>
-          )}
+        {/* Job Title */}
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">Job Title</label>
+          <input
+            type="text"
+            value={selectedInternship.jobTitle || ""}
+            onChange={(e) => updateField("jobTitle", e.target.value)}
+            className="w-full border rounded-lg px-4 py-2 shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+          />
         </div>
-      </Modal>
+
+        {/* Company Name */}
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">Company Name</label>
+          <input
+            type="text"
+            value={selectedInternship.companyName || ""}
+            onChange={(e) => updateField("companyName", e.target.value)}
+            className="w-full border rounded-lg px-4 py-2 shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+          />
+        </div>
+
+        {/* Location */}
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">Location</label>
+          <input
+            type="text"
+            value={selectedInternship.location || ""}
+            onChange={(e) => updateField("location", e.target.value)}
+            className="w-full border rounded-lg px-4 py-2 shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+          />
+        </div>
+
+        {/* Internship Type (readonly) */}
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">Internship Type</label>
+          <input
+            type="text"
+            readOnly
+            value={
+              selectedInternship.internshipType === "PAID"
+                ? "Paid"
+                : selectedInternship.internshipType === "STIPEND"
+                  ? "Stipend"
+                  : "Free"
+            }
+            className="w-full border rounded-lg px-4 py-2 bg-gray-100 text-gray-600"
+          />
+        </div>
+
+        {/* Mode Selector */}
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">Mode</label>
+          <select
+            value={selectedInternship.internshipMode || ""}
+            onChange={(e) => updateField("internshipMode", e.target.value)}
+            className="w-full border rounded-lg px-4 py-2 shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+          >
+            <option value="ONLINE">Online</option>
+            <option value="OFFLINE">Offline</option>
+            <option value="HYBRID">Hybrid</option>
+          </select>
+        </div>
+
+        {/* Job Description */}
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">Job Description</label>
+          <textarea
+            rows={3}
+            value={selectedInternship.jobDescription || ""}
+            onChange={(e) => updateField("jobDescription", e.target.value)}
+            className="w-full border rounded-lg px-4 py-2 shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+          />
+        </div>
+
+        {/* Start Date */}
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">Start Date</label>
+          <input
+            type={
+              selectedInternship.startDate?.match(/^\d{4}-\d{2}-\d{2}$/) ? "date" : "text"
+            }
+            value={selectedInternship.startDate || ""}
+            onChange={(e) => updateField("startDate", e.target.value)}
+            className="w-full border rounded-lg px-4 py-2 shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+          />
+        </div>
+
+        {/* End Date / Duration */}
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">End Date / Duration</label>
+          <input
+            type={
+              selectedInternship.endDateOrDuration?.match(/^\d{4}-\d{2}-\d{2}$/) ? "date" : "text"
+            }
+            value={selectedInternship.endDateOrDuration || ""}
+            onChange={(e) => updateField("endDateOrDuration", e.target.value)}
+            className="w-full border rounded-lg px-4 py-2 shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+          />
+        </div>
+
+        {/* Duration */}
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">Duration</label>
+          <input
+            type="text"
+            value={selectedInternship.duration || ""}
+            onChange={(e) => updateField("duration", e.target.value)}
+            className="w-full border rounded-lg px-4 py-2 shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+          />
+        </div>
+
+        {/* Stipend / Salary */}
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">Stipend / Salary</label>
+          <input
+            type="text"
+            value={selectedInternship.compensationDetails?.amount
+              ? `${selectedInternship.compensationDetails.amount} ${selectedInternship.compensationDetails.currency} (${selectedInternship.compensationDetails.frequency})`
+              : ""}
+            onChange={(e) => updateField("salaryDetails", e.target.value)}
+            className="w-full border rounded-lg px-4 py-2 shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+          />
+        </div>
+
+        {/* Qualifications */}
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">Qualifications</label>
+          <textarea
+            rows={3}
+            value={selectedInternship.qualifications || ""}
+            onChange={(e) => updateField("qualifications", e.target.value)}
+            className="w-full border rounded-lg px-4 py-2 shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+          />
+        </div>
+
+        {/* Contact Info */}
+        <div>
+          <h3 className="text-lg font-semibold text-gray-800 mt-6 mb-3">Contact Information</h3>
+
+          <input
+            type="text"
+            placeholder="Name"
+            value={selectedInternship.contactInfo?.name || ""}
+            onChange={(e) => updateField("contactInfo.name", e.target.value)}
+            className="w-full border rounded-lg px-4 py-2 mb-3 shadow-sm"
+          />
+
+          <input
+            type="email"
+            placeholder="Email"
+            value={selectedInternship.contactInfo?.email || ""}
+            onChange={(e) => updateField("contactInfo.email", e.target.value)}
+            className="w-full border rounded-lg px-4 py-2 mb-3 shadow-sm"
+          />
+
+          <input
+            type="text"
+            placeholder="Phone"
+            value={selectedInternship.contactInfo?.phone || ""}
+            onChange={(e) => updateField("contactInfo.phone", e.target.value)}
+            className="w-full border rounded-lg px-4 py-2 shadow-sm"
+          />
+        </div>
+
+        {/* Buttons */}
+        <div className="flex justify-end space-x-4 pt-4 border-t mt-6">
+          <button
+            type="button"
+            onClick={closeModal}
+            className="px-4 py-2 rounded-md text-sm font-medium bg-gray-100 text-gray-700 hover:bg-gray-200"
+          >
+            Cancel
+          </button>
+          <button
+            type="submit"
+            className="px-4 py-2 rounded-md text-sm font-medium bg-indigo-600 text-white hover:bg-indigo-700 transition"
+          >
+            Save
+          </button>
+        </div>
+      </form>
+    )}
+  </div>
+</Modal>
 
     </div>
   );

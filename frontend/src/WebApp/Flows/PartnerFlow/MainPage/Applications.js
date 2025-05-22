@@ -11,30 +11,47 @@ import {
   faDownload,
 } from "@fortawesome/free-solid-svg-icons";
 import Modal from "./Modal";
+import ScheduleForm from "./ScheduleForm";
 import { ApplicationsTable, ShortlistedTable } from "./Tables";
 
+
 const InternshipList = () => {
+  // --- Core data state ---
   const [internships, setInternships] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+
+
+  // --- Applications / Shortlist state ---
   const [applications, setApplications] = useState({});
   const [loadingApplications, setLoadingApplications] = useState({});
   const [shortlistedCandidates, setShortlistedCandidates] = useState({});
   const [modalData, setModalData] = useState({
     open: false,
     internshipId: null,
-    type: null,
+    type: null, // "applications" or "shortlisted"
     loading: false,
   });
+
+  // --- Offer‐letter overlay state ---
   const [selectedStudent, setSelectedStudent] = useState(null);
   const [joiningDate, setJoiningDate] = useState("");
   const [templateId, setTemplateId] = useState("");
   const [templates, setTemplates] = useState([]);
   const [sendingOffer, setSendingOffer] = useState(false);
 
-  const partnerId = localStorage.getItem("partnerId");
-  const api = axios.create({ baseURL: "http://localhost:5000/api", timeout: 10000 });
+  // --- Schedule modal state ---
+  const [scheduleFormOpen, setScheduleFormOpen] = useState(false);
+  const [selectedInternshipForSchedule, setSelectedInternshipForSchedule] = useState(null);
+  
 
+  const partnerId = localStorage.getItem("partnerId");
+  const api = axios.create({
+    baseURL: "http://localhost:5000/api",
+    timeout: 10000,
+  });
+
+  // Fetch internships on mount
   useEffect(() => {
     const fetchInternships = async () => {
       try {
@@ -44,7 +61,7 @@ const InternshipList = () => {
         setInternships(data);
         setError(null);
       } catch (err) {
-        setError(err.message || "No internships posted by partner");
+        setError(err.message || "Failed to load internships");
       } finally {
         setLoading(false);
       }
@@ -52,40 +69,59 @@ const InternshipList = () => {
     fetchInternships();
   }, [partnerId]);
 
+  // Helper: how many days/hours ago
   const calculateDaysAgo = (date) => {
     const posted = new Date(date);
     const now = new Date();
     const diff = now - posted;
     const days = Math.floor(diff / (1000 * 60 * 60 * 24));
     const hours = Math.floor(diff / (1000 * 60 * 60));
-    if (days === 0)
-      return hours === 0
-        ? "Just now"
-        : hours === 1
-        ? "1 hour ago"
-        : `${hours} hours ago`;
+    if (days === 0) {
+      if (hours === 0) return "Just now";
+      if (hours === 1) return "1 hour ago";
+      return `${hours} hours ago`;
+    }
     if (days === 1) return "Yesterday";
     return `${days}d ago`;
   };
 
+  // --- Applications handlers ---
   const fetchApplications = async (internshipId) => {
     try {
-      setLoadingApplications((prev) => ({ ...prev, [internshipId]: true }));
+      setLoadingApplications(prev => ({ ...prev, [internshipId]: true }));
+  
+      // Fetch applications (assume API returns { applications: [] } if none)
       const { data } = await api.get(`/applications/internship/${internshipId}`);
-      setApplications((prev) => ({ ...prev, [internshipId]: data.applications }));
-      setModalData({ open: true, internshipId, type: "applications", loading: false });
+  
+      // Safely set to an array (empty or not)
+      setApplications(prev => ({
+        ...prev,
+        [internshipId]: Array.isArray(data.applications) ? data.applications : []
+      }));
+  
     } catch (err) {
-      setError(err.message);
+      console.warn("Could not fetch applications:", err.message);
+      // On error, just put an empty array
+      setApplications(prev => ({ ...prev, [internshipId]: [] }));
     } finally {
-      setLoadingApplications((prev) => ({ ...prev, [internshipId]: false }));
+      // In either case, open the modal
+      setLoadingApplications(prev => ({ ...prev, [internshipId]: false }));
+      setModalData({
+        open: true,
+        internshipId,
+        type: "applications",
+        loading: false
+      });
     }
   };
-
+  
+  // --- Shortlist handlers ---
   const handleShortlist = async (id, description, skills) => {
     try {
       setModalData({ open: true, internshipId: id, type: "shortlisted", loading: true });
       const resumeUrls = (applications[id] || []).map((s) => s.resumeUrl);
-      if (!resumeUrls.length) throw new Error("No applications found to shortlist");
+      if (!resumeUrls.length) throw new Error("No applications to shortlist");
+
       const formData = new FormData();
       formData.append("job_description", description);
       formData.append("job_skills", JSON.stringify(skills));
@@ -126,6 +162,7 @@ const InternshipList = () => {
     }
   };
 
+  // Update application status (Pending/Approved/Rejected)
   const updateApplicationStatus = async (studentId, status) => {
     try {
       await api.put(`/applications/${studentId}/status`, { status });
@@ -143,6 +180,7 @@ const InternshipList = () => {
     }
   };
 
+  // --- Offer letter handlers ---
   const handleSendOffer = (student) => {
     setSelectedStudent({ ...student, internship_id: modalData.internshipId });
     setJoiningDate("");
@@ -157,9 +195,7 @@ const InternshipList = () => {
   };
 
   const handleSendOfferLetter = async () => {
-    if (!templateId || !joiningDate)
-      return alert("Template and joining date are required");
-
+    if (!templateId || !joiningDate) return alert("Template and joining date required");
     try {
       setSendingOffer(true);
       await api.post(
@@ -179,6 +215,12 @@ const InternshipList = () => {
     } finally {
       setSendingOffer(false);
     }
+  };
+
+  // --- Schedule handler ---
+  const handleSchedule = (internshipId) => {
+    setSelectedInternshipForSchedule(internshipId);
+    setScheduleFormOpen(true);
   };
 
   const closeModal = () =>
@@ -253,10 +295,12 @@ const InternshipList = () => {
         </div>
       )}
 
-      {/* Main list */}
+      {/* Header */}
       <h2 className="text-3xl font-semibold text-gray-900 mb-6">
         Internships Posted by Partner
       </h2>
+
+      {/* Internship Cards */}
       {internships.length === 0 ? (
         <p>No internships posted yet.</p>
       ) : (
@@ -311,29 +355,19 @@ const InternshipList = () => {
                   {internship.qualifications || "Not provided"}
                 </p>
               </div>
-
-              {/* Premium action buttons */}
               <div className="flex flex-wrap gap-4 mt-4">
                 {/* View Applications */}
                 <button
                   onClick={() => fetchApplications(internship._id)}
                   disabled={loadingApplications[internship._id]}
-                  className={`
-                    flex items-center gap-2
-                    px-5 py-2
-                    bg-gradient-to-r from-blue-500 to-indigo-600
-                    text-white font-semibold
-                    rounded-lg shadow-lg
-                    hover:from-blue-600 hover:to-indigo-700
-                    transform hover:scale-105
-                    transition duration-200
-                    ${loadingApplications[internship._id] ? "opacity-50 cursor-not-allowed" : ""}
-                  `}
+                  className={`flex items-center gap-2 px-5 py-2 bg-gradient-to-r from-blue-500 to-indigo-600 text-white font-semibold rounded-lg shadow-lg hover:from-blue-600 hover:to-indigo-700 transform hover:scale-105 transition duration-200 ${
+                    loadingApplications[internship._id] ? "opacity-50 cursor-not-allowed" : ""
+                  }`}
                 >
                   <FontAwesomeIcon icon={faEye} /> View Applications
                 </button>
 
-                {/* Shortlist Candidates */}
+                {/* Shortlist */}
                 <button
                   onClick={() =>
                     handleShortlist(
@@ -342,16 +376,7 @@ const InternshipList = () => {
                       internship.qualifications || []
                     )
                   }
-                  className="
-                    flex items-center gap-2
-                    px-5 py-2
-                    bg-gradient-to-r from-green-400 to-teal-500
-                    text-white font-semibold
-                    rounded-lg shadow-lg
-                    hover:from-green-500 hover:to-teal-600
-                    transform hover:scale-105
-                    transition duration-200
-                  "
+                  className="flex items-center gap-2 px-5 py-2 bg-gradient-to-r from-green-400 to-teal-500 text-white font-semibold rounded-lg shadow-lg hover:from-green-500 hover:to-teal-600 transform hover:scale-105 transition duration-200"
                 >
                   <FontAwesomeIcon icon={faStar} /> Shortlist
                 </button>
@@ -359,18 +384,17 @@ const InternshipList = () => {
                 {/* Shortlisted Resumes */}
                 <button
                   onClick={() => showShortlisted(internship._id)}
-                  className="
-                    flex items-center gap-2
-                    px-5 py-2
-                    bg-gradient-to-r from-purple-500 to-pink-500
-                    text-white font-semibold
-                    rounded-lg shadow-lg
-                    hover:from-purple-600 hover:to-pink-600
-                    transform hover:scale-105
-                    transition duration-200
-                  "
+                  className="flex items-center gap-2 px-5 py-2 bg-gradient-to-r from-purple-500 to-indigo-600 text-white font-semibold rounded-lg shadow-lg hover:from-purple-600 hover:to-indigo-700 transform hover:scale-105 transition duration-200"
                 >
-                  <FontAwesomeIcon icon={faDownload} /> Resumes
+                  <FontAwesomeIcon icon={faDownload} /> Shortlisted Resumes
+                </button>
+
+                {/* Schedule */}
+                <button
+                  onClick={() => handleSchedule(internship._id)}
+                  className="flex items-center gap-2 px-5 py-2 bg-gradient-to-r from-yellow-400 to-orange-500 text-white font-semibold rounded-lg shadow-lg hover:from-yellow-500 hover:to-orange-600 transform hover:scale-105 transition duration-200"
+                >
+                  <FontAwesomeIcon icon={faClock} /> Schedule
                 </button>
               </div>
             </div>
@@ -378,27 +402,45 @@ const InternshipList = () => {
         })
       )}
 
-      {/* Applications / Shortlisted modal */}
-      <Modal
+  {/* Applications / Shortlisted Modal */}
+  <Modal
         isOpen={modalData.open}
         onClose={closeModal}
-        title={
-          modalData.type === "applications"
-            ? "Applications"
-            : "Shortlisted Candidates"
-        }
+        title={modalData.type === "applications" ? "Applications" : "Shortlisted Candidates"}
         isLoading={modalData.loading}
       >
-        {modalData.type === "applications" && (
-          <ApplicationsTable
-            applications={applications[modalData.internshipId] || []}
-            onStatusUpdate={updateApplicationStatus}
-          />
-        )}
-        {modalData.type === "shortlisted" && (
-          <ShortlistedTable
-            candidates={shortlistedCandidates[modalData.internshipId] || []}
-            internshipId={modalData.internshipId}
+       {modalData.type === "applications" && !modalData.loading && (
+  (applications[modalData.internshipId] || []).length === 0
+    ? <p className="p-6 text-center text-gray-600">No applications yet.</p>
+    : <ApplicationsTable
+        applications={applications[modalData.internshipId]}
+        onStatusUpdate={() => {}}
+      />
+)}
+
+{modalData.type === "shortlisted" && !modalData.loading && (
+  (shortlistedCandidates[modalData.internshipId] || []).length === 0
+    ? <p className="p-6 text-center text-gray-600">No candidates shortlisted yet.</p>
+    : <ShortlistedTable
+        candidates={shortlistedCandidates[modalData.internshipId]}
+        internshipId={modalData.internshipId}
+        onSendOffer={() => {}}
+        onScheduleClick={() => handleSchedule(modalData.internshipId)}
+      />
+)}
+
+      </Modal>
+
+      {/* Schedule Form Modal */}
+      <Modal
+        isOpen={scheduleFormOpen}
+        onClose={() => setScheduleFormOpen(false)}
+        title="Create Internship Schedule"
+      >
+        {selectedInternshipForSchedule && (
+          <ScheduleForm
+            internshipId={selectedInternshipForSchedule}
+            onClose={() => setScheduleFormOpen(false)}
           />
         )}
       </Modal>

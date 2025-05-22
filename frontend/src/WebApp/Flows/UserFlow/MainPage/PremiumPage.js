@@ -65,7 +65,7 @@ function Pricing() {
       const orderData = orderResponse.data;
 
       const options = {
-        key: process.env.RAZORPAY_KEY_ID,
+        key: process.env.REACT_APP_RAZORPAY_KEY_ID,
         amount: orderData.amount,
         currency: orderData.currency,
         name: "Skillnaav",
