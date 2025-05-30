@@ -352,7 +352,9 @@ const InternshipList = () => {
                 </p>
                 <p className="mt-1">
                   <strong>Qualifications:</strong>{" "}
-                  {internship.qualifications || "Not provided"}
+                  {Array.isArray(internship.qualifications)
+                    ? internship.qualifications.join(", ")
+                    : internship.qualifications?.match(/[A-Z]?[a-z]+/g)?.join(", ") || "Not provided"}
                 </p>
               </div>
               <div className="flex flex-wrap gap-4 mt-4">

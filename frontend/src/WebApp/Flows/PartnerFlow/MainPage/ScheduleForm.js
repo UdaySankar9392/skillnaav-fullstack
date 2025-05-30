@@ -2,8 +2,9 @@
 import React, { useState, useEffect } from 'react';
 import { FiCalendar, FiClock, FiLink, FiPlus, FiCheck, FiChevronRight, FiX, FiMapPin } from 'react-icons/fi';
 import axios from 'axios';
+import * as XLSX from 'xlsx';
 
-const allWeekdays = ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'];
+const allWeekdays = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
 const internshipTypes = ['online', 'offline', 'hybrid'];
 
 const ScheduleForm = ({ internshipId, onClose }) => {
@@ -29,8 +30,8 @@ const ScheduleForm = ({ internshipId, onClose }) => {
   const [timetable, setTimetable] = useState([]);
   const [previewed, setPreviewed] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [manualEvent, setManualEvent] = useState({ 
-    date: '', 
+  const [manualEvent, setManualEvent] = useState({
+    date: '',
     description: '',
     type: 'online',
     location: {
@@ -39,20 +40,21 @@ const ScheduleForm = ({ internshipId, onClose }) => {
       mapLink: ''
     }
   });
+  const [excelData, setExcelData] = useState({});
 
   useEffect(() => {
     axios.get(`/api/interns/${internshipId}`, {
       headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
     })
-    .then(({ data }) => {
-      setForm(f => ({
-        ...f,
-        startDate: new Date(data.startDate).toISOString().split('T')[0],
-        endDate: new Date(data.endDateOrDuration).toISOString().split('T')[0],
-        defaultType: data.type || 'online'
-      }));
-    })
-    .catch(err => setError(err.message));
+      .then(({ data }) => {
+        setForm(f => ({
+          ...f,
+          startDate: new Date(data.startDate).toISOString().split('T')[0],
+          endDate: new Date(data.endDateOrDuration).toISOString().split('T')[0],
+          defaultType: data.type || 'online'
+        }));
+      })
+      .catch(err => setError(err.message));
   }, [internshipId]);
 
   useEffect(() => {
@@ -64,8 +66,8 @@ const ScheduleForm = ({ internshipId, onClose }) => {
         const data = response.data;
         setForm(f => ({
           ...f,
-          startDate: data.startDate.slice(0,10),
-          endDate: data.endDate.slice(0,10),
+          startDate: data.startDate.slice(0, 10),
+          endDate: data.endDate.slice(0, 10),
           workHours: data.workHours,
           defaultStartTime: data.timetable[0]?.startTime || '',
           defaultEndTime: data.timetable[0]?.endTime || '',
@@ -77,9 +79,9 @@ const ScheduleForm = ({ internshipId, onClose }) => {
             mapLink: ''
           }
         }));
-        
+
         setTimetable(data.timetable.map(entry => ({
-          date: entry.date.slice(0,10),
+          date: entry.date.slice(0, 10),
           day: entry.day,
           selected: true,
           startTime: entry.startTime,
@@ -154,22 +156,39 @@ const ScheduleForm = ({ internshipId, onClose }) => {
     }
 
     const days = [];
-    for (let d = new Date(startDate); d <= new Date(endDate); d.setDate(d.getDate()+1)) {
-      const name = d.toLocaleString('en-us',{ weekday:'long' });
-      if (selectedDays.includes(name)) {
+    let dayCounter = 1;
+
+    for (let d = new Date(startDate); d <= new Date(endDate); d.setDate(d.getDate() + 1)) {
+      const dayName = d.toLocaleString('en-us', { weekday: 'long' });
+
+      if (selectedDays.includes(dayName)) {
+        const key = `Day - ${dayCounter}`;
+        const excelEntry = excelData[key];
+
         days.push({
           date: d.toISOString().split('T')[0],
-          day: name,
+          day: dayName,
           selected: true,
           startTime: defaultStartTime,
           endTime: defaultEndTime,
-          eventLink: defaultEventLink,
-          type: defaultType,
-          location: defaultLocation,
+          eventLink: excelEntry?.link || defaultEventLink,
+          type: excelEntry?.type || defaultType,
+          location:
+            (excelEntry?.type === "offline" || excelEntry?.type === "hybrid")
+              ? {
+                name: excelEntry?.location || '',
+                address: excelEntry?.location || '',
+                mapLink: ''
+              }
+              : defaultLocation,
+          sectionSummary: excelEntry?.summary || "",
           events: []
         });
+
+        dayCounter++;
       }
     }
+
     setTimetable(days);
     setPreviewed(true);
     setError(null);
@@ -204,17 +223,17 @@ const ScheduleForm = ({ internshipId, onClose }) => {
     }
 
     setTimetable(tt => tt.map(d =>
-      d.date === date ? { 
-        ...d, 
-        events: [...d.events, { 
-          description, 
+      d.date === date ? {
+        ...d,
+        events: [...d.events, {
+          description,
           type,
-          location: type === 'online' ? null : location 
-        }] 
+          location: type === 'online' ? null : location
+        }]
       } : d
     ));
-    setManualEvent({ 
-      date: '', 
+    setManualEvent({
+      date: '',
       description: '',
       type: 'online',
       location: {
@@ -235,19 +254,19 @@ const ScheduleForm = ({ internshipId, onClose }) => {
       return setError('Location address is required for offline/hybrid days');
     }
 
-    const name = new Date(newDate).toLocaleString('en-us',{ weekday:'long' });
+    const name = new Date(newDate).toLocaleString('en-us', { weekday: 'long' });
     setTimetable(tt => [
       ...tt,
-      { 
-        date: newDate, 
-        day: name, 
+      {
+        date: newDate,
+        day: name,
         selected: true,
-        startTime: defaultStartTime, 
+        startTime: defaultStartTime,
         endTime: defaultEndTime,
-        eventLink: defaultEventLink, 
+        eventLink: defaultEventLink,
         type: defaultType,
         location: defaultType === 'online' ? null : defaultLocation,
-        events: [] 
+        events: []
       }
     ]);
     setForm(f => ({ ...f, newDate: '' }));
@@ -259,22 +278,22 @@ const ScheduleForm = ({ internshipId, onClose }) => {
     setLoading(true);
     try {
       const payload = {
-  internshipId,
-  partnerId: localStorage.getItem('partnerId'),
-  startDate: form.startDate,
-  endDate: form.endDate,
-  workHours: form.workHours,
-  defaultStartTime: form.defaultStartTime,
-  defaultEndTime: form.defaultEndTime,
-  defaultEventLink: form.defaultEventLink,
-  defaultLocation: form.defaultType === 'online' ? null : form.defaultLocation,
-  defaultType: form.defaultType,
-  selectedDays: form.selectedDays,
-  timetable: timetable.filter(d => d.selected).map(day => ({
-    ...day,
-    location: day.type === 'online' ? null : day.location
-  }))
-};
+        internshipId,
+        partnerId: localStorage.getItem('partnerId'),
+        startDate: form.startDate,
+        endDate: form.endDate,
+        workHours: form.workHours,
+        defaultStartTime: form.defaultStartTime,
+        defaultEndTime: form.defaultEndTime,
+        defaultEventLink: form.defaultEventLink,
+        defaultLocation: form.defaultType === 'online' ? null : form.defaultLocation,
+        defaultType: form.defaultType,
+        selectedDays: form.selectedDays,
+        timetable: timetable.filter(d => d.selected).map(day => ({
+          ...day,
+          location: day.type === 'online' ? null : day.location
+        }))
+      };
 
       await axios.post('/api/schedule/create', payload, {
         headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
@@ -290,7 +309,7 @@ const ScheduleForm = ({ internshipId, onClose }) => {
   const renderLocationFields = (prefix, location, onChange) => (
     <div className="mt-4 space-y-3">
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">Location Name</label>
+        <label className="text-md font-semibold text-gray-700 mb-3 flex items-center">Location Name</label>
         <div className="relative">
           <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400">
             <FiMapPin size={14} />
@@ -306,7 +325,7 @@ const ScheduleForm = ({ internshipId, onClose }) => {
         </div>
       </div>
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">Address</label>
+        <label className="text-md font-semibold text-gray-700 mb-3 flex items-center">Address</label>
         <textarea
           name={`${prefix}.address`}
           value={location.address}
@@ -318,7 +337,7 @@ const ScheduleForm = ({ internshipId, onClose }) => {
         />
       </div>
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">Map Link</label>
+        <label className="text-md font-semibold text-gray-700 mb-3 flex items-center">Map Link</label>
         <div className="relative">
           <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400">
             <FiLink size={14} />
@@ -426,7 +445,7 @@ const ScheduleForm = ({ internshipId, onClose }) => {
               </div>
 
               {/* Internship Type */}
-              <div className="bg-gray-50 p-5 rounded-xl border border-gray-200">
+              <div className="bg-gray-50 p-5 rounded-xl border border-gray-200 space-y-6">
                 <h3 className="text-lg font-semibold text-gray-800 mb-4">Internship Type</h3>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                   {internshipTypes.map(type => (
@@ -438,7 +457,7 @@ const ScheduleForm = ({ internshipId, onClose }) => {
                         value={type}
                         checked={form.defaultType === type}
                         onChange={handleFormChange}
-                        className="h-5 w-5 text-indigo-600 focus:ring-indigo-500"
+                        className="h-5 w-5 text-indigo-600 focus:ring-indigo-500 -mt-0"
                       />
                       <label
                         htmlFor={`type-${type}`}
@@ -449,76 +468,88 @@ const ScheduleForm = ({ internshipId, onClose }) => {
                     </div>
                   ))}
                 </div>
-                {(form.defaultType === 'offline' || form.defaultType === 'hybrid') && 
-                  renderLocationFields('location', form.defaultLocation, handleFormChange)}
+
+                {/* Online or Hybrid: Default Times & Link */}
+                {(form.defaultType === 'online' || form.defaultType === 'hybrid') && (
+                  <div className="bg-white mt-6 p-5 rounded-xl border border-gray-300 space-y-6">
+                    {/* Default Times */}
+                    <div>
+                      <h4 className="text-md font-semibold text-gray-700 mb-3 flex items-center">
+                        <FiClock className="mr-2 text-indigo-600" />
+                        Default Times
+                      </h4>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-1">Start Time</label>
+                          <div className="relative">
+                            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400">
+                              <FiClock />
+                            </div>
+                            <input
+                              type="time"
+                              name="defaultStartTime"
+                              value={form.defaultStartTime}
+                              onChange={handleFormChange}
+                              className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg bg-white shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                              required
+                            />
+                          </div>
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-1">End Time</label>
+                          <div className="relative">
+                            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400">
+                              <FiClock />
+                            </div>
+                            <input
+                              type="time"
+                              name="defaultEndTime"
+                              value={form.defaultEndTime}
+                              onChange={handleFormChange}
+                              className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg bg-white shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                              required
+                            />
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Default Meeting Link */}
+                    <div>
+                      <h4 className="text-md font-semibold text-gray-700 mb-3 flex items-center">
+                        <FiLink className="mr-2 text-indigo-600" />
+                        Default Meeting Link
+                      </h4>
+                      <div className="relative">
+                        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400">
+                          <FiLink />
+                        </div>
+                        <input
+                          type="url"
+                          name="defaultEventLink"
+                          value={form.defaultEventLink}
+                          onChange={handleFormChange}
+                          placeholder="https://meet.example.com/your-link"
+                          className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg bg-white shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                        />
+                      </div>
+                    </div>
+
+                    {/* Location Fields for hybrid only */}
+                    {form.defaultType === 'hybrid' &&
+                      renderLocationFields('location', form.defaultLocation, handleFormChange)}
+                  </div>
+                )}
+
+                {/* Location Fields for offline only */}
+                {form.defaultType === 'offline' && (
+                  <div className="bg-white mt-6 p-5 rounded-xl border border-gray-300 space-y-6">
+                    {renderLocationFields('location', form.defaultLocation, handleFormChange)}
+                  </div>
+                )}
               </div>
 
-              {/* Default Times Section */}
-              <div className="bg-gray-50 p-5 rounded-xl border border-gray-200">
-                <h3 className="text-lg font-semibold text-gray-800 mb-4 flex items-center">
-                  <FiClock className="mr-2 text-indigo-600" />
-                  Default Times
-                </h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Start Time</label>
-                    <div className="relative">
-                      <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400">
-                        <FiClock />
-                      </div>
-                      <input
-                        type="time"
-                        name="defaultStartTime"
-                        value={form.defaultStartTime}
-                        onChange={handleFormChange}
-                        className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg bg-white shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
-                        required
-                      />
-                    </div>
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">End Time</label>
-                    <div className="relative">
-                      <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400">
-                        <FiClock />
-                      </div>
-                      <input
-                        type="time"
-                        name="defaultEndTime"
-                        value={form.defaultEndTime}
-                        onChange={handleFormChange}
-                        className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg bg-white shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
-                        required
-                      />
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Event Link Section (only for online/hybrid) */}
-              {(form.defaultType === 'online' || form.defaultType === 'hybrid') && (
-                <div className="bg-gray-50 p-5 rounded-xl border border-gray-200">
-                  <h3 className="text-lg font-semibold text-gray-800 mb-4 flex items-center">
-                    <FiLink className="mr-2 text-indigo-600" />
-                    Default Meeting Link
-                  </h3>
-                  <div className="relative">
-                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400">
-                      <FiLink />
-                    </div>
-                    <input
-                      type="url"
-                      name="defaultEventLink"
-                      value={form.defaultEventLink}
-                      onChange={handleFormChange}
-                      placeholder="https://meet.example.com/your-link"
-                      className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg bg-white shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
-                    />
-                  </div>
-                </div>
-              )}
-
-              {/* Weekday Selection */}
+              {/* Weekday Selection + Excel Upload */}
               <div className="bg-gray-50 p-5 rounded-xl border border-gray-200">
                 <h3 className="text-lg font-semibold text-gray-800 mb-4">Working Days</h3>
                 <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-7 gap-3">
@@ -529,7 +560,7 @@ const ScheduleForm = ({ internshipId, onClose }) => {
                         id={`day-${day}`}
                         checked={form.selectedDays.includes(day)}
                         onChange={() => toggleWeekday(day)}
-                        className="h-5 w-5 text-indigo-600 rounded border-gray-300 focus:ring-indigo-500"
+                        className="h-5 w-5 text-indigo-600 rounded border-gray-300 focus:ring-indigo-500 -mt-1"
                       />
                       <label
                         htmlFor={`day-${day}`}
@@ -539,6 +570,45 @@ const ScheduleForm = ({ internshipId, onClose }) => {
                       </label>
                     </div>
                   ))}
+                </div>
+
+                {/* Upload Excel file below the checkboxes */}
+                <div className="mt-6">
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Upload Working Days (.xlsx):
+                  </label>
+                  <input
+                    type="file"
+                    accept=".xlsx"
+                    onChange={(e) => {
+                      const file = e.target.files[0];
+                      if (file) {
+                        const reader = new FileReader();
+                        reader.onload = (evt) => {
+                          const data = new Uint8Array(evt.target.result);
+                          const workbook = XLSX.read(data, { type: 'array' });
+                          const sheet = workbook.Sheets[workbook.SheetNames[0]];
+                          const rows = XLSX.utils.sheet_to_json(sheet);
+
+                          const formatted = {};
+                          rows.forEach((row, index) => {
+                            if (row["Date"]) {
+                              formatted[`Day - ${index + 1}`] = {
+                                summary: row["section summary"] || "",
+                                type: (row["Section type"] || "").toLowerCase(),
+                                location: row["Section Adress"] || "",
+                                link: row["Link"] || ""
+                              };
+                            }
+                          });
+
+                          setExcelData(formatted);
+                        };
+                        reader.readAsArrayBuffer(file);
+                      }
+                    }}
+                    className="block w-full text-sm text-gray-700 bg-white border border-gray-300 rounded-lg p-2 shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
+                  />
                 </div>
               </div>
 
@@ -580,11 +650,10 @@ const ScheduleForm = ({ internshipId, onClose }) => {
                             <p className="text-sm text-gray-500">
                               {new Date(day.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
                             </p>
-                            <span className={`inline-block mt-1 px-2 py-0.5 text-xs rounded-full ${
-                              day.type === 'online' ? 'bg-blue-100 text-blue-800' :
+                            <span className={`inline-block mt-1 px-2 py-0.5 text-xs rounded-full ${day.type === 'online' ? 'bg-blue-100 text-blue-800' :
                               day.type === 'offline' ? 'bg-green-100 text-green-800' :
-                              'bg-purple-100 text-purple-800'
-                            }`}>
+                                'bg-purple-100 text-purple-800'
+                              }`}>
                               {day.type}
                             </span>
                           </div>
@@ -636,6 +705,43 @@ const ScheduleForm = ({ internshipId, onClose }) => {
                             </div>
                           )}
 
+                          {/* Section Summary Input */}
+                          <div>
+                            <label className="text-md font-semibold text-gray-700 mb-3 flex items-center">Section Summary</label>
+                            <textarea
+                              value={day.sectionSummary || ""}
+                              onChange={e => changeField(idx, 'sectionSummary', e.target.value)}
+                              placeholder="Write a brief section summary here..."
+                              rows={2}
+                              className="block w-full px-3 py-2 text-sm border border-gray-300 rounded-lg bg-white focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500"
+                            />
+                          </div>
+
+                          {/* Instructor Input */}
+                          <div>
+                            <label className="text-md font-semibold text-gray-700 mb-3 flex items-center">Instructor Name</label>
+                            <textarea
+                              value={day.instructor || ""}
+                              onChange={e => changeField(idx, 'instructor', e.target.value)}
+                              placeholder="Enter instructor name(s)..."
+                              rows={1}
+                              className="block w-full px-3 py-2 text-sm border border-gray-300 rounded-lg bg-white focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500"
+                            />
+                          </div>
+
+                          {/* Assignment File Upload */}
+                          <div className="mt-4">
+                            <label className="text-md font-semibold text-gray-700 mb-3 flex items-center">Assignment</label>
+                            <input
+                              type="file"
+                              onChange={(e) => {
+                                const file = e.target.files[0];
+                                changeField(idx, 'assignment', file); // store file in state
+                              }}
+                              className="block w-full text-sm text-gray-700 bg-white border border-gray-300 rounded-lg p-2 shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
+                            />
+                          </div>
+
                           {(day.type === 'offline' || day.type === 'hybrid') && (
                             renderLocationFields(`location-${idx}`, day.location, (e) => {
                               const field = e.target.name.split('.')[1];
@@ -654,11 +760,10 @@ const ScheduleForm = ({ internshipId, onClose }) => {
                               </span>
                               <div>
                                 <span className="text-sm text-gray-700">{ev.description}</span>
-                                <span className={`ml-2 inline-block px-1.5 py-0.5 text-xs rounded-full ${
-                                  ev.type === 'online' ? 'bg-blue-100 text-blue-800' :
+                                <span className={`ml-2 inline-block px-1.5 py-0.5 text-xs rounded-full ${ev.type === 'online' ? 'bg-blue-100 text-blue-800' :
                                   ev.type === 'offline' ? 'bg-green-100 text-green-800' :
-                                  'bg-purple-100 text-purple-800'
-                                }`}>
+                                    'bg-purple-100 text-purple-800'
+                                  }`}>
                                   {ev.type}
                                 </span>
                               </div>
@@ -715,7 +820,7 @@ const ScheduleForm = ({ internshipId, onClose }) => {
                         ))}
                       </select>
                     </div>
-                    {(manualEvent.type === 'offline' || manualEvent.type === 'hybrid') && 
+                    {(manualEvent.type === 'offline' || manualEvent.type === 'hybrid') &&
                       renderLocationFields('meLocation', manualEvent.location, handleMEChange)}
                     <button
                       type="button"
