@@ -9,7 +9,7 @@ const updateInternshipSchedule = async (req, res) => {
       startDate,
       endDate,
       workHours,
-      timetable, // array of schedule entries
+      timetable = [],
       defaultStartTime,
       defaultEndTime,
       defaultEventLink,
@@ -18,18 +18,19 @@ const updateInternshipSchedule = async (req, res) => {
       selectedDays
     } = req.body;
 
-    // Basic validation
     if (!internshipId || !partnerId || !startDate || !endDate || !workHours) {
       return res.status(400).json({ error: 'Missing required fields' });
     }
 
-    // Sanitize timetable entries
-    const sanitizedTimetable = (timetable || []).map(entry => ({
+    const sanitizedTimetable = timetable.map(entry => ({
       date: new Date(entry.date),
       day: entry.day,
       startTime: entry.startTime,
       endTime: entry.endTime,
       eventLink: entry.eventLink || '',
+      sectionSummary: entry.sectionSummary || '',
+      instructor: entry.instructor || '',
+      assignment: entry.assignment || null, // if file upload is added, convert to URL
       type: entry.type || 'online',
       location: (entry.type === 'online') ? null : {
         name: entry.location?.name || '',
@@ -53,25 +54,25 @@ const updateInternshipSchedule = async (req, res) => {
       startDate: new Date(startDate),
       endDate: new Date(endDate),
       workHours,
-      timetable: sanitizedTimetable,
       defaultStartTime,
       defaultEndTime,
       defaultEventLink,
-      defaultLocation: {
+      defaultLocation: (defaultType === 'online') ? null : {
         name: defaultLocation?.name || '',
         address: defaultLocation?.address || '',
         mapLink: defaultLocation?.mapLink || ''
       },
       defaultType,
-      selectedDays
+      selectedDays,
+      timetable: sanitizedTimetable
     };
 
     let schedule = await InternshipSchedule.findOne({ internshipId, partnerId });
 
     if (schedule) {
-      schedule.set(scheduleData); // update existing schedule
+      schedule.set(scheduleData);
     } else {
-      schedule = new InternshipSchedule(scheduleData); // create new
+      schedule = new InternshipSchedule(scheduleData);
     }
 
     await schedule.save();

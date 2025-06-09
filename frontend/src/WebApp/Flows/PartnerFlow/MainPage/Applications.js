@@ -187,7 +187,7 @@ const InternshipList = () => {
     setTemplateId("");
     axios
       .get(
-        `http://localhost:5000/api/offers/templates?partnerId=${partnerId}`,
+        `/api/offers/templates?partnerId=${partnerId}`,
         { headers: { Authorization: `Bearer ${localStorage.getItem("token")}` } }
       )
       .then((res) => setTemplates(res.data))

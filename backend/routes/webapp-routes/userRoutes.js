@@ -43,7 +43,7 @@ router.get("/premium-status", authenticate, getPremiumStatus);
 
 // Admin (you might want to gate these behind an admin check later)
 router.get("/users",  getAllUsers);
-router.patch("/approve/:userId", authenticate, approveUser);
-router.patch("/reject/:userId", authenticate, rejectUser);
+router.patch("/approve/:userId",  approveUser);
+router.patch("/reject/:userId", rejectUser);
 
 module.exports = router;

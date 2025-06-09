@@ -19,15 +19,8 @@ router.post("/upgrade-to-premium", upgradeToPremium);
 router.get("/count/:studentId", getApplicationCount);
 
 // Route to apply for an internship
-router.post("/apply", resumeUpload.single("resume"), (req, res, next) => {
-  if (!req.file) {
-    return res.status(400).json({
-      message: "No file uploaded, please upload a resume.",
-    });
-  }
-  // Proceed with the controller logic if file is uploaded
-  applyForInternship(req, res);
-});
+router.post("/apply", resumeUpload.single("resume"), applyForInternship);
+
 
 // Route to get all applications for a specific internship
 router.get("/internship/:internshipId", getApplicationsForInternship);

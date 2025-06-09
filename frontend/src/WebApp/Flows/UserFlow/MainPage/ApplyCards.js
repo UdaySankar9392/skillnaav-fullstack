@@ -64,58 +64,92 @@ const ApplyCards = ({ job, onBack }) => {
     }
   };
 
-  const handleApply = async () => {
-    if (isApplied) return;
+ const handleApply = async () => {
+  if (isApplied) return;
 
-    if (!resume) {
-      setShowResumePopup(true);
+  if (!resume) {
+    setShowResumePopup(true);
+    return;
+  }
+
+  const userInfo = JSON.parse(localStorage.getItem("userInfo"));
+  const studentId = userInfo ? userInfo._id : null;
+  const token = userInfo ? userInfo.token : null;
+
+  if (!studentId || !token) {
+    console.error("User info or token missing.");
+    return;
+  }
+
+  try {
+    const { data: countData } = await axios.get(`/api/applications/count/${studentId}`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    if (!isPremium && countData.count >= MAX_FREE_APPLICATIONS) {
+      setShowLimitPopup(true);
       return;
     }
+  } catch (error) {
+    console.error("Error fetching application count before applying:", error);
+    return;
+  }
 
-    const userInfo = JSON.parse(localStorage.getItem("userInfo"));
-    const studentId = userInfo ? userInfo._id : null;
-    if (!studentId) return;
+  setIsUploading(true);
 
-    try {
-      const { data: countData } = await axios.get(`/api/applications/count/${studentId}`);
-      if (!isPremium && countData.count >= MAX_FREE_APPLICATIONS) {
-        setShowLimitPopup(true);
-        return;
-      }
-    } catch (error) {
-      console.error("Error fetching application count before applying:", error);
-      return;
-    }
+  try {
+    const formData = new FormData();
+    formData.append("studentId", studentId);
+    formData.append("internshipId", job._id);
+    formData.append("resume", resume);
 
-    setIsUploading(true);
+    console.log("Submitting application with formData:", {
+      studentId,
+      internshipId: job._id,
+      resume,
+    });
 
-    try {
-      const formData = new FormData();
-      formData.append("studentId", studentId);
-      formData.append("internshipId", job._id);
-      formData.append("resume", resume);
+    const apiResponse = await axios.post("/api/applications/apply", formData, {
+      headers: {
+        "Content-Type": "multipart/form-data",
+        Authorization: `Bearer ${token}`, // ✅ Ensure backend receives token
+      },
+    });
 
-      const apiResponse = await axios.post("/api/applications/apply", formData, {
-        headers: { "Content-Type": "multipart/form-data" },
+    if (apiResponse.status === 201) {
+      setIsApplied(true);
+      const { data: updatedCount } = await axios.get(`/api/applications/count/${studentId}`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
       });
-
-      if (apiResponse.status === 201) {
-        setIsApplied(true);
-
-        const { data: updatedCount } = await axios.get(`/api/applications/count/${studentId}`);
-        setApplicationCount(updatedCount.count);
-        console.log("Updated application count:", updatedCount.count);
-      }
-    } catch (error) {
-      console.error("Error applying for the job:", error);
-
-      if (error.response && error.response.status === 403) {
-        setShowLimitPopup(true);
-      }
-    } finally {
-      setIsUploading(false);
+      setApplicationCount(updatedCount.count);
+      console.log("Updated application count:", updatedCount.count);
     }
-  };
+  } catch (error) {
+    console.error("Error applying for the job:", error);
+
+    if (error.response) {
+      const { status, data } = error.response;
+      console.error(`Server responded with ${status}: ${data.message}`);
+
+      if (status === 403) {
+        setShowLimitPopup(true);
+      } else if (status === 400 && data.message?.includes("already applied")) {
+        setIsApplied(true);
+      } else {
+        alert(data.message || "An unexpected error occurred while applying.");
+      }
+    } else {
+      alert("Failed to connect to server. Please try again.");
+    }
+  } finally {
+    setIsUploading(false);
+  }
+};
+
 
   const toggleSaveJob = () => {
     if (savedJobs.some((savedJob) => savedJob.jobTitle === job.jobTitle)) {
