@@ -3,7 +3,7 @@ name: Deploy to Server
 on:
   push:
     branches:
-      -udaysai14-03-25  # Adjust the branch as necessary
+      - Asrith-09-06-25 # Adjust the branch as necessary
 
 jobs:
   deploy:
@@ -22,5 +22,5 @@ jobs:
         run: |
           ssh -o StrictHostKeyChecking=no ubuntu@www.skillnaav.com << 'EOF'
             cd /home/ubuntu/skillnaav-fullstack
-            ./deploy.sh udaysai14-03-25  # Pass the branch name directly
+            ./deploy.sh Asrith-09-06-25  # Pass the branch name directly
           EOF
