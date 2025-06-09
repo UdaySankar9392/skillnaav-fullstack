@@ -21,6 +21,6 @@ jobs:
       - name: Run deployment script
         run: |
           ssh -o StrictHostKeyChecking=no ubuntu@www.skillnaav.com << 'EOF'
-            cd /home/ubuntu/skillnaav-fullstack
+            cd /home/ubuntu/
             ./deploy.sh Asrith-09-06-25  # Pass the branch name directly
           EOF
