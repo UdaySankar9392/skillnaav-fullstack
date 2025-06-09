@@ -293,7 +293,7 @@ Type: ${session.type}
                             </span>
                           </p>
                         ) : (
-                          <span className="text-gray-400 text-xs">Location TBD</span>
+                          <span className="text-gray-400 text-xs">Location TBA</span>
                         )
                       ) : (
                         // Hybrid
@@ -321,7 +321,7 @@ Type: ${session.type}
                             </p>
                           )}
                           {!session.eventLink && !session.location?.address && (
-                            <span className="text-gray-400 text-xs">TBD</span>
+                            <span className="text-gray-400 text-xs">TBA</span>
                           )}
                         </>
                       )}
