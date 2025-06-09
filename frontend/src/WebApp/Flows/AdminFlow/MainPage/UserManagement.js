@@ -4,39 +4,31 @@ import { AiOutlineClose, AiOutlineSearch, AiOutlineDownload } from "react-icons/
 import jsPDF from "jspdf";
 
 const UserManagement = () => {
-  // ——————————————————————————————————————
-  // 1) Grab token and bail out if missing/malformed
-const raw = localStorage.getItem("adminToken"); // or whatever key your login used
-
-  if (!raw || raw.split(".").length !== 3) {
-    return (
-      <div className="text-center text-red-500 p-6">
-        Unauthorized: no valid session found. Please{" "}
-        <a href="/login" className="underline">
-          log in
-        </a>
-        .
-      </div>
-    );
-  }
-  // 2) Configure axios default header
-  axios.defaults.headers.common["Authorization"] = `Bearer ${raw}`;
-  // ——————————————————————————————————————
-
-  // State
-  const [users, setUsers]               = useState([]);
-  const [loading, setLoading]           = useState(true);
-  const [error, setError]               = useState(null);
+  // ————————————————————————
+  // HOOKS: always define at top
+  // ————————————————————————
+  const [users, setUsers] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [selectedUser, setSelectedUser] = useState(null);
-  const [isModalOpen, setIsModalOpen]   = useState(false);
-  const [confirmAction, setConfirmAction]     = useState(null);
-  const [confirmLoading, setConfirmLoading]   = useState(false);
-  const [searchQuery, setSearchQuery]         = useState("");
-  const [currentPage, setCurrentPage]         = useState(1);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [confirmAction, setConfirmAction] = useState(null);
+  const [confirmLoading, setConfirmLoading] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
   const usersPerPage = 10;
 
-  // Fetch all users
+  // ————————————————————————
+  // Token setup & validity check
+  // ————————————————————————
+  const raw = localStorage.getItem("adminToken");
+  const isValidToken = raw && raw.split(".").length === 3;
+
   useEffect(() => {
+    if (!isValidToken) return;
+
+    axios.defaults.headers.common["Authorization"] = `Bearer ${raw}`;
+    
     const fetchUsers = async () => {
       try {
         const { data } = await axios.get("/api/users/users");
@@ -47,13 +39,13 @@ const raw = localStorage.getItem("adminToken"); // or whatever key your login us
         setLoading(false);
       }
     };
+
     fetchUsers();
-  }, []);
+  }, [isValidToken, raw]);
 
   const handleApprove = (userId) => setConfirmAction({ type: "approve", userId });
-  const handleReject  = (userId) => setConfirmAction({ type: "reject",  userId });
+  const handleReject = (userId) => setConfirmAction({ type: "reject", userId });
 
-  // Approve/Reject handler
   const confirmActionHandler = async () => {
     const { type, userId } = confirmAction;
     setConfirmLoading(true);
@@ -82,9 +74,11 @@ const raw = localStorage.getItem("adminToken"); // or whatever key your login us
     setSelectedUser(user);
     setIsModalOpen(true);
   };
-  const closeModal = () => setIsModalOpen(false) || setSelectedUser(null);
+  const closeModal = () => {
+    setIsModalOpen(false);
+    setSelectedUser(null);
+  };
 
-  // Download PDF of selected user
   const downloadPDF = () => {
     if (!selectedUser) return;
     const doc = new jsPDF();
@@ -94,29 +88,37 @@ const raw = localStorage.getItem("adminToken"); // or whatever key your login us
     doc.text(`Email: ${selectedUser.email || "N/A"}`, 10, 30);
 
     const fields = [
-      ["University Name",  selectedUser.universityName],
-      ["Date of Birth",     selectedUser.dob],
+      ["University Name", selectedUser.universityName],
+      ["Date of Birth", selectedUser.dob],
       ["Educational Level", selectedUser.educationLevel],
-      ["Field of Study",    selectedUser.fieldOfStudy],
-      ["Desired Field",     selectedUser.desiredField],
+      ["Field of Study", selectedUser.fieldOfStudy],
+      ["Desired Field", selectedUser.desiredField],
     ];
     fields.forEach(([label, val], i) =>
-      doc.text(`${label}: ${val || "N/A"}`, 10, 40 + i*10)
+      doc.text(`${label}: ${val || "N/A"}`, 10, 40 + i * 10)
     );
     doc.save("UserProfileDetails.pdf");
   };
 
-  // Pagination & Search
-  const idxLast  = currentPage * usersPerPage;
+  const idxLast = currentPage * usersPerPage;
   const idxFirst = idxLast - usersPerPage;
   const filtered = users.filter((u) =>
     u.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
     u.email.toLowerCase().includes(searchQuery.toLowerCase())
   );
-  const current  = filtered.slice(idxFirst, idxLast);
-  const total    = Math.ceil(filtered.length / usersPerPage);
-  const next     = () => setCurrentPage((p) => Math.min(p+1, total));
-  const prev     = () => setCurrentPage((p) => Math.max(p-1, 1));
+  const current = filtered.slice(idxFirst, idxLast);
+  const total = Math.ceil(filtered.length / usersPerPage);
+  const next = () => setCurrentPage((p) => Math.min(p + 1, total));
+  const prev = () => setCurrentPage((p) => Math.max(p - 1, 1));
+
+  if (!isValidToken) {
+    return (
+      <div className="text-center text-red-500 p-6">
+        Unauthorized: no valid session found. Please{" "}
+        <a href="/login" className="underline">log in</a>.
+      </div>
+    );
+  }
 
   if (loading) {
     return (
@@ -125,6 +127,7 @@ const raw = localStorage.getItem("adminToken"); // or whatever key your login us
       </div>
     );
   }
+
   if (error) {
     return <div className="text-center text-red-500">Error: {error}</div>;
   }
@@ -144,11 +147,11 @@ const raw = localStorage.getItem("adminToken"); // or whatever key your login us
           onChange={e => setSearchQuery(e.target.value)}
           className="px-12 py-2 border rounded-lg w-full focus:outline-none focus:ring-2 focus:ring-blue-500"
         />
-        <AiOutlineSearch size={20} className="absolute left-4 top-1/2 transform -translate-y-0 text-gray-600" />
+        <AiOutlineSearch size={20} className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-600" />
         {searchQuery && (
           <AiOutlineClose
             size={20}
-            className="absolute right-4 top-1/2 transform -translate-y-0 text-gray-600 cursor-pointer"
+            className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-600 cursor-pointer"
             onClick={() => setSearchQuery("")}
           />
         )}
