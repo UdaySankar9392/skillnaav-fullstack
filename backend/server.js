@@ -36,13 +36,14 @@ const skillnaavRoute = require("./routes/skillnaavRoute");
 const partnerRoutes = require("./routes/webapp-routes/partnerRoutes");
 const adminRoutes = require("./routes/webapp-routes/adminRoutes");
 const chatRoutes = require("./routes/webapp-routes/ChatRoutes");
-const googleUserRoutes = require("./routes/webapp-routes/GoogleUserRoutes");
+// const googleUserRoutes = require("./routes/webapp-routes/GoogleUserRoutes");
 const applicationRoutes = require("./routes/webapp-routes/applicationRoutes");
 const savedJobRoutes = require("./routes/webapp-routes/SavedJobRoutes");
 const personalityRoutes = require("./routes/webapp-routes/PersonalityRoutes");
 const paymentRoutes = require("./routes/webapp-routes/paymentRoutes");
 const dashboardRoutes = require("./routes/webapp-routes/dashboardRoutes");
 const NotificationRoutes = require("./routes/webapp-routes/NotificatioRoutes");
+const googleRoutes = require("./routes/webapp-routes/googleRoutes");
 
 // NEW: Import Offer Routes
 const offerLetterRoutes = require("./routes/webapp-routes/offerLetterRoutes");
@@ -56,7 +57,7 @@ app.use("/api/contact", skillnaavRoute);
 app.use("/api/partners", partnerRoutes);
 app.use("/api/admin", adminRoutes);
 app.use("/api/chats", chatRoutes);
-app.use("/api/google-users", googleUserRoutes);
+// app.use("/api/google-users", googleUserRoutes);
 app.use("/api/applications", applicationRoutes);
 app.use("/api/savedJobs", savedJobRoutes);
 app.use("/api/personality", personalityRoutes);
@@ -66,6 +67,7 @@ app.use(
   express.raw({ type: "application/json" })
 );
 app.use("/api/dashboard", dashboardRoutes);
+app.use("/api/google", googleRoutes);
 
 // NEW: Add Offer Routes
 app.use('/api/offer-letters', offerLetterRoutes);

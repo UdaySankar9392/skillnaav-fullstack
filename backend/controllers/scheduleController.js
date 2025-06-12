@@ -1,4 +1,12 @@
 const InternshipSchedule = require('../models/webapp-models/InternshipScheduleModel');
+const { addScheduleToGoogleCalendar } = require('../controllers/GoogleController');
+const Student = require('../models/webapp-models/userModel'); // <-- replace with your actual student model
+
+// Utility function to fetch student who accepted
+const getStudentByInternshipId = async (internshipId) => {
+  // Adjust query based on your schema (assumption: status = 'accepted')
+  return await Student.findOne({ internshipId, status: 'accepted' });
+};
 
 // Create or update a schedule
 const updateInternshipSchedule = async (req, res) => {
@@ -22,6 +30,7 @@ const updateInternshipSchedule = async (req, res) => {
       return res.status(400).json({ error: 'Missing required fields' });
     }
 
+    // Sanitize timetable for saving
     const sanitizedTimetable = timetable.map(entry => ({
       date: new Date(entry.date),
       day: entry.day,
@@ -30,7 +39,7 @@ const updateInternshipSchedule = async (req, res) => {
       eventLink: entry.eventLink || '',
       sectionSummary: entry.sectionSummary || '',
       instructor: entry.instructor || '',
-      assignment: entry.assignment || null, // if file upload is added, convert to URL
+      assignment: entry.assignment || null,
       type: entry.type || 'online',
       location: (entry.type === 'online') ? null : {
         name: entry.location?.name || '',
@@ -76,6 +85,16 @@ const updateInternshipSchedule = async (req, res) => {
     }
 
     await schedule.save();
+
+    // Step: Send to Google Calendar
+    const student = await getStudentByInternshipId(internshipId);
+    if (student?.email) {
+      await addScheduleToGoogleCalendar({
+        studentEmail: student.email,
+        timetable: sanitizedTimetable, // IMPORTANT: pass sanitized data
+        internshipTitle: "Internship Schedule"
+      });
+    }
 
     return res.status(200).json({
       message: 'Schedule saved successfully',

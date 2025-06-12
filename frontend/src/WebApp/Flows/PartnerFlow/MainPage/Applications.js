@@ -14,7 +14,10 @@ import Modal from "./Modal";
 import ScheduleForm from "./ScheduleForm";
 import { ApplicationsTable, ShortlistedTable } from "./Tables";
 
-
+ const api = axios.create({
+    baseURL: "http://localhost:5000/api",
+    timeout: 10000,
+  });
 const InternshipList = () => {
   // --- Core data state ---
   const [internships, setInternships] = useState([]);
@@ -46,10 +49,7 @@ const InternshipList = () => {
   
 
   const partnerId = localStorage.getItem("partnerId");
-  const api = axios.create({
-    baseURL: "http://localhost:5000/api",
-    timeout: 10000,
-  });
+ 
 
   // Fetch internships on mount
   useEffect(() => {
@@ -182,40 +182,77 @@ const InternshipList = () => {
 
   // --- Offer letter handlers ---
   const handleSendOffer = (student) => {
-    setSelectedStudent({ ...student, internship_id: modalData.internshipId });
-    setJoiningDate("");
-    setTemplateId("");
-    axios
-      .get(
-        `/api/offers/templates?partnerId=${partnerId}`,
-        { headers: { Authorization: `Bearer ${localStorage.getItem("token")}` } }
-      )
-      .then((res) => setTemplates(res.data))
-      .catch(console.error);
-  };
+  const internship = internships.find(i => i._id === modalData.internshipId);
+  setSelectedStudent({ ...student, internship_id: modalData.internshipId });
 
-  const handleSendOfferLetter = async () => {
-    if (!templateId || !joiningDate) return alert("Template and joining date required");
-    try {
-      setSendingOffer(true);
-      await api.post(
-        `/offers`,
-        {
-          studentId: selectedStudent._id,
-          internshipId: selectedStudent.internship_id,
-          templateId,
-          joiningDate,
+  // ✅ Set default joiningDate to internship.startDate (in yyyy-mm-dd format)
+  setJoiningDate(
+    internship?.startDate
+      ? new Date(internship.startDate).toISOString().split("T")[0]
+      : ""
+  );
+
+  setTemplateId("");
+
+  axios
+    .get(`/api/templates?partnerId=${partnerId}`, {
+      headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
+    })
+    .then((res) => setTemplates(res.data))
+    .catch(console.error);
+};
+
+
+const handleSendOfferLetter = async () => {
+  if (!templateId || !joiningDate) return alert("Template and joining date required");
+
+  try {
+    setSendingOffer(true);
+
+    const internship = internships.find(
+      (i) => i._id === selectedStudent.internship_id
+    );
+
+    await api.post(
+      `/offer-letters`,
+      {
+        student_id: selectedStudent._id,
+        internshipId: internship._id,
+        templateId,
+        name: selectedStudent.name,
+        email: selectedStudent.email,
+        position: internship.jobTitle,
+        company: internship.companyName,
+        location: internship.location,
+        duration: internship.endDateOrDuration,
+        startDate: joiningDate,
+        internshipType: internship.internshipType,
+        compensationDetails: internship.compensationDetails,
+        jobDescription: internship.jobDescription,
+        qualifications: internship.qualifications,
+        contactInfo: {
+          name: "HR Manager",       // Replace with actual admin/partner data
+          email: "hr@company.com",
+          phone: "9876543210",
         },
-        { headers: { Authorization: `Bearer ${localStorage.getItem("token")}` } }
-      );
-      alert("Offer sent successfully!");
-      setSelectedStudent(null);
-    } catch (err) {
-      alert(err.message);
-    } finally {
-      setSendingOffer(false);
-    }
-  };
+        noticePeriod: "2 weeks",
+      },
+      {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+      }
+    );
+
+    alert("Offer sent successfully!");
+    setSelectedStudent(null);
+  } catch (err) {
+    alert(err.response?.data?.error || err.message);
+  } finally {
+    setSendingOffer(false);
+  }
+};
+
 
   // --- Schedule handler ---
   const handleSchedule = (internshipId) => {

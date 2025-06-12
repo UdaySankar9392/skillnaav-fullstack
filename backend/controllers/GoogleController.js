@@ -1,180 +1,806 @@
-const GoogleUserWebApp = require("../models/webapp-models/GoogleUserModel");
-const admin = require("../config/firebase-admin"); // Import Firebase Admin SDK
+require('dotenv').config();
+const { google } = require('googleapis');
+const TokenModel = require('../models/webapp-models/TokenModel');
+const jwt = require('jsonwebtoken');
+const InternshipScheduleModel = require('../models/webapp-models/InternshipScheduleModel');
 
-// Register Google User
-const registerGoogleUser = async (req, res) => {
+const {
+  GOOGLE_CLIENT_ID,
+  GOOGLE_CLIENT_SECRET,
+  GOOGLE_REDIRECT_URI
+} = process.env;
+
+// Validate environment variables
+if (!GOOGLE_CLIENT_ID || !GOOGLE_CLIENT_SECRET || !GOOGLE_REDIRECT_URI) {
+  throw new Error("⚠️ Google OAuth environment variables missing or invalid.");
+}
+
+const googleAuth = (req, res) => {
+  // Create new OAuth client per request to avoid shared state
+  const oAuth2Client = new google.auth.OAuth2(
+    GOOGLE_CLIENT_ID,
+    GOOGLE_CLIENT_SECRET,
+    GOOGLE_REDIRECT_URI
+  );
+
+  // Generate random state for security
+  const state = Math.random().toString(36).substring(2, 15);
+
+  const authUrl = oAuth2Client.generateAuthUrl({
+    access_type: 'offline',
+    scope: [
+      'https://www.googleapis.com/auth/userinfo.email',
+      'https://www.googleapis.com/auth/calendar',
+      'https://www.googleapis.com/auth/calendar.events',
+      'openid'
+    ],
+    prompt: 'consent',
+    include_granted_scopes: true,
+    state: state,
+    response_type: 'code'
+  });
+
+  console.log('Generated auth URL with state:', state);
+  res.redirect(authUrl);
+};
+
+const googleCallback = async (req, res) => {
+  const { code, state, error } = req.query;
+
+  console.log('OAuth callback received:', {
+    hasCode: !!code,
+    state,
+    error,
+    fullUrl: req.url
+  });
+
+  // Handle OAuth errors
+  if (error) {
+    console.error("OAuth error:", error);
+    return res.status(400).send(`Authentication error: ${error}`);
+  }
+
+  if (!code) {
+    return res.status(400).send("Missing authorization code");
+  }
+
   try {
-    const {
-      idToken, // Firebase ID Token
-      googleId, // Google UID from Google OAuth
-      name,
-      email,
-      universityName,
-      dob,
-      educationLevel,
-      fieldOfStudy,
-      desiredField,
-      linkedin,
-      portfolio,
-    } = req.body;
+    console.log('Starting token exchange process...');
 
-    // Validate required fields
-    if (
-      !idToken ||
-      !googleId ||
-      !name ||
-      !email ||
-      !universityName ||
-      !dob ||
-      !educationLevel ||
-      !fieldOfStudy ||
-      !desiredField ||
-      !linkedin
-    ) {
-      return res.status(400).json({ message: "All required fields must be filled." });
+    // Exchange code for tokens
+    const tokens = await exchangeCodeForTokens(code);
+    console.log('Successfully obtained tokens via manual exchange');
+
+    // Create OAuth client and set credentials
+    const oAuth2Client = new google.auth.OAuth2(
+      GOOGLE_CLIENT_ID,
+      GOOGLE_CLIENT_SECRET,
+      GOOGLE_REDIRECT_URI
+    );
+
+    oAuth2Client.setCredentials(tokens);
+
+    // Get email from ID token first
+    let email;
+    if (tokens.id_token) {
+      try {
+        const decoded = jwt.decode(tokens.id_token);
+        email = decoded?.email;
+        console.log("Email from ID token:", email);
+      } catch (decodeErr) {
+        console.warn("ID token decode error:", decodeErr.message);
+      }
     }
 
-    // // Verify the Firebase ID token
-    let decodedToken;
+    // Fallback to userinfo API if email not found in ID token
+    if (!email) {
+      try {
+        const oauth2 = google.oauth2({
+          version: 'v2',
+          auth: oAuth2Client
+        });
+        const { data } = await oauth2.userinfo.get();
+        email = data.email;
+        console.log("Email from userinfo API:", email);
+      } catch (userinfoErr) {
+        console.error("Userinfo API error:", userinfoErr.message);
+      }
+    }
+
+    if (!email) {
+      throw new Error("Failed to retrieve user email from Google");
+    }
+
+    // Store tokens with email
+    const tokenDoc = await TokenModel.findOneAndUpdate(
+      { email },
+      {
+        tokens,
+        updatedAt: new Date()
+      },
+      { upsert: true, new: true }
+    );
+
+    console.log(`Successfully stored tokens for ${email}`);
+
     try {
-      decodedToken = await admin.auth().verifyIdToken(idToken);  // Verifying the ID token
-    } catch (error) {
-      return res.status(401).json({ message: "Invalid or expired ID token." }); // Token verification failure
+      const scheduleDoc = await InternshipScheduleModel.findOne({ "timetable.0": { $exists: true } }).sort({ createdAt: -1 });
+
+      if (!scheduleDoc || !scheduleDoc.timetable || scheduleDoc.timetable.length === 0) {
+        console.warn("⚠️ No internship schedule found to sync.");
+      } else {
+        console.log(`📅 Found ${scheduleDoc.timetable.length} schedule entries to sync for ${email}`);
+
+        const result = await addScheduleToGoogleCalendar({
+          studentEmail: email,
+          timetable: scheduleDoc.timetable,
+          internshipTitle: 'Internship Schedule',
+          defaultEventLink: scheduleDoc.defaultEventLink
+        });
+
+
+        console.log('📤 Sync result:', result.summary);
+      }
+    } catch (syncErr) {
+      console.error("❌ Error syncing schedule after authentication:", syncErr.message);
     }
 
-    // Ensure the token's UID matches the googleId
-    if (decodedToken.uid !== googleId) { 
-      return res.status(401).json({ message: "Google ID does not match the token." });
-    }
+    res.send(`
+      <html>
+        <head>
+          <title>Authentication Success</title>
+          <style>
+            body { font-family: Arial, sans-serif; text-align: center; padding: 50px; }
+            .success { color: #28a745; }
+            .info { color: #17a2b8; margin-top: 20px; }
+          </style>
+        </head>
+        <body>
+          <h1 class="success">Google account linked successfully!</h1>
+          <p>Email: ${email}</p>
+          <div class="info">
+            <p>✅ Calendar access has been granted</p>
+            <p>🔗 <a href="https://calendar.google.com" target="_blank">View your Google Calendar</a></p>
+            <p>⚠️ Check your browser console for test event creation status</p>
+          </div>
+          <p>You can now close this tab.</p>
+          <script>
+            console.log('Google Calendar integration completed for: ${email}');
+            setTimeout(() => {
+              if (window.opener) {
+                window.opener.postMessage({
+                  type: 'auth_success',
+                  email: '${email}',
+                  message: 'Calendar access granted'
+                }, '*');
+              }
+              window.close();
+            }, 5000);
+          </script>
+        </body>
+      </html>
+    `);
 
-    // Parse the date for consistency
-    const parsedDob = new Date(dob);
-    if (isNaN(parsedDob)) {
-      return res.status(400).json({ message: "Invalid date format for DOB." });
-    }
-
-    // Check if the user already exists using googleId
-    let user = await GoogleUserWebApp.findOne({ googleId });
-
-    if (user) {
-      // Update existing user profile
-      user.uid = googleId;
-      user.name = name;
-      user.email = email;
-      user.universityName = universityName;
-      user.dob = parsedDob;
-      user.educationLevel = educationLevel;
-      user.fieldOfStudy = fieldOfStudy;
-      user.desiredField = desiredField;
-      user.linkedin = linkedin;
-      user.portfolio = portfolio || user.portfolio;
-
-      // Admin approval and active status are not updated, assuming that admin approval is done separately
-      // Save updates
-      const updatedUser = await user.save();
-      return res.status(200).json({
-        message: "User profile updated successfully!",
-        user: updatedUser,
-      });
-    } else {
-      // Create a new user if it doesn't exist
-      const newUser = new GoogleUserWebApp({
-        uid: googleId,
-        googleId,
-        name,
-        email,
-        universityName,
-        dob: parsedDob,
-        educationLevel,
-        fieldOfStudy,
-        desiredField,
-        linkedin,
-        portfolio: portfolio || null,
-        adminApproved: false, // Default is false (awaiting admin approval)
-        isActive: false, // Default is false (user not active yet)
-      });
-
-      // Save the new user
-      const savedUser = await newUser.save();
-      return res.status(201).json({
-        message: "User registered successfully! Awaiting admin approval.",
-        user: savedUser,
-      });
-    }
-  } catch (error) {
-    console.error("Error during user registration or profile update:", error);
-    return res.status(500).json({
-      message: "Server error. Please try again later.",
-      error: error.message,
+  } catch (err) {
+    console.error("Google callback error:", {
+      message: err.message,
+      code: err.code,
+      stack: err.stack,
+      response: err.response?.data || 'No response data'
     });
+
+    let errorMessage = "Authentication failed";
+    if (err.message.includes('invalid_grant')) {
+      errorMessage = "The authorization code has expired or is invalid. Please try clearing your browser cache and try again.";
+    } else if (err.message.includes('redirect_uri_mismatch')) {
+      errorMessage = "Redirect URI mismatch. Please check your Google OAuth configuration.";
+    } else if (err.message.includes('invalid_client')) {
+      errorMessage = "Invalid client credentials. Please check your Google OAuth setup.";
+    }
+
+    res.status(500).send(`
+      <html>
+        <head>
+          <title>Authentication Failed</title>
+          <style>
+            body { font-family: Arial, sans-serif; text-align: center; padding: 50px; }
+            .error { color: #dc3545; }
+          </style>
+        </head>
+        <body>
+          <h1 class="error">Authentication Failed</h1>
+          <p>${errorMessage}</p>
+          <p>Error details: ${err.message}</p>
+          <a href="/api/google/auth">Try Again</a>
+        </body>
+      </html>
+    `);
   }
 };
 
-// Sign-In Google User
-const signInGoogleUser = async (req, res) => {
-  try {
-    const { idToken, googleId } = req.body; // ID token and googleId are required
+// Manual token exchange function
+async function exchangeCodeForTokens(code) {
+  const https = require('https');
+  const querystring = require('querystring');
 
-    if (!idToken || !googleId) {
-      return res.status(400).json({ message: "Google ID and ID token are required." });
+  const postData = querystring.stringify({
+    client_id: GOOGLE_CLIENT_ID,
+    client_secret: GOOGLE_CLIENT_SECRET,
+    code: code,
+    grant_type: 'authorization_code',
+    redirect_uri: GOOGLE_REDIRECT_URI
+  });
+
+  const options = {
+    hostname: 'oauth2.googleapis.com',
+    port: 443,
+    path: '/token',
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/x-www-form-urlencoded',
+      'Content-Length': Buffer.byteLength(postData)
     }
+  };
 
-    // // Verify the Firebase ID token
-    // let decodedToken;
-    // try {
-    //   decodedToken = await admin.auth().verifyIdToken(idToken);  // Verifying the ID token
-    // } catch (error) {
-    //   return res.status(401).json({ message: "Invalid or expired ID token." });
-    // }
+  return new Promise((resolve, reject) => {
+    const req = https.request(options, (res) => {
+      let data = '';
 
-
-    const decodedToken = await verifyToken(idToken);
-    // Ensure the token's UID matches the googleId
-    if (decodedToken.uid !== googleId) { 
-      return res.status(401).json({ message: "Google ID does not match the token." });
-    }
-
-    // Find user by googleId
-    let user = await GoogleUserWebApp.findOne({ googleId });
-
-    if (!user) {
-      return res.status(404).json({ message: "User not found." });
-    }
-
-    // Check if the user's account is approved
-    if (!user.adminApproved) {
-      return res.status(403).json({
-        message: "Your account is awaiting admin approval. Please try again later."
+      res.on('data', (chunk) => {
+        data += chunk;
       });
+
+      res.on('end', () => {
+        try {
+          const response = JSON.parse(data);
+
+          if (response.error) {
+            console.error('Token exchange error response:', response);
+            reject(new Error(response.error_description || response.error));
+          } else {
+            console.log('Token exchange successful');
+            resolve(response);
+          }
+        } catch (parseErr) {
+          console.error('Failed to parse token response:', data);
+          reject(new Error('Invalid response from Google OAuth'));
+        }
+      });
+    });
+
+    req.on('error', (err) => {
+      console.error('Token exchange request error:', err);
+      reject(err);
+    });
+
+    req.write(postData);
+    req.end();
+  });
+}
+
+// Create a test event immediately after authentication
+const createTestEvent = async (email) => {
+  console.log('🧪 Creating test event for:', email);
+
+  try {
+    const studentToken = await TokenModel.findOne({ email });
+    if (!studentToken || !studentToken.tokens) {
+      throw new Error(`No tokens found for ${email}`);
     }
 
-    // Proceed with successful sign-in (e.g., generate a session, issue a JWT, etc.)
-    return res.status(200).json({
-      message: "Sign-in successful.",
-      user: {
-        name: user.name,
-        email: user.email,
-        googleId: user.googleId,
-        universityName: user.universityName,
-        dob: user.dob,
-        educationLevel: user.educationLevel,
-        fieldOfStudy: user.fieldOfStudy,
-        desiredField: user.desiredField,
-        linkedin: user.linkedin,
-        portfolio: user.portfolio,
-        isActive: user.isActive,
+    const oAuth2Client = new google.auth.OAuth2(
+      GOOGLE_CLIENT_ID,
+      GOOGLE_CLIENT_SECRET,
+      GOOGLE_REDIRECT_URI
+    );
+
+    oAuth2Client.setCredentials(studentToken.tokens);
+    const calendar = google.calendar({ version: 'v3', auth: oAuth2Client });
+
+    // Create test event for 1 hour from now
+    const now = new Date();
+    const startTime = new Date(now.getTime() + 60 * 60 * 1000); // 1 hour from now
+    const endTime = new Date(startTime.getTime() + 60 * 60 * 1000); // 1 hour duration
+
+    const testEvent = {
+      start: {
+        dateTime: startTime.toISOString(),
+        timeZone: 'Asia/Kolkata',
       },
+      end: {
+        dateTime: endTime.toISOString(),
+        timeZone: 'Asia/Kolkata',
+      },
+      reminders: {
+        useDefault: false,
+        overrides: [
+          { method: 'popup', minutes: 10 }
+        ]
+      },
+      colorId: '1', // Optional
+      status: 'confirmed',
+    };
+
+    console.log('🧪 Creating test event:', {
+      summary: testEvent.summary,
+      start: testEvent.start.dateTime,
+      end: testEvent.end.dateTime
     });
-  } catch (error) {
-    console.error("Error during user sign-in:", error);
-    return res.status(500).json({
-      message: "Server error. Please try again later.",
-      error: error.message,
+
+    const response = await calendar.events.insert({
+      calendarId: 'primary',
+      resource: testEvent
     });
+
+    console.log('🧪 Test event created successfully:', {
+      eventId: response.data.id,
+      htmlLink: response.data.htmlLink
+    });
+
+    return {
+      success: true,
+      eventId: response.data.id,
+      htmlLink: response.data.htmlLink,
+      message: 'Test event created successfully'
+    };
+
+  } catch (err) {
+    console.error('🧪 Test event creation failed:', err);
+    return {
+      success: false,
+      error: err.message
+    };
+  }
+};
+
+// Enhanced function to add schedule to Google Calendar
+const addScheduleToGoogleCalendar = async ({ studentEmail, timetable, internshipTitle, defaultEventLink }) => {
+  console.log('🚀 Starting calendar integration for:', studentEmail);
+  console.log('📅 Timetable data:', JSON.stringify(timetable, null, 2));
+  console.log('📋 Internship title:', internshipTitle);
+
+  try {
+    // Get student tokens
+    const studentToken = await TokenModel.findOne({ email: studentEmail });
+    if (!studentToken || !studentToken.tokens) {
+      console.error(`❌ No Google tokens found for ${studentEmail}`);
+      return {
+        success: false,
+        error: 'No authentication tokens found. Please authenticate with Google first.',
+        action: 'Please visit /api/google/auth to authenticate'
+      };
+    }
+
+    console.log('🔑 Found tokens for user:', studentEmail);
+    console.log('🔗 Token details:', {
+      hasAccessToken: !!studentToken.tokens.access_token,
+      hasRefreshToken: !!studentToken.tokens.refresh_token,
+      expiryDate: studentToken.tokens.expiry_date,
+      scope: studentToken.tokens.scope
+    });
+
+    // Create OAuth client
+    const oAuth2Client = new google.auth.OAuth2(
+      GOOGLE_CLIENT_ID,
+      GOOGLE_CLIENT_SECRET,
+      GOOGLE_REDIRECT_URI
+    );
+
+    oAuth2Client.setCredentials(studentToken.tokens);
+
+    // Handle token refresh
+    oAuth2Client.on('tokens', async (newTokens) => {
+      console.log('🔄 Refreshing tokens for', studentEmail);
+      try {
+        const mergedTokens = { ...studentToken.tokens, ...newTokens };
+
+        await TokenModel.findOneAndUpdate(
+          { email: studentEmail },
+          {
+            tokens: mergedTokens,
+            updatedAt: new Date()
+          }
+        );
+
+        console.log('✅ Tokens refreshed successfully');
+      } catch (saveErr) {
+        console.error('❌ Error saving refreshed tokens:', saveErr);
+      }
+    });
+
+    const calendar = google.calendar({ version: 'v3', auth: oAuth2Client });
+
+    // Test calendar access first
+    console.log('🔍 Testing calendar access...');
+    try {
+      const calendarList = await calendar.calendarList.list();
+      console.log('📋 Calendar access successful. Available calendars:', calendarList.data.items.length);
+
+      // Log primary calendar details
+      const primaryCalendar = calendarList.data.items.find(cal => cal.primary);
+      if (primaryCalendar) {
+        console.log('📅 Primary calendar:', {
+          id: primaryCalendar.id,
+          summary: primaryCalendar.summary,
+          timeZone: primaryCalendar.timeZone
+        });
+      }
+    } catch (accessErr) {
+      console.error('❌ Calendar access failed:', accessErr);
+      return {
+        success: false,
+        error: 'Failed to access Google Calendar. Please re-authenticate.',
+        details: accessErr.message,
+        action: 'Please visit /api/google/auth to re-authenticate'
+      };
+    }
+
+    // Validate timetable
+    if (!Array.isArray(timetable) || timetable.length === 0) {
+      return {
+        success: false,
+        error: 'Invalid timetable: expected non-empty array',
+        received: typeof timetable
+      };
+    }
+
+    console.log(`📊 Processing ${timetable.length} time slots...`);
+
+    const createdEvents = [];
+    const failedEvents = [];
+
+    // Process each time slot
+    for (let i = 0; i < timetable.length; i++) {
+      const slot = timetable[i];
+      console.log(`\n🔄 Processing slot ${i + 1}/${timetable.length}:`, slot);
+
+      try {
+        // Validate slot
+        if (!slot || typeof slot !== 'object') {
+          throw new Error('Invalid slot object');
+        }
+
+        const requiredFields = ['date', 'startTime', 'endTime'];
+        const missingFields = requiredFields.filter(field => !slot[field]);
+        if (missingFields.length > 0) {
+          throw new Error(`Missing required fields: ${missingFields.join(', ')}`);
+        }
+
+        // Normalize slot.date to YYYY-MM-DD string
+        let dateStr;
+        if (slot.date instanceof Date) {
+          dateStr = slot.date.toISOString().split('T')[0];
+        } else if (typeof slot.date === 'string') {
+          if (slot.date.includes('T')) {
+            dateStr = slot.date.split('T')[0];
+          } else {
+            dateStr = slot.date;
+          }
+        } else {
+          throw new Error(`Invalid date format: ${slot.date}. Expected YYYY-MM-DD`);
+        }
+
+        // Validate date format (should be YYYY-MM-DD)
+        if (!isValidDate(dateStr)) {
+          throw new Error(`Invalid date format: ${dateStr}. Expected YYYY-MM-DD`);
+        }
+
+        // Validate time format (should be HH:MM)
+        if (!isValidTime(slot.startTime) || !isValidTime(slot.endTime)) {
+          throw new Error(`Invalid time format. Expected HH:MM format. Got start: ${slot.startTime}, end: ${slot.endTime}`);
+        }
+
+        // Create proper datetime strings for IST timezone
+        const startDateTime = createISTDateTime(dateStr, slot.startTime);
+        const endDateTime = createISTDateTime(dateStr, slot.endTime);
+
+
+        console.log('⏰ Created datetime strings:', {
+          start: startDateTime,
+          end: endDateTime
+        });
+
+        // Validate times
+        const startDate = new Date(startDateTime);
+        const endDate = new Date(endDateTime);
+
+        if (isNaN(startDate.getTime()) || isNaN(endDate.getTime())) {
+          throw new Error('Invalid datetime values');
+        }
+
+        if (startDate >= endDate) {
+          throw new Error(`End time must be after start time. Got ${slot.startTime} to ${slot.endTime}`);
+        }
+
+        // Use finalEventLink before the event object
+        const finalEventLink = slot.eventLink || defaultEventLink; // fallback to default
+
+        // Create event object
+        const event = {
+          summary: `${internshipTitle} - ${slot.sectionSummary || 'Session'}`,
+          description: `
+${slot.sectionSummary || slot.description || 'Internship session'}
+
+🔗 Online Meeting Link: ${finalEventLink || 'Link not available'}
+
+📅 Date: ${formatDate(dateStr)}
+⏰ Time: ${slot.startTime} - ${slot.endTime} (IST)
+📍 Location: ${slot.location?.address || slot.location || 'Virtual'}
+
+Generated on: ${new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' })}
+  `,
+          location: slot.location?.address || slot.location || 'Virtual Meeting',
+          start: {
+            dateTime: startDateTime,
+            timeZone: 'Asia/Kolkata',
+          },
+          end: {
+            dateTime: endDateTime,
+            timeZone: 'Asia/Kolkata',
+          },
+          reminders: {
+            useDefault: false,
+            overrides: [
+              { method: 'email', minutes: 24 * 60 }, // 1 day before
+              { method: 'popup', minutes: 15 }       // 15 minutes before
+            ]
+          },
+          colorId: '9', // Blue color for internship events
+          visibility: 'default',
+          status: 'confirmed'
+        };
+
+        // If offline, update location and description
+        if (slot.type === 'offline' && slot.location && slot.location.address) {
+          event.location = slot.location.address;
+          event.description += `\n📍 Offline Location: ${slot.location.address}`;
+          if (slot.location.mapLink) {
+            event.description += `\n🗺️ Map: ${slot.location.mapLink}`;
+          }
+        }
+
+        // If nothing is provided and includeMeet is true, generate a Meet link
+        if ((slot.type === 'online' || slot.type === 'hybrid') && !finalEventLink && slot.includeMeet !== false) {
+          event.conferenceData = {
+            createRequest: {
+              requestId: `meet-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+              conferenceSolutionKey: { type: 'hangoutsMeet' }
+            }
+          };
+        }
+
+        console.log('📝 Creating event with details:', {
+          summary: event.summary,
+          start: event.start.dateTime,
+          end: event.end.dateTime,
+          timeZone: event.start.timeZone,
+          hasConference: !!event.conferenceData || !!slot.eventLink
+        });
+
+        // Create the event
+        const response = await calendar.events.insert({
+          calendarId: 'primary',
+          resource: event,
+          conferenceDataVersion: event.conferenceData ? 1 : 0,
+          sendNotifications: true,
+        });
+
+        const eventData = {
+          slot,
+          eventId: response.data.id,
+          meetLink: response.data.hangoutLink || response.data.conferenceData?.entryPoints?.[0]?.uri,
+          htmlLink: response.data.htmlLink,
+          created: response.data.created,
+          summary: response.data.summary,
+          startDateTime: response.data.start.dateTime,
+          endDateTime: response.data.end.dateTime
+        };
+
+        createdEvents.push(eventData);
+
+        console.log(`✅ Event created successfully:`, {
+          eventId: response.data.id,
+          summary: response.data.summary,
+          date: slot.date,
+          time: `${slot.startTime}-${slot.endTime}`,
+          meetLink: eventData.meetLink,
+          calendarLink: response.data.htmlLink
+        });
+
+        // Delay to avoid rate limiting
+        await new Promise(resolve => setTimeout(resolve, 300));
+
+      } catch (slotErr) {
+        console.error(`❌ Failed to create event for slot ${i + 1}:`, {
+          error: slotErr.message,
+          slot,
+          stack: slotErr.stack
+        });
+
+        failedEvents.push({
+          slot,
+          error: slotErr.message,
+          index: i + 1
+        });
+      }
+    }
+
+    // Return comprehensive result
+    const result = {
+      success: createdEvents.length > 0,
+      studentEmail,
+      createdEvents,
+      failedEvents,
+      summary: `Successfully created ${createdEvents.length} events, ${failedEvents.length} failed`,
+      totalSlots: timetable.length,
+      calendarUrl: 'https://calendar.google.com/calendar/u/0/r',
+      details: {
+        successful: createdEvents.length,
+        failed: failedEvents.length,
+        successRate: `${Math.round((createdEvents.length / timetable.length) * 100)}%`
+      }
+    };
+
+    console.log('🎉 Calendar integration completed:', result.summary);
+    console.log('📊 Success rate:', result.details.successRate);
+
+    if (createdEvents.length > 0) {
+      console.log('📅 Events successfully added to Google Calendar!');
+      console.log('🔗 View calendar at:', result.calendarUrl);
+    }
+
+    if (failedEvents.length > 0) {
+      console.log('⚠️ Failed events:', failedEvents.map(f => `${f.index}: ${f.error}`));
+    }
+
+    return result;
+
+  } catch (err) {
+    console.error(`❌ Calendar integration error for ${studentEmail}:`, {
+      error: err.message,
+      stack: err.stack
+    });
+
+    return {
+      success: false,
+      error: err.message,
+      studentEmail,
+      stack: err.stack
+    };
+  }
+};
+
+// Helper functions
+function isValidDate(dateString) {
+  if (!dateString || typeof dateString !== 'string') return false;
+  const regEx = /^\d{4}-\d{2}-\d{2}$/;
+  if (!dateString.match(regEx)) return false;
+
+  const date = new Date(dateString + 'T00:00:00.000Z');
+  return date instanceof Date && !isNaN(date.getTime());
+}
+
+function isValidTime(timeString) {
+  if (!timeString || typeof timeString !== 'string') return false;
+  const regEx = /^([01]\d|2[0-3]):([0-5]\d)$/;
+  return timeString.match(regEx) !== null;
+}
+
+function createISTDateTime(dateString, timeString) {
+  // Create proper ISO string for IST timezone
+  return `${dateString}T${timeString}:00+05:30`;
+}
+
+function formatDate(dateString) {
+  const date = new Date(dateString + 'T00:00:00.000Z');
+  return date.toLocaleDateString('en-IN', {
+    weekday: 'long',
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric'
+  });
+}
+
+// Test function with immediate execution
+const debugCalendarCreation = async (studentEmail) => {
+  console.log('🧪 Starting debug calendar creation for:', studentEmail);
+
+  // Create test event for tomorrow
+  const tomorrow = new Date();
+  tomorrow.setDate(tomorrow.getDate() + 1);
+  const dateStr = slot.date instanceof Date ? slot.date.toISOString().split('T')[0] : slot.date;
+
+  const testTimetable = [
+    {
+      date: dateString,
+      startTime: '15:00',
+      endTime: '16:00',
+      sectionSummary: 'Debug Test Session',
+      description: 'This is a debug test event to verify calendar integration',
+      location: 'Virtual Debug Room',
+      includeMeet: true
+    }
+  ];
+
+  console.log('🧪 Test timetable:', testTimetable);
+
+  const result = await addScheduleToGoogleCalendar({
+    studentEmail,
+    timetable: testTimetable,
+    internshipTitle: '🧪 Debug Test Internship'
+  });
+
+  console.log('🧪 Debug result:', JSON.stringify(result, null, 2));
+
+  if (result.success) {
+    console.log('✅ Debug test successful! Check your Google Calendar.');
+    console.log('🔗 Calendar link:', result.calendarUrl);
+  } else {
+    console.log('❌ Debug test failed:', result.error);
+  }
+
+  return result;
+};
+
+// Function to check authentication status
+const checkAuthStatus = async (studentEmail) => {
+  try {
+    const studentToken = await TokenModel.findOne({ email: studentEmail });
+
+    if (!studentToken || !studentToken.tokens) {
+      return {
+        authenticated: false,
+        message: 'No authentication tokens found',
+        action: 'Please authenticate with Google'
+      };
+    }
+
+    // Test if tokens are still valid
+    const oAuth2Client = new google.auth.OAuth2(
+      GOOGLE_CLIENT_ID,
+      GOOGLE_CLIENT_SECRET,
+      GOOGLE_REDIRECT_URI
+    );
+
+    oAuth2Client.setCredentials(studentToken.tokens);
+
+    try {
+      const calendar = google.calendar({ version: 'v3', auth: oAuth2Client });
+      await calendar.calendarList.list();
+
+      return {
+        authenticated: true,
+        email: studentEmail,
+        tokenInfo: {
+          hasAccessToken: !!studentToken.tokens.access_token,
+          hasRefreshToken: !!studentToken.tokens.refresh_token,
+          expiryDate: studentToken.tokens.expiry_date
+        },
+        message: 'Authentication valid'
+      };
+    } catch (apiErr) {
+      return {
+        authenticated: false,
+        message: 'Authentication expired or invalid',
+        error: apiErr.message,
+        action: 'Please re-authenticate with Google'
+      };
+    }
+
+  } catch (err) {
+    return {
+      authenticated: false,
+      message: 'Error checking authentication status',
+      error: err.message
+    };
   }
 };
 
 module.exports = {
-  registerGoogleUser,
-  signInGoogleUser,
+  googleAuth,
+  googleCallback,
+  addScheduleToGoogleCalendar,
+  debugCalendarCreation,
+  checkAuthStatus,
+  createTestEvent
 };

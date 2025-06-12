@@ -487,20 +487,31 @@ Type: ${session.type}
       </div>
 
       {/* VIEW SCHEDULE BUTTON */}
-      {offer.status.toLowerCase() === "accepted" && (
-        <div className="mt-4">
-          <button
-            onClick={() => setShowScheduleModal(true)}
-            className="flex items-center text-indigo-600 hover:text-indigo-800 text-sm font-medium mb-2"
-          >
-            <FontAwesomeIcon
-              icon={faCalendarAlt}
-              className="mr-1 text-indigo-500"
-            />
-            View Schedule
-          </button>
-        </div>
-      )}
+      {/* VIEW SCHEDULE & LINK CALENDAR BUTTONS */}
+{offer.status.toLowerCase() === "accepted" && (
+  <div className="mt-4 space-y-2">
+    <button
+      onClick={() => setShowScheduleModal(true)}
+      className="flex items-center text-indigo-600 hover:text-indigo-800 text-sm font-medium"
+    >
+      <FontAwesomeIcon
+        icon={faCalendarAlt}
+        className="mr-1 text-indigo-500"
+      />
+      View Schedule
+    </button>
+
+    {/* ✅ LINK GOOGLE CALENDAR */}
+   <a
+  href="http://localhost:5000/api/google/auth"
+  className="inline-block bg-blue-600 text-white px-3 py-2 rounded-lg text-sm font-medium hover:bg-blue-700 transition"
+>
+  Link Google Calendar
+</a>
+
+  </div>
+)}
+
 
       {/* SCHEDULE MODAL */}
       {showScheduleModal && (

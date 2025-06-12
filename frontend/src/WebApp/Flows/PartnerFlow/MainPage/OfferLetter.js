@@ -14,39 +14,43 @@ const SendOfferLetter = ({ student, internshipId, onSuccess }) => {
     position: ""
   });
 
-  useEffect(() => {
-    const fetchInternship = async () => {
-      try {
-        setError(null);
-        const response = await axios.get(
-          `http://localhost:5000/api/interns/${internshipId}`,
-          { 
-            headers: { 
-              Authorization: `Bearer ${localStorage.getItem("token")}` 
-            } 
-          }
-        );
-        
-        if (!response.data) {
-          throw new Error("No data received");
+ useEffect(() => {
+  const fetchInternship = async () => {
+    try {
+      setError(null);
+      const response = await axios.get(
+        `http://localhost:5000/api/interns/${internshipId}`,
+        { 
+          headers: { 
+            Authorization: `Bearer ${localStorage.getItem("token")}` 
+          } 
         }
-        
-        setInternship(response.data);
-        setOfferDetails(prev => ({
-          ...prev,
-          position: response.data.jobTitle
-        }));
-        
-      } catch (err) {
-        console.error("Error fetching internship:", err);
-        setError(err.response?.data?.message || "Failed to load internship details");
+      );
+      
+      if (!response.data) {
+        throw new Error("No data received");
       }
-    };
+      
+      setInternship(response.data);
+     setOfferDetails(prev => ({
+  ...prev,
+  position: response.data.jobTitle,
+  joiningDate: response.data.startDate
+    ? new Date(response.data.startDate).toISOString().split("T")[0]
+    : ""
+}));
 
-    if (internshipId) {
-      fetchInternship();
+
+    } catch (err) {
+      console.error("Error fetching internship:", err);
+      setError(err.response?.data?.message || "Failed to load internship details");
     }
-  }, [internshipId]);
+  };
+
+  if (internshipId) {
+    fetchInternship();
+  }
+}, [internshipId]);
 
   const handleSendOffer = async () => {
     try {

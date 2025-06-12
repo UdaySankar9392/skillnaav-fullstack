@@ -25,7 +25,23 @@ const sendOfferLetter = async (req, res) => {
       return res.status(400).json({ error: e.message });
     }
 
-    const pdfBuffer = await generateOfferPDFBuffer({ name, position, startDate, internshipId });
+   const pdfBuffer = await generateOfferPDFBuffer({
+  name,
+  email,
+  position,
+  startDate,
+  internshipId,
+  companyName: req.body.company,
+  location: req.body.location,
+  duration: req.body.duration,
+  internshipType: req.body.internshipType,
+  compensationDetails: req.body.compensationDetails,
+  jobDescription: req.body.jobDescription,
+  qualifications: req.body.qualifications,
+  contactInfo: req.body.contactInfo,
+  noticePeriod: req.body.noticePeriod,
+});
+
     const fileName = `offer-${studentId}-${Date.now()}.pdf`;
     const s3Url = await uploadOfferLetterBuffer(pdfBuffer, fileName);
 
